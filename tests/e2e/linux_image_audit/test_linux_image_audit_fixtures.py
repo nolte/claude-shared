@@ -179,6 +179,44 @@ def test_headless_runs_skip_user_settings():
     assert cmd[cmd.index("--setting-sources") + 1] == "project" and "--strict-mcp-config" in cmd
 
 
+# Plausible scanner wordings per row: each must hit the matcher of its own row
+# and no matcher of another row in the same case.
+PARAPHRASES = {
+    "§A image declaration": ["image-declaration.yaml present", "image declaration missing"],
+    "§C inputs pinned": ["inputs pinned (snapshot or lock file)", "external inputs pinned to immutable references",
+                         "pinned inputs"],
+    "§C lock file committed": ["lock or manifest file committed", "lock file tracked", "manifest committed"],
+    "§C SOURCE_DATE_EPOCH from source": ["SOURCE_DATE_EPOCH derived from the source", "fixed SOURCE_DATE_EPOCH"],
+    "§C reproducibility switch": ["toolchain reproducibility switch enabled"],
+    "§D no populated machine-id": ["no fixed machine identity", "machine-id empty or absent"],
+    "§D no host keys or secrets": ["no SSH host keys", "no per-machine secrets",
+                                   "no host keys, random seed, or TLS private keys"],
+    "§D no credentials in layers or logs": ["no credentials in layers, overlays, or logs", "secrets in layers"],
+    "§F payload signature verified": ["update payload signature verified",
+                                      "payload signature verified before install"],
+    "§F install and reboot without input, unhealthy reboot": [
+        "installs a newer version and reboots without input", "reboot after an unhealthy report"],
+    "§F refuses a version that isn't newer": ["refuses a downgrade", "rejects a version that is not newer"],
+    "§F failure switch ignored once committed": ["failure switch has no effect once committed",
+                                                 "commit boundary"],
+    "§G SBOM produced": ["SBOM generated for every build", "machine-readable SBOM per build",
+                         "SBOM produced (SPDX or CycloneDX)"],
+    "§G SPDX for OCI images": ["SPDX SBOM for the OCI image"],
+    "§G not legal-info alone": ["not make legal-info alone", "legal-info isn't the only SBOM"],
+}
+
+
+@pytest.mark.parametrize("case", CASES)
+def test_matchers_survive_paraphrases(case):
+    specs = [s for s in scenario.load_expected(case)["results"] if s["section"] != "declaration"]
+    for spec in specs:
+        assert spec["row"] in PARAPHRASES, spec["row"]
+        for row, wordings in PARAPHRASES.items():
+            for wording in wordings:
+                hit = scenario._matches(_label_line(f"{row[:2]} {wording}"), spec)
+                assert hit is (row == spec["row"]), (spec["id"], row, wording)
+
+
 # --------------------------------------------------------------------------- #
 # Matchers against the verbatim requirement labels
 # --------------------------------------------------------------------------- #
@@ -304,6 +342,10 @@ def test_no_pillar_fail_ignores_should_requirements():
                                  "no-pillar-fail", {}) is True
     must = "- §C inputs pinned — fail (static-heuristic) — live mirror; renovate.json present"
     assert scenario.check_output(must, "no-pillar-fail", {}) is False
+    should_in_evidence = "- §C inputs pinned — fail (static-heuristic) — §C SHOULD pair it with Renovate"
+    assert scenario.check_output(should_in_evidence, "no-pillar-fail", {}) is False
+    assert scenario.check_output("- §C pins paired with an updater — fail (SHOULD) — none",
+                                 "no-pillar-fail", {}) is True
 
 
 def test_scenario_and_output_checks():

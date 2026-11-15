@@ -28,7 +28,7 @@ results:
     section: "§C"
     row: "§C inputs pinned"
     match: [pin]
-    exclude: [lock, updat, renovate]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: not-decidable
     cause: spec-gap
     spec: "§I table OSTree: inputs pinned 'not covered'; References, triangulation status: no source names a pinning knob for an OSTree compose's repositories; §J row '§C inputs pinned': no named knob yields spec-gap (the [unverified] marker of §I.4 OSTree covers SOURCE_DATE_EPOCH and rpmdb-normalize, not pinning)"
@@ -49,7 +49,7 @@ results:
     section: "§F"
     row: "§F install and reboot without input, unhealthy reboot"
     match: ["install|reboot"]
-    exclude: [gates, "health definition"]
+    exclude: [gates, "health definition", signature]
     expected: not-decidable
     cause: resolvable
     scenario: rollback
@@ -74,6 +74,7 @@ results:
   - id: g-sbom-produced
     section: "§G"
     row: "§G SBOM produced"
-    match: ["produc"]
+    match: ["produc|generat|per build|machine-readable"]
+    exclude: [OCI, legal, publish, "next to"]
     expected: pass
     spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"

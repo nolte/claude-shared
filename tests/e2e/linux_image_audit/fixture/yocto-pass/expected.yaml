@@ -28,13 +28,13 @@ results:
     section: "§C"
     row: "§C inputs pinned"
     match: [pin]
-    exclude: [lock, updat, renovate]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: pass
     spec: "§C pinned inputs; §I.2 every layer pinned to a commit (kas); §I table Yocto 4.0 or later 'supported'"
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: [lock]
+    match: ["lock|manifest", "commit|tracked"]
     expected: pass
     spec: "§C lock file committed; §J row static-file: kas.lock.yml exists and is tracked; §I table 'supported'"
   - id: c-source-date-epoch
@@ -47,7 +47,8 @@ results:
   - id: d-host-keys
     section: "§D"
     row: "§D no host keys or secrets"
-    match: ["host key"]
+    match: ["host key|secret"]
+    exclude: [credential, layer]
     expected: pass
     spec: "§D no SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): no committed key file in the overlay"
   - id: f-payload-signature
@@ -60,7 +61,7 @@ results:
     section: "§F"
     row: "§F install and reboot without input, unhealthy reboot"
     match: ["install|reboot"]
-    exclude: [gates, "health definition"]
+    exclude: [gates, "health definition", signature]
     expected: not-decidable
     cause: resolvable
     scenario: rollback
@@ -85,6 +86,7 @@ results:
   - id: g-sbom-produced
     section: "§G"
     row: "§G SBOM produced"
-    match: ["produc"]
+    match: ["produc|generat|per build|machine-readable"]
+    exclude: [OCI, legal, publish, "next to"]
     expected: pass
     spec: "§G; §I.2 Yocto create-spdx (INHERIT += create-spdx in the kas local_conf_header); §J row '§G SBOM produced'"

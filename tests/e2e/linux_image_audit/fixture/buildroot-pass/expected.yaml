@@ -28,14 +28,14 @@ results:
     section: "§C"
     row: "§C inputs pinned"
     match: [pin]
-    exclude: [lock, updat, renovate]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: not-decidable
     cause: spec-gap
     spec: "§I table Buildroot: inputs pinned 'not covered'; §J row '§C inputs pinned': a profile without a named pinning knob yields spec-gap"
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: [lock]
+    match: ["lock|manifest", "commit|tracked"]
     expected: not-decidable
     cause: spec-gap
     spec: "§I table Buildroot: lock file committed 'not covered'; §J cause spec-gap"
@@ -49,13 +49,15 @@ results:
   - id: d-host-keys
     section: "§D"
     row: "§D no host keys or secrets"
-    match: ["host key"]
+    match: ["host key|secret"]
+    exclude: [credential, layer]
     expected: pass
     spec: "§D no SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): no committed key file in the overlay"
   - id: g-sbom-produced
     section: "§G"
     row: "§G SBOM produced"
-    match: ["produc"]
+    match: ["produc|generat|per build|machine-readable"]
+    exclude: [OCI, legal, publish, "next to"]
     expected: pass
     spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"
   - id: g-not-legal-info-alone

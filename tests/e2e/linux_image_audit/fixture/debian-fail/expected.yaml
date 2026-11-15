@@ -28,7 +28,7 @@ results:
     section: "§C"
     row: "§C inputs pinned"
     match: [pin]
-    exclude: [lock, updat, renovate]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: fail
     spec: "§C: a build resolving the newest version from a live mirror is a hard failure; §I.3; §I table Debian 'supported'"
   - id: c-source-date-epoch

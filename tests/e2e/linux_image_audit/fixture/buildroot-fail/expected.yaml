@@ -34,13 +34,15 @@ results:
   - id: d-host-keys
     section: "§D"
     row: "§D no host keys or secrets"
-    match: ["host key"]
+    match: ["host key|secret"]
+    exclude: [credential, layer]
     expected: fail
     spec: "§D MUST NOT ship SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): committed key file board/gateway/rootfs-overlay/etc/ssh/ssh_host_ed25519_key"
   - id: g-sbom-produced
     section: "§G"
     row: "§G SBOM produced"
-    match: ["produc"]
+    match: ["produc|generat|per build|machine-readable"]
+    exclude: [OCI, legal, publish, "next to"]
     expected: fail
     spec: "§G SPDX or CycloneDX per build; §I.2 Buildroot needs a separate generator; §J row '§G SBOM produced'"
   - id: g-not-legal-info-alone

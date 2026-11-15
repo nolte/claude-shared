@@ -28,7 +28,7 @@ results:
     section: "§C"
     row: "§C inputs pinned"
     match: [pin]
-    exclude: [lock, updat, renovate]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: not-decidable
     cause: unverified
     spec: "§I.1: an absent Snapshot= on a listed distribution counts as unpinned, [unverified]; §J: an [unverified] entry yields not-decidable (unverified), never fail"

@@ -34,7 +34,7 @@ results:
     section: "§C"
     row: "§C inputs pinned"
     match: [pin]
-    exclude: [lock, updat, renovate]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: not-decidable
     cause: delegated
     spec: "§C bootc base-image pinning delegated to spec/project/dockerfile-best-practices/; §J cause delegated"

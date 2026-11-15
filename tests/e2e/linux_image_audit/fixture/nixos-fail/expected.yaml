@@ -27,13 +27,13 @@ results:
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: [lock]
+    match: ["lock|manifest", "commit|tracked"]
     expected: fail
     spec: "§C commit the lock file; §I.4 committed flake.lock; §J row '§C lock file committed' (static-file); §I table NixOS 'supported'"
   - id: c-inputs-pinned
     section: "§C"
     row: "§C inputs pinned"
     match: [pin]
-    exclude: [lock, updat, renovate]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: fail
     spec: "§C pin Nix inputs through a committed lock file; without flake.lock the flake inputs resolve the newest revision; §I table NixOS 'supported'"

@@ -122,9 +122,14 @@ def j_rows(spec_text: str | None = None) -> tuple[str, ...]:
 
 
 def is_should_line(line: "Line") -> bool:
-    """A SHOULD-level line: marked (SHOULD), or its requirement names a SHOULD row (never its evidence)."""
+    """A SHOULD-level line: SHOULD in its requirement or result slot, or a SHOULD row's wording.
+
+    Only the text before the evidence counts, so evidence that merely mentions
+    SHOULD never excuses a failed MUST.
+    """
     head = line.requirement.lower()
-    return "SHOULD" in line.raw or any(marker in head for marker in _SHOULD_MARKERS)
+    return ("SHOULD" in line.requirement or "SHOULD" in line.status
+            or any(marker in head for marker in _SHOULD_MARKERS))
 
 
 _STR_OR_LIST = {"oneOf": [{"type": "string", "minLength": 1},
@@ -394,6 +399,7 @@ class Line:
     cause: str | None
     detail: str | None  # text after the cause (the scenario of a resolvable cause, ...)
     raw: str
+    status: str = ""    # the result slot: text between the first and the second separator
 
 
 _BULLET = re.compile(r"^\s*[-*]\s+(.*\S)\s*$")
@@ -434,7 +440,8 @@ def parse_inventory(text: str) -> list[Line]:
         if cm and result == "not-decidable":
             cause = cm.group(1).lower()
             detail = cm.group(2).strip().lower() or None
-        lines.append(Line(section, requirement, result, cause, detail, raw))
+        status = _SEP.split(rest, maxsplit=1)[0]
+        lines.append(Line(section, requirement, result, cause, detail, raw, status))
     return lines
 
 

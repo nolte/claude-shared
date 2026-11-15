@@ -28,13 +28,13 @@ results:
     section: "§C"
     row: "§C inputs pinned"
     match: [pin]
-    exclude: [lock, updat, renovate]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: pass
     spec: "§C Nix inputs through a committed lock file; §I.4 committed flake.lock; §I table NixOS 'supported'"
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: [lock]
+    match: ["lock|manifest", "commit|tracked"]
     expected: pass
     spec: "§C; §J row static-file: flake.lock exists and is tracked; §I table NixOS 'supported'"
   - id: f-payload-signature
@@ -49,7 +49,7 @@ results:
     section: "§F"
     row: "§F install and reboot without input, unhealthy reboot"
     match: ["install|reboot"]
-    exclude: [gates, "health definition"]
+    exclude: [gates, "health definition", signature]
     expected: not-decidable
     cause: resolvable
     scenario: rollback
@@ -82,6 +82,7 @@ results:
   - id: g-sbom-produced
     section: "§G"
     row: "§G SBOM produced"
-    match: ["produc"]
+    match: ["produc|generat|per build|machine-readable"]
+    exclude: [OCI, legal, publish, "next to"]
     expected: pass
     spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"

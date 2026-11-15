@@ -2,8 +2,7 @@
 # Single build entry point for the kiosk image (CI runs the same command).
 set -eu
 SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
-# The archive snapshot is pinned to the same moment as SOURCE_DATE_EPOCH.
-SNAPSHOT="$(date -u -d "@${SOURCE_DATE_EPOCH}" +%Y%m%dT%H%M%SZ)"
+SNAPSHOT="$(cat snapshot.lock)"
 MIRROR="http://snapshot.debian.org/archive/debian/${SNAPSHOT}/"
 export SOURCE_DATE_EPOCH
 mkdir -p dist
