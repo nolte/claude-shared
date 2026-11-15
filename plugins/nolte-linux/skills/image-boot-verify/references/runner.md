@@ -10,6 +10,8 @@ The runner ships, but it hasn't booted a real image yet. Its tests run against a
 - the `restrict=on` network isolation, including whether `guestfwd` still forwards under it
 - the §J timeout defaults
 
+The runner also doesn't run the update-security scenarios of §I: downgrade, signature-rejection, commit-boundary, and interrupted-update. It writes protocol version 1.1 for every image, which can't name them, although §G requires version 1.2 for an image updated in the field. For an image updated in the field, its overall verdict and exit status therefore cover smoke and rollback only, not the required downgrade and signature-rejection scenarios, and `linux-image-audit` keeps the requirements those scenarios resolve blocking. The spec records this gap in its Open Questions; closing it is tracked in nolte/claude-shared#728 or its follow-up.
+
 ## Usage
 
 ```bash

@@ -1,0 +1,1686 @@
+# Schema for protocol.json; written by the nolte-linux plugin's image-boot-verify
+# skill (and the non-interactive runner of nolte/claude-shared#728), consumed by
+# the linux-image-audit skill and by any pipeline gate that reads a boot verdict.
+#
+# The schema is normative for the protocol format
+# (spec/project/image-boot-verification/ §G). Two conventions carry the §G rule
+# that a field is never omitted or guessed:
+#
+# - Every field the run may fail to collect accepts its collected type OR
+#   $defs/Unavailable ({status: unavailable, reason: <non-empty>}) through a
+#   oneOf. No such field accepts null, and every one of them is required.
+# - overall_verdict and exit_status sit together in the `outcome` object, whose
+#   enum lists the three consistent pairs (pass/0, fail/1, not-run/2). That
+#   keeps the consistency rule inside the schema without a top-level allOf/if,
+#   which spec/project/yaml-json-schema/ §Document skeleton doesn't admit.
+#
+# The schema also admits each scenario name at most once, rejects a pass or fail
+# scenario whose network isolation is unavailable, rejects a pass scenario that
+# carries no report line, and requires smoke, identity, and commit-boundary to
+# run without a network device. It fixes the required flag of the four
+# update-security scenarios (downgrade and signature-rejection required,
+# commit-boundary and interrupted-update recommended), admits their
+# per-scenario fields only on them, derives a signature-rejection verdict from
+# its two payload variants (untrusted-key, unsigned), and enforces the positive
+# control: a downgrade or signature-rejection pass needs a rollback or positive
+# pass in the same protocol, and a commit-boundary pass or fail a positive pass.
+#
+# Rules that span several fields stay with the consumers (§G): the overall
+# verdict is the worst verdict of the required scenarios in the order fail,
+# not-run, pass, and a recommended scenario raises it only by failing (§H); a
+# restricted-forward scenario names exactly the endpoint the run serves the next
+# version from (§B); an identity pass needs two different machine_id_app values;
+# a pass or fail scenario needs the image-definition commit and the artifact it
+# booted; a firmware out of scope (bios, other), or the identity scenario
+# under u-boot, carries only not-run (§A, §I); a downgrade pass, or a passing
+# signature-rejection variant, observed only N's expected version; an
+# interrupted-update pass ends on N's or N+1's expected version; a
+# commit-boundary pass observed only N+1's expected version; and a pass or fail
+# of the downgrade scenario, or a variant of the signature-rejection scenario
+# that booted, records the payload it served (previous_artifact, test_payload,
+# unsigned_payload), not unavailable.
+#
+# v1.1 (relaxing over v1.0): a fail scenario may carry an empty report_lines.
+# §F makes a missing health report a fail (a readiness timeout, or a VM that
+# stops after console output), and v1.0 required at least one report line for
+# every pass or fail scenario, so such a fail had no valid protocol. The
+# report-line minimum now holds for pass only, as a nested if/then inside
+# $defs/Scenario. Every other rule is unchanged: a protocol that validates
+# against v1.0 validates against v1.1 apart from its schema_version, and a
+# consumer keeps accepting v1.0 protocols against the v1.0 schema.
+#
+# v1.2 (extending v1.1, nolte/claude-shared#737): the update-security
+# scenarios downgrade, signature-rejection, commit-boundary, and
+# interrupted-update (§I), their per-scenario fields observed_versions,
+# source_requests, interruption, and signature_variants, the top-level
+# previous_artifact, test_payload, and unsigned_payload, and the update_window
+# and recovery timeouts (§J). A run for an image updated in the field always
+# plans downgrade and signature-rejection and writes v1.2 (§G). A v1.0 or v1.1 protocol stays
+# valid input against its own schema, but it can't name these scenarios, so a
+# consumer treats each of them as absent: the requirement it resolves stays
+# not-decidable with cause resolvable: <scenario> (§G).
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/nolte/claude-shared/blob/main/schemas/image-boot-protocol-v1.2.schema.yaml
+title: Image Boot Protocol
+description: >-
+  Validates the protocol.json a boot verification run writes for every verdict:
+  the image, firmware, host, hypervisor, network isolation, timeouts, and the
+  per-scenario verdicts with their health report lines. Refs
+  spec/project/image-boot-verification/ §B, §G, and §H, and
+  spec/project/linux-image-best-practices/ §J.
+type: object
+required:
+  - acceleration
+  - artifact
+  - declaration
+  - firmware
+  - host
+  - hypervisor
+  - identity_boots
+  - image_definition_commit
+  - machine
+  - next_artifact
+  - outcome
+  - previous_artifact
+  - rollback_observed_versions
+  - run_timestamp
+  - scenarios
+  - schema_version
+  - serial_logs
+  - test_payload
+  - timeouts
+  - tpm_emulated
+  - unsigned_payload
+additionalProperties: false
+properties:
+  schema_version:
+    type: string
+    const: "1.2"
+    description: >-
+      The protocol format version this file is written against; a consumer
+      picks the schema file from it.
+  run_timestamp:
+    type: string
+    format: date-time
+    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+    description: >-
+      When the run started, as an RFC 3339 timestamp with an explicit offset.
+  outcome:
+    type: object
+    description: >-
+      The run's overall verdict and the process exit status that exposes it
+      (§H); the enum admits only the consistent pairs.
+    additionalProperties: false
+    required:
+      - exit_status
+      - overall_verdict
+    properties:
+      overall_verdict:
+        type: string
+        enum: [pass, fail, not-run]
+        description: >-
+          The worst verdict of the required scenarios, raised to fail by a
+          failing recommended scenario (§H).
+      exit_status:
+        type: integer
+        enum: [0, 1, 2]
+        description: >-
+          0 for pass (with or without the flaky flag), 1 for fail, 2 for
+          not-run.
+    enum:
+      - {overall_verdict: pass, exit_status: 0}
+      - {overall_verdict: fail, exit_status: 1}
+      - {overall_verdict: not-run, exit_status: 2}
+  host:
+    type: object
+    description: >-
+      The machine the run executed on.
+    additionalProperties: false
+    required:
+      - architecture
+      - kernel
+      - os
+    properties:
+      os:
+        description: The host operating system and its release.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      kernel:
+        description: The host kernel release.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      architecture:
+        description: The host architecture as `uname -m` reports it.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+  artifact:
+    description: >-
+      The image artifact under test (version N), its digest, and the version
+      the caller expects it to report.
+    oneOf:
+      - $ref: "#/$defs/Artifact"
+      - $ref: "#/$defs/Unavailable"
+  next_artifact:
+    description: >-
+      The next-version artifact (N+1) of the rollback, positive, and
+      interrupted-update scenarios; unavailable, with the reason, for an image
+      that isn't updated in the field or when the input wasn't given.
+    oneOf:
+      - $ref: "#/$defs/Artifact"
+      - $ref: "#/$defs/Unavailable"
+  previous_artifact:
+    description: >-
+      The version that isn't newer than N (N-1, or N itself when the operator
+      passes it) which the local source served in the downgrade scenario (§H,
+      §I); unavailable, with the reason, when the input wasn't given or the
+      scenario wasn't planned.
+    oneOf:
+      - $ref: "#/$defs/Artifact"
+      - $ref: "#/$defs/Unavailable"
+  test_payload:
+    description: >-
+      The untrusted-key variant's payload of the signature-rejection scenario:
+      a bootable image of a version newer than N, built through the image
+      definition's own build entry point and differing from the release only
+      in being signed with a key the image doesn't trust (§B, §H, §I);
+      unavailable, with the reason, when the input wasn't given or the
+      scenario wasn't planned.
+    oneOf:
+      - $ref: "#/$defs/TestPayload"
+      - $ref: "#/$defs/Unavailable"
+  unsigned_payload:
+    description: >-
+      The unsigned variant's payload of the signature-rejection scenario: the
+      same build without any signature (§H, §I); unavailable, with the reason,
+      when the update framework's payload format admits no unsigned payload,
+      the input wasn't given, or the scenario wasn't planned.
+    oneOf:
+      - $ref: "#/$defs/UnsignedPayload"
+      - $ref: "#/$defs/Unavailable"
+  image_definition_commit:
+    description: >-
+      The full commit id of the image definition the artifact was built from,
+      recorded as the caller gave it and never replaced by the working copy's
+      current commit (§H).
+    oneOf:
+      - type: string
+        pattern: "^([0-9a-f]{40}|[0-9a-f]{64})$"
+      - $ref: "#/$defs/Unavailable"
+  declaration:
+    type: object
+    description: >-
+      The image declaration the run read.
+    additionalProperties: false
+    required:
+      - digest
+      - image_name
+      - path
+      - schema_version
+    properties:
+      path:
+        description: The declaration's path as the caller passed it.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      digest:
+        description: The digest of the declaration file the run read.
+        oneOf:
+          - $ref: "#/$defs/Digest"
+          - $ref: "#/$defs/Unavailable"
+      schema_version:
+        description: The declaration's own schema_version.
+        oneOf:
+          - type: string
+            pattern: "^[0-9]+\\.[0-9]+$"
+          - $ref: "#/$defs/Unavailable"
+      image_name:
+        description: >-
+          The declaration's image.name, which a consumer matches against the
+          image it audits.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+  firmware:
+    type: object
+    description: >-
+      The firmware the image booted on: its type, its build, and whether
+      Secure Boot was enabled (§B, §H).
+    additionalProperties: false
+    required:
+      - build
+      - secure_boot
+      - type
+    properties:
+      type:
+        description: >-
+          The firmware type the declaration names (image.firmware), or uefi for
+          a v1.0 declaration. bios and other are out of scope and only ever
+          appear with not-run scenarios (§A).
+        oneOf:
+          - type: string
+            enum: [uefi, u-boot, bios, other]
+          - $ref: "#/$defs/Unavailable"
+      build:
+        description: >-
+          The firmware build the hypervisor loaded, for example the path and
+          package version of the firmware image.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      secure_boot:
+        description: Whether the firmware ran with Secure Boot enabled.
+        oneOf:
+          - type: boolean
+          - $ref: "#/$defs/Unavailable"
+  tpm_emulated:
+    description: >-
+      Whether a software TPM emulator stood in for the hardware TPM (§B).
+    oneOf:
+      - type: boolean
+      - $ref: "#/$defs/Unavailable"
+  hypervisor:
+    type: object
+    description: >-
+      The hypervisor that booted the image.
+    additionalProperties: false
+    required:
+      - name
+      - version
+    properties:
+      name:
+        description: The hypervisor binary or launcher, for example its path.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      version:
+        description: The hypervisor's version as it reports it.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+  machine:
+    type: object
+    description: >-
+      The virtual machine's architecture scope (§A, §H).
+    additionalProperties: false
+    required:
+      - architecture
+      - cross_architecture
+      - machine_type
+    properties:
+      architecture:
+        description: >-
+          The guest architecture the run booted and where it came from: the
+          declaration's image.architectures, the artifact itself, or an
+          operator input (a v1.0 declaration carries none).
+        oneOf:
+          - type: object
+            additionalProperties: false
+            required:
+              - name
+              - source
+            properties:
+              name:
+                $ref: "#/$defs/Architecture"
+                description: The guest architecture.
+              source:
+                type: string
+                enum: [declaration, artifact, operator-input]
+                description: Where the run took the architecture from.
+          - $ref: "#/$defs/Unavailable"
+      machine_type:
+        description: >-
+          The hypervisor's machine type, for example q35 or virt.
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      cross_architecture:
+        description: >-
+          True when the guest architecture differs from the host's, which
+          forces emulation (§H).
+        oneOf:
+          - type: boolean
+          - $ref: "#/$defs/Unavailable"
+  acceleration:
+    description: >-
+      Hardware virtualisation, or emulation with its warning and timeout
+      factor (§H, §J).
+    oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+          - mode
+        properties:
+          mode:
+            type: string
+            const: hardware
+            description: Hardware virtualisation was used.
+      - type: object
+        additionalProperties: false
+        required:
+          - mode
+          - timeout_factor
+          - warning
+        properties:
+          mode:
+            type: string
+            const: emulation
+            description: The run fell back to emulation.
+          warning:
+            type: string
+            minLength: 1
+            description: The explicit warning the run stated in its output.
+          timeout_factor:
+            type: number
+            minimum: 5
+            description: The factor every timeout was scaled by (§J).
+      - $ref: "#/$defs/Unavailable"
+  timeouts:
+    type: object
+    description: >-
+      Every timeout the run used, after the emulation factor, with whether it's
+      the §J default or the caller's override.
+    additionalProperties: false
+    required:
+      - readiness
+      - recovery
+      - rollback
+      - total_margin
+      - update_installation
+      - update_window
+    properties:
+      readiness:
+        $ref: "#/$defs/Timeout"
+        description: From power-on to the first health report line of one boot.
+      update_installation:
+        $ref: "#/$defs/Timeout"
+        description: From the first healthy report of N to the first report of N+1.
+      rollback:
+        $ref: "#/$defs/Timeout"
+        description: >-
+          From N+1's first unhealthy report to N's healthy report; unavailable
+          without update.max_boot_attempts.
+      total_margin:
+        $ref: "#/$defs/Timeout"
+        description: >-
+          The margin §J adds to the sum of a scenario's phase timeouts to form
+          its total timeout.
+      update_window:
+        $ref: "#/$defs/Timeout"
+        description: >-
+          From N's first report to the VM reset that ends the observation in
+          the downgrade scenario and in each signature-rejection variant.
+      recovery:
+        $ref: "#/$defs/Timeout"
+        description: >-
+          From the VM reset of the interrupted-update scenario to the first
+          healthy report; unavailable without update.max_boot_attempts.
+  scenarios:
+    type: array
+    minItems: 1
+    description: >-
+      One entry per planned scenario, including every not-run one; each
+      scenario name appears at most once.
+    items:
+      $ref: "#/$defs/Scenario"
+    allOf:
+      - contains:
+          type: object
+          properties:
+            name:
+              const: smoke
+        minContains: 0
+        maxContains: 1
+      - contains:
+          type: object
+          properties:
+            name:
+              const: rollback
+        minContains: 0
+        maxContains: 1
+      - contains:
+          type: object
+          properties:
+            name:
+              const: positive
+        minContains: 0
+        maxContains: 1
+      - contains:
+          type: object
+          properties:
+            name:
+              const: identity
+        minContains: 0
+        maxContains: 1
+      - contains:
+          type: object
+          properties:
+            name:
+              const: downgrade
+        minContains: 0
+        maxContains: 1
+      - contains:
+          type: object
+          properties:
+            name:
+              const: signature-rejection
+        minContains: 0
+        maxContains: 1
+      - contains:
+          type: object
+          properties:
+            name:
+              const: commit-boundary
+        minContains: 0
+        maxContains: 1
+      - contains:
+          type: object
+          properties:
+            name:
+              const: interrupted-update
+        minContains: 0
+        maxContains: 1
+      # Positive control (§I): a refusal counts only where the same source
+      # arrangement installed a validly signed newer version.
+      - if:
+          contains:
+            type: object
+            required: [name, verdict]
+            properties:
+              name:
+                enum: [downgrade, signature-rejection]
+              verdict:
+                const: pass
+        then:
+          contains:
+            type: object
+            required: [name, verdict]
+            properties:
+              name:
+                enum: [rollback, positive]
+              verdict:
+                const: pass
+      # Commit boundary continues from the positive scenario's committed state.
+      - if:
+          contains:
+            type: object
+            required: [name, verdict]
+            properties:
+              name:
+                const: commit-boundary
+              verdict:
+                enum: [pass, fail]
+        then:
+          contains:
+            type: object
+            required: [name, verdict]
+            properties:
+              name:
+                const: positive
+              verdict:
+                const: pass
+  rollback_observed_versions:
+    description: >-
+      The image version each boot of the rollback scenario reported, in boot
+      order; unavailable, with the reason, when that scenario didn't boot.
+    oneOf:
+      - type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      - $ref: "#/$defs/Unavailable"
+  identity_boots:
+    description: >-
+      The machine UUID and machine_id_app of each of the identity scenario's
+      two boots; unavailable, with the reason, when that scenario didn't boot.
+    oneOf:
+      - type: array
+        minItems: 2
+        maxItems: 2
+        items:
+          $ref: "#/$defs/IdentityBoot"
+      - $ref: "#/$defs/Unavailable"
+  serial_logs:
+    description: >-
+      The paths of the captured serial console logs, relative to the run
+      directory; unavailable when no boot started.
+    oneOf:
+      - type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      - $ref: "#/$defs/Unavailable"
+$defs:
+  Unavailable:
+    type: object
+    description: >-
+      A field the run couldn't collect, with the reason; never null and never
+      omitted (§G).
+    additionalProperties: false
+    required:
+      - reason
+      - status
+    properties:
+      status:
+        type: string
+        const: unavailable
+        description: Marks the field as not collected.
+      reason:
+        type: string
+        minLength: 1
+        description: Why the run couldn't collect the field.
+  Digest:
+    type: string
+    description: A content digest with its algorithm prefix.
+    pattern: "^(sha256:[0-9a-f]{64}|sha512:[0-9a-f]{128})$"
+  Architecture:
+    type: string
+    description: >-
+      A guest architecture in `uname -m` spelling, the same values as the
+      declaration's image.architectures.
+    enum: [x86_64, aarch64, armv7l, riscv64, ppc64le, s390x]
+  Artifact:
+    type: object
+    description: >-
+      One image artifact: where it was read from, its digest, and the version
+      the caller expects it to report.
+    additionalProperties: false
+    required:
+      - digest
+      - expected_version
+      - path
+    properties:
+      path:
+        type: string
+        minLength: 1
+        description: The artifact's path as the caller passed it.
+      digest:
+        $ref: "#/$defs/Digest"
+        description: The digest of the artifact file.
+      expected_version:
+        type: string
+        minLength: 1
+        description: The image_version the caller expects the artifact to report.
+  TestPayload:
+    type: object
+    description: >-
+      The signature-rejection scenario's test payload: an N+1 payload produced
+      separately from the release artifact, signed with a key the image doesn't
+      trust, and never published (§B, §I).
+    additionalProperties: false
+    required:
+      - digest
+      - expected_version
+      - path
+      - production
+      - signing_key
+    properties:
+      path:
+        type: string
+        minLength: 1
+        description: The test payload's path as the caller passed it.
+      digest:
+        $ref: "#/$defs/Digest"
+        description: The digest of the test payload file.
+      expected_version:
+        type: string
+        minLength: 1
+        description: >-
+          The version the test payload offers, newer than N, so only its
+          signature can stop the update.
+      signing_key:
+        type: string
+        minLength: 1
+        description: >-
+          The fingerprint or identifier of the key the payload is signed with,
+          which no trust anchor of the image contains.
+      production:
+        type: string
+        minLength: 1
+        description: >-
+          How the payload was produced, for example the build entry point and
+          the throwaway key it signed with (§I).
+  UnsignedPayload:
+    type: object
+    description: >-
+      The signature-rejection scenario's unsigned payload: the test build of a
+      version newer than N with no signature at all, never published (§I).
+    additionalProperties: false
+    required:
+      - digest
+      - expected_version
+      - path
+      - production
+    properties:
+      path:
+        type: string
+        minLength: 1
+        description: The unsigned payload's path as the caller passed it.
+      digest:
+        $ref: "#/$defs/Digest"
+        description: The digest of the unsigned payload file.
+      expected_version:
+        type: string
+        minLength: 1
+        description: >-
+          The version the unsigned payload offers and would report if
+          installed, newer than N.
+      production:
+        type: string
+        minLength: 1
+        description: How the unsigned payload was produced (§I).
+  SignatureVariant:
+    type: object
+    description: >-
+      One payload variant of the signature-rejection scenario, each booted
+      from its own fresh copy (§I).
+    additionalProperties: false
+    required:
+      - name
+      - observed_versions
+      - source_requests
+      - verdict
+    properties:
+      name:
+        type: string
+        enum: [untrusted-key, unsigned]
+        description: Which payload the local source served.
+      verdict:
+        type: string
+        enum: [pass, fail, not-run, not-producible]
+        description: >-
+          The variant's verdict; not-producible only for the unsigned variant
+          whose update framework's payload format admits no unsigned payload.
+      observed_versions:
+        description: >-
+          The image version each report of this variant named, in order;
+          unavailable when nothing booted.
+        oneOf:
+          - type: array
+            minItems: 1
+            items:
+              type: string
+              minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      source_requests:
+        description: How many guest requests the local source recorded.
+        oneOf:
+          - type: integer
+            minimum: 0
+          - $ref: "#/$defs/Unavailable"
+      reason:
+        type: string
+        minLength: 1
+        description: >-
+          Why the variant is not-run or not-producible; present exactly then.
+          For not-producible it names why the payload format of the declared
+          update.mechanism can't carry an unsigned payload (§I).
+    if:
+      properties:
+        verdict:
+          enum: [not-run, not-producible]
+    then:
+      required:
+        - reason
+    else:
+      not:
+        required:
+          - reason
+      if:
+        properties:
+          verdict:
+            const: pass
+      then:
+        properties:
+          observed_versions:
+            type: array
+          source_requests:
+            type: integer
+            minimum: 1
+    dependentSchemas:
+      name:
+        if:
+          properties:
+            name:
+              const: untrusted-key
+        then:
+          properties:
+            verdict:
+              enum: [pass, fail, not-run]
+  Interruption:
+    type: object
+    description: >-
+      When the interrupted-update scenario reset the VM through the
+      hypervisor (§I).
+    additionalProperties: false
+    required:
+      - after_s
+      - trigger
+    properties:
+      trigger:
+        type: string
+        const: payload-delivered
+        description: >-
+          The local source finished sending the next-version payload to the
+          guest.
+      after_s:
+        type: number
+        minimum: 0
+        description: Seconds between the trigger and the reset.
+  Timeout:
+    description: >-
+      One timeout in seconds and whether it's the §J default or an override;
+      unavailable when the run couldn't compute it.
+    oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+          - seconds
+          - source
+        properties:
+          seconds:
+            type: number
+            exclusiveMinimum: 0
+            description: The timeout used, after the emulation factor.
+          source:
+            type: string
+            enum: [default, override]
+            description: Whether the caller overrode the §J default.
+      - $ref: "#/$defs/Unavailable"
+  Network:
+    description: >-
+      The scenario's network isolation (§B): no network at all, or user-mode
+      networking restricted to exactly one forwarded endpoint for the local
+      update source; unavailable when isolation couldn't be established, which
+      makes the scenario not-run.
+    oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+          - config
+          - mode
+        properties:
+          mode:
+            type: string
+            const: none
+            description: The guest had no network device.
+          config:
+            type: string
+            minLength: 1
+            description: The network argument the run passed to the hypervisor.
+      - type: object
+        additionalProperties: false
+        required:
+          - config
+          - forward
+          - mode
+        properties:
+          mode:
+            type: string
+            const: restricted-forward
+            description: >-
+              Restricted user-mode networking with one forwarded endpoint.
+          config:
+            type: string
+            minLength: 1
+            description: >-
+              The network argument the run passed to the hypervisor, as
+              asserted before boot.
+          forward:
+            $ref: "#/$defs/ForwardedEndpoint"
+            description: The single endpoint the guest can reach.
+      - $ref: "#/$defs/Unavailable"
+  ForwardedEndpoint:
+    type: object
+    description: >-
+      The one guest address forwarded to the host-side local update source.
+    additionalProperties: false
+    required:
+      - guest_address
+      - guest_port
+      - host_address
+      - host_port
+      - protocol
+    properties:
+      protocol:
+        type: string
+        const: tcp
+        description: The forwarded transport protocol.
+      guest_address:
+        type: string
+        minLength: 1
+        description: The address the guest connects to.
+      guest_port:
+        type: integer
+        minimum: 1
+        maximum: 65535
+        description: The port the guest connects to.
+      host_address:
+        type: string
+        minLength: 1
+        description: The host address the connection is forwarded to.
+      host_port:
+        type: integer
+        minimum: 1
+        maximum: 65535
+        description: The host port the local update source listens on.
+  Phase:
+    type: object
+    description: One timed phase of a scenario.
+    additionalProperties: false
+    required:
+      - duration_s
+      - name
+      - timeout_s
+    properties:
+      name:
+        type: string
+        minLength: 1
+        description: The phase name, for example readiness or update-installation.
+      timeout_s:
+        type: number
+        exclusiveMinimum: 0
+        description: The timeout that bounded the phase, in seconds.
+      duration_s:
+        description: >-
+          How long the phase took, in seconds; unavailable when it didn't
+          finish.
+        oneOf:
+          - type: number
+            minimum: 0
+          - $ref: "#/$defs/Unavailable"
+  IdentityBoot:
+    type: object
+    description: One boot of the identity scenario.
+    additionalProperties: false
+    required:
+      - machine_id_app
+      - machine_uuid
+    properties:
+      machine_uuid:
+        type: string
+        pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        description: The machine UUID the hypervisor assigned to this boot.
+      machine_id_app:
+        description: >-
+          The machine_id_app value of this boot's report, `-` for an image
+          without systemd; unavailable when the boot gave no report.
+        oneOf:
+          - type: string
+            pattern: "^([0-9a-f]{32}|-)$"
+          - $ref: "#/$defs/Unavailable"
+  NotRunCause:
+    type: object
+    description: >-
+      Why a scenario is not-run: the failed precondition, the missing tool, or
+      the case §I names, with an install hint.
+    additionalProperties: false
+    required:
+      - install_hint
+      - reason
+    properties:
+      reason:
+        type: string
+        minLength: 1
+        description: The failed precondition or the not-run case.
+      install_hint:
+        description: >-
+          How to supply the missing tool or input; unavailable when no install
+          can help (an out-of-scope firmware, a missing switch).
+        oneOf:
+          - type: string
+            minLength: 1
+          - $ref: "#/$defs/Unavailable"
+  Scenario:
+    type: object
+    description: >-
+      One scenario's verdict and evidence. A not-run scenario carries
+      not_run_cause; a pass or fail scenario doesn't. A pass scenario carries at
+      least one report line; a fail scenario may carry none, which is the
+      missing-report case of §F.
+    additionalProperties: false
+    required:
+      - attempt
+      - flaky
+      - name
+      - network
+      - phases
+      - report_lines
+      - required
+      - trace_ids
+      - verdict
+    properties:
+      name:
+        type: string
+        enum:
+          - smoke
+          - rollback
+          - positive
+          - identity
+          - downgrade
+          - signature-rejection
+          - commit-boundary
+          - interrupted-update
+        description: The scenario (§F, §I).
+      required:
+        type: boolean
+        description: >-
+          True for a required scenario (smoke, and rollback, downgrade, and
+          signature-rejection for a field-updated image), false for a
+          recommended one (positive, identity, commit-boundary,
+          interrupted-update).
+      verdict:
+        type: string
+        enum: [pass, fail, not-run]
+        description: The scenario's verdict by the exclusion rules of §H.
+      flaky:
+        type: boolean
+        description: True when the scenario passed only on a retry (§C).
+      attempt:
+        type: integer
+        minimum: 1
+        description: The attempt number of the recorded verdict.
+      network:
+        $ref: "#/$defs/Network"
+        description: The scenario's network isolation.
+      phases:
+        type: array
+        description: The scenario's timed phases; empty when nothing booted.
+        items:
+          $ref: "#/$defs/Phase"
+      report_lines:
+        type: array
+        description: >-
+          Every normalised health report line the scenario observed, in order;
+          empty for a fail without a health report and for a not-run scenario.
+        items:
+          type: string
+          pattern: "^IMAGE-HEALTH-REPORT "
+      trace_ids:
+        type: array
+        minItems: 1
+        description: The requirement or TC-IDs the scenario verifies (§E).
+        items:
+          type: string
+          minLength: 1
+      not_run_cause:
+        $ref: "#/$defs/NotRunCause"
+        description: Why the scenario didn't run; present exactly when not-run.
+      observed_versions:
+        description: >-
+          The image version each report of the scenario named, in order; only on
+          downgrade, commit-boundary, and interrupted-update, and unavailable
+          when nothing booted.
+        oneOf:
+          - type: array
+            minItems: 1
+            items:
+              type: string
+              minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      source_requests:
+        description: >-
+          How many guest requests the local source recorded; only on downgrade
+          and interrupted-update. A pass needs at least one, since a source the
+          guest never contacted verifies nothing (§I).
+        oneOf:
+          - type: integer
+            minimum: 0
+          - $ref: "#/$defs/Unavailable"
+      interruption:
+        description: >-
+          When the run reset the VM; only on interrupted-update, and unavailable
+          when the reset wasn't reached.
+        oneOf:
+          - $ref: "#/$defs/Interruption"
+          - $ref: "#/$defs/Unavailable"
+      signature_variants:
+        description: >-
+          The two payload variants of the signature-rejection scenario, each
+          exactly once (the two names, each contained once, fix the length at
+          two); only on signature-rejection, and unavailable when nothing
+          booted.
+        oneOf:
+          - type: array
+            items:
+              $ref: "#/$defs/SignatureVariant"
+            allOf:
+              - contains:
+                  properties:
+                    name:
+                      const: untrusted-key
+                minContains: 1
+                maxContains: 1
+              - contains:
+                  properties:
+                    name:
+                      const: unsigned
+                minContains: 1
+                maxContains: 1
+          - $ref: "#/$defs/Unavailable"
+    if:
+      properties:
+        verdict:
+          const: not-run
+    then:
+      required:
+        - not_run_cause
+    else:
+      not:
+        required:
+          - not_run_cause
+      properties:
+        network:
+          not:
+            $ref: "#/$defs/Unavailable"
+      if:
+        properties:
+          verdict:
+            const: pass
+      then:
+        properties:
+          report_lines:
+            minItems: 1
+    dependentSchemas:
+      name:
+        allOf:
+          # No update source: no network device.
+          - if:
+              properties:
+                name:
+                  enum: [smoke, identity, commit-boundary]
+            then:
+              properties:
+                network:
+                  oneOf:
+                    - type: object
+                      required: [mode]
+                      properties:
+                        mode:
+                          const: none
+                    - $ref: "#/$defs/Unavailable"
+          # An update source the guest reaches through the one forward.
+          - if:
+              properties:
+                name:
+                  enum: [downgrade, signature-rejection, interrupted-update]
+            then:
+              properties:
+                network:
+                  oneOf:
+                    - type: object
+                      required: [mode]
+                      properties:
+                        mode:
+                          const: restricted-forward
+                    - $ref: "#/$defs/Unavailable"
+          - if:
+              properties:
+                name:
+                  enum: [downgrade, interrupted-update]
+            then:
+              required: [observed_versions, source_requests]
+          - if:
+              properties:
+                name:
+                  const: commit-boundary
+            then:
+              required: [observed_versions]
+          - if:
+              properties:
+                name:
+                  const: signature-rejection
+            then:
+              required: [signature_variants]
+              not:
+                anyOf:
+                  - required: [observed_versions]
+                  - required: [source_requests]
+            else:
+              not:
+                required: [signature_variants]
+          - if:
+              properties:
+                name:
+                  const: interrupted-update
+            then:
+              required: [interruption]
+            else:
+              not:
+                required: [interruption]
+          - if:
+              properties:
+                name:
+                  enum: [smoke, rollback, positive, identity]
+            then:
+              not:
+                anyOf:
+                  - required: [observed_versions]
+                  - required: [source_requests]
+          - if:
+              properties:
+                name:
+                  const: commit-boundary
+            then:
+              not:
+                required: [source_requests]
+          # The required set of §H.
+          - if:
+              properties:
+                name:
+                  enum: [downgrade, signature-rejection]
+            then:
+              properties:
+                required:
+                  const: true
+          - if:
+              properties:
+                name:
+                  enum: [commit-boundary, interrupted-update]
+            then:
+              properties:
+                required:
+                  const: false
+          # A pass rests on collected observations and a contacted source.
+          - if:
+              required: [verdict]
+              properties:
+                name:
+                  enum: [downgrade, commit-boundary, interrupted-update]
+                verdict:
+                  const: pass
+            then:
+              properties:
+                observed_versions:
+                  type: array
+          - if:
+              required: [verdict]
+              properties:
+                name:
+                  enum: [downgrade, interrupted-update]
+                verdict:
+                  const: pass
+            then:
+              properties:
+                source_requests:
+                  type: integer
+                  minimum: 1
+          # A signature-rejection verdict follows its variants (§I): pass needs
+          # an untrusted-key pass and an unsigned pass or not-producible; fail
+          # needs a failing variant, and a failing variant needs fail.
+          - if:
+              required: [verdict]
+              properties:
+                name:
+                  const: signature-rejection
+                verdict:
+                  const: pass
+            then:
+              properties:
+                signature_variants:
+                  type: array
+                  allOf:
+                    - contains:
+                        properties:
+                          name:
+                            const: untrusted-key
+                          verdict:
+                            const: pass
+                    - contains:
+                        properties:
+                          name:
+                            const: unsigned
+                          verdict:
+                            enum: [pass, not-producible]
+          - if:
+              required: [verdict]
+              properties:
+                name:
+                  const: signature-rejection
+                verdict:
+                  const: fail
+            then:
+              properties:
+                signature_variants:
+                  type: array
+                  contains:
+                    properties:
+                      verdict:
+                        const: fail
+          # The converse: a failing variant makes the scenario fail.
+          - if:
+              required: [signature_variants]
+              properties:
+                name:
+                  const: signature-rejection
+                signature_variants:
+                  type: array
+                  contains:
+                    properties:
+                      verdict:
+                        const: fail
+            then:
+              properties:
+                verdict:
+                  const: fail
+examples:
+  # pass: a UEFI x86_64 image updated in the field, all eight scenarios.
+  - schema_version: "1.2"
+    run_timestamp: "2026-11-15T09:12:03Z"
+    outcome: {overall_verdict: pass, exit_status: 0}
+    host: {os: Debian GNU/Linux 13, kernel: 6.12.48-amd64, architecture: x86_64}
+    artifact:
+      path: build/edge-appliance_1.4.0.raw
+      digest: "sha256:4f2a0c5e8b1d3f6a9c7e2b4d6f8a0c1e3b5d7f9a2c4e6b8d0f1a3c5e7b9d2f4a"
+      expected_version: "1.4.0"
+    next_artifact:
+      path: build/edge-appliance_1.5.0.raw
+      digest: "sha256:9b1d3f5a7c9e2b4d6f8a0c2e4b6d8f1a3c5e7b9d0f2a4c6e8b1d3f5a7c9e2b4d"
+      expected_version: "1.5.0"
+    previous_artifact:
+      path: build/edge-appliance_1.3.2.raw
+      digest: "sha256:5c7e9b2d4f6a8c0e1b3d5f7a9c2e4b6d8f0a1c3e5b7d9f2a4c6e8b0d1f3a5c7e"
+      expected_version: "1.3.2"
+    test_payload:
+      path: test-payloads/edge-appliance_1.5.0.untrusted.raw
+      digest: "sha256:7a9c2e4b6d8f0a1c3e5b7d9f2a4c6e8b0d1f3a5c7e9b2d4f6a8c0e1b3d5f7a9c"
+      expected_version: "1.5.0"
+      signing_key: "SHA256:3f1c5e7a9b2d4f6a8c0e2b4d6f8a1c3e5b7d9f2a4c6e8b0d"
+      production: "build entry point run for 1.5.0 with a throwaway key generated for this run; never published"
+    unsigned_payload:
+      path: test-payloads/edge-appliance_1.5.0.unsigned.raw
+      digest: "sha256:8b0d1f3a5c7e9b2d4f6a8c0e1b3d5f7a9c2e4b6d8f0a1c3e5b7d9f2a4c6e8b0d"
+      expected_version: "1.5.0"
+      production: "build entry point run for 1.5.0 with the signing step skipped; never published"
+    image_definition_commit: 605926fb3c1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f
+    declaration:
+      path: images/edge-appliance/image-declaration.yaml
+      digest: "sha256:1a3c5e7b9d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c1e3b5d7f9a2c4e6b8d0f1a3c"
+      schema_version: "1.1"
+      image_name: edge-appliance
+    firmware: {type: uefi, build: /usr/share/OVMF/OVMF_CODE_4M.secboot.fd (edk2 2025.02-8), secure_boot: true}
+    tpm_emulated: false
+    hypervisor: {name: /usr/bin/qemu-system-x86_64, version: "10.0.2"}
+    machine:
+      architecture: {name: x86_64, source: declaration}
+      machine_type: q35
+      cross_architecture: false
+    acceleration: {mode: hardware}
+    timeouts:
+      readiness: {seconds: 300, source: default}
+      update_installation: {seconds: 600, source: default}
+      rollback: {seconds: 1200, source: default}
+      total_margin: {seconds: 120, source: default}
+      update_window: {seconds: 600, source: default}
+      recovery: {seconds: 1200, source: default}
+    scenarios:
+      - name: smoke
+        required: true
+        verdict: pass
+        flaky: false
+        attempt: 1
+        network: {mode: none, config: "-nic none"}
+        phases:
+          - {name: readiness, timeout_s: 300, duration_s: 41.7}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        trace_ids: [linux-image-best-practices §A health definition]
+      - name: rollback
+        required: true
+        verdict: pass
+        flaky: false
+        attempt: 1
+        network:
+          mode: restricted-forward
+          config: "-netdev user,id=n0,restrict=on,guestfwd=tcp:10.0.2.100:8080-tcp:127.0.0.1:38080"
+          forward: {protocol: tcp, guest_address: 10.0.2.100, guest_port: 8080, host_address: 127.0.0.1, host_port: 38080}
+        phases:
+          - {name: readiness, timeout_s: 300, duration_s: 40.2}
+          - {name: update-installation, timeout_s: 600, duration_s: 133.9}
+          - {name: rollback, timeout_s: 1200, duration_s: 171.4}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=unhealthy image_id=edge-appliance image_version=1.5.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=unhealthy image_id=edge-appliance image_version=1.5.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=unhealthy image_id=edge-appliance image_version=1.5.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        trace_ids: [linux-image-best-practices §F rollback]
+      - name: positive
+        required: false
+        verdict: pass
+        flaky: false
+        attempt: 1
+        network:
+          mode: restricted-forward
+          config: "-netdev user,id=n0,restrict=on,guestfwd=tcp:10.0.2.100:8080-tcp:127.0.0.1:38081"
+          forward: {protocol: tcp, guest_address: 10.0.2.100, guest_port: 8080, host_address: 127.0.0.1, host_port: 38081}
+        phases:
+          - {name: readiness, timeout_s: 300, duration_s: 39.8}
+          - {name: update-installation, timeout_s: 600, duration_s: 129.5}
+          - {name: reset-readiness, timeout_s: 300, duration_s: 38.1}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.5.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.5.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        trace_ids: [linux-image-best-practices §F update]
+      - name: identity
+        required: false
+        verdict: pass
+        flaky: false
+        attempt: 1
+        network: {mode: none, config: "-nic none"}
+        phases:
+          - {name: readiness, timeout_s: 300, duration_s: 42.0}
+          - {name: second-readiness, timeout_s: 300, duration_s: 41.3}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=6a1b2c3d4e5f60718293a4b5c6d7e8f9"
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=d4c3b2a1f0e9d8c7b6a5948372615041"
+        trace_ids: [linux-image-best-practices §D machine identity]
+      - name: downgrade
+        required: true
+        verdict: pass
+        flaky: false
+        attempt: 1
+        network:
+          mode: restricted-forward
+          config: "-netdev user,id=n0,restrict=on,guestfwd=tcp:10.0.2.100:8080-tcp:127.0.0.1:38082"
+          forward: {protocol: tcp, guest_address: 10.0.2.100, guest_port: 8080, host_address: 127.0.0.1, host_port: 38082}
+        phases:
+          - {name: readiness, timeout_s: 300, duration_s: 40.9}
+          - {name: update-window, timeout_s: 600, duration_s: 600}
+          - {name: reset-readiness, timeout_s: 300, duration_s: 38.7}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        trace_ids: [linux-image-best-practices §F downgrade refusal]
+        observed_versions: ["1.4.0", "1.4.0"]
+        source_requests: 2
+      - name: signature-rejection
+        required: true
+        verdict: pass
+        flaky: false
+        attempt: 1
+        network:
+          mode: restricted-forward
+          config: "-netdev user,id=n0,restrict=on,guestfwd=tcp:10.0.2.100:8080-tcp:127.0.0.1:38083"
+          forward: {protocol: tcp, guest_address: 10.0.2.100, guest_port: 8080, host_address: 127.0.0.1, host_port: 38083}
+        phases:
+          - {name: readiness, timeout_s: 300, duration_s: 41.2}
+          - {name: update-window, timeout_s: 600, duration_s: 600}
+          - {name: reset-readiness, timeout_s: 300, duration_s: 39.0}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        trace_ids: [linux-image-best-practices §F payload signature]
+        signature_variants:
+          - {name: untrusted-key, verdict: pass, observed_versions: ["1.4.0", "1.4.0"], source_requests: 3}
+          - {name: unsigned, verdict: pass, observed_versions: ["1.4.0", "1.4.0"], source_requests: 2}
+      - name: commit-boundary
+        required: false
+        verdict: pass
+        flaky: false
+        attempt: 1
+        network: {mode: none, config: "-nic none"}
+        phases:
+          - {name: readiness, timeout_s: 300, duration_s: 37.6}
+          - {name: reset-readiness, timeout_s: 300, duration_s: 37.9}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.5.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.5.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        trace_ids: [linux-image-best-practices §F failure switch ignored once committed]
+        observed_versions: ["1.5.0", "1.5.0"]
+      - name: interrupted-update
+        required: false
+        verdict: pass
+        flaky: false
+        attempt: 1
+        network:
+          mode: restricted-forward
+          config: "-netdev user,id=n0,restrict=on,guestfwd=tcp:10.0.2.100:8080-tcp:127.0.0.1:38084"
+          forward: {protocol: tcp, guest_address: 10.0.2.100, guest_port: 8080, host_address: 127.0.0.1, host_port: 38084}
+        phases:
+          - {name: readiness, timeout_s: 300, duration_s: 40.4}
+          - {name: payload-delivery, timeout_s: 600, duration_s: 61.3}
+          - {name: recovery, timeout_s: 1200, duration_s: 44.8}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        trace_ids: [linux-image-best-practices §F atomic update]
+        observed_versions: ["1.4.0", "1.4.0"]
+        source_requests: 1
+        interruption: {trigger: payload-delivered, after_s: 0}
+    rollback_observed_versions: ["1.4.0", "1.5.0", "1.5.0", "1.5.0", "1.4.0"]
+    identity_boots:
+      - {machine_uuid: 3f8e2a1c-5b7d-4e9f-a0c2-d4e6f8a1b3c5, machine_id_app: 6a1b2c3d4e5f60718293a4b5c6d7e8f9}
+      - {machine_uuid: 9c1d3e5f-7a2b-4c6d-8e0f-a1b3c5d7e9f2, machine_id_app: d4c3b2a1f0e9d8c7b6a5948372615041}
+    serial_logs:
+      - smoke.serial.log
+      - rollback.serial.log
+      - positive.serial.log
+      - identity-1.serial.log
+      - identity-2.serial.log
+      - downgrade.serial.log
+      - signature-rejection.serial.log
+      - commit-boundary.serial.log
+      - interrupted-update.serial.log
+  # fail: a U-Boot aarch64 image booted on an x86_64 host under emulation.
+  - schema_version: "1.2"
+    run_timestamp: "2026-11-15T10:40:00+01:00"
+    outcome: {overall_verdict: fail, exit_status: 1}
+    host: {os: Ubuntu 26.04 LTS, kernel: 6.17.0-8-generic, architecture: x86_64}
+    artifact:
+      path: build/lab-kiosk-arm_2.0.1.img
+      digest: "sha256:c2e4b6d8f0a1c3e5b7d9f2a4c6e8b0d1f3a5c7e9b2d4f6a8c0e1b3d5f7a9c2e4"
+      expected_version: "2.0.1"
+    next_artifact: {status: unavailable, reason: "update_model is reflash-only; no next version applies"}
+    previous_artifact: {status: unavailable, reason: "update_model is reflash-only; no downgrade scenario applies"}
+    test_payload: {status: unavailable, reason: "update_model is reflash-only; no signature-rejection scenario applies"}
+    unsigned_payload: {status: unavailable, reason: "update_model is reflash-only; no signature-rejection scenario applies"}
+    image_definition_commit: 8599a1013c1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f
+    declaration:
+      path: images/lab-kiosk-arm/image-declaration.yaml
+      digest: "sha256:e0b1d3f5a7c9e2b4d6f8a0c1e3b5d7f9a2c4e6b8d0f1a3c5e7b9d2f4a6c8e0b1"
+      schema_version: "1.1"
+      image_name: lab-kiosk-arm
+    firmware: {type: u-boot, build: u-boot-qemu 2025.10 (qemu_arm64), secure_boot: false}
+    tpm_emulated: false
+    hypervisor: {name: /usr/bin/qemu-system-aarch64, version: "10.0.2"}
+    machine:
+      architecture: {name: aarch64, source: declaration}
+      machine_type: virt
+      cross_architecture: true
+    acceleration:
+      mode: emulation
+      warning: "No hardware virtualisation for aarch64 on an x86_64 host; emulated boot, timeouts scaled by 5."
+      timeout_factor: 5
+    timeouts:
+      readiness: {seconds: 1500, source: default}
+      update_installation: {status: unavailable, reason: "update_model is reflash-only"}
+      rollback: {status: unavailable, reason: "update_model is reflash-only; no update.max_boot_attempts"}
+      total_margin: {seconds: 600, source: default}
+      update_window: {status: unavailable, reason: "update_model is reflash-only"}
+      recovery: {status: unavailable, reason: "update_model is reflash-only; no update.max_boot_attempts"}
+    scenarios:
+      - name: smoke
+        required: true
+        verdict: fail
+        flaky: false
+        attempt: 1
+        network: {mode: none, config: "-nic none"}
+        phases:
+          - {name: readiness, timeout_s: 1500, duration_s: 388.5}
+        report_lines:
+          - "IMAGE-HEALTH-REPORT status=unhealthy image_id=lab-kiosk-arm image_version=2.0.1 system_state=degraded failed_units=kiosk-browser.service machine_id_app=1b2c3d4e5f60718293a4b5c6d7e8f90a"
+        trace_ids: [linux-image-best-practices §A health definition]
+      - name: identity
+        required: false
+        verdict: not-run
+        flaky: false
+        attempt: 1
+        network: {mode: none, config: "-nic none"}
+        phases: []
+        report_lines: []
+        trace_ids: [linux-image-best-practices §D machine identity]
+        not_run_cause:
+          reason: "precondition failed: no machine-UUID transport is established for u-boot firmware"
+          install_hint: {status: unavailable, reason: "no tool closes the gap; it needs a U-Boot UUID transport (#740)"}
+    rollback_observed_versions: {status: unavailable, reason: "rollback scenario not planned: update_model is reflash-only"}
+    identity_boots: {status: unavailable, reason: "identity scenario not-run under u-boot firmware"}
+    serial_logs: [smoke.serial.log]
+  # not-run: a host without the hypervisor; every uncollected field is unavailable.
+  - schema_version: "1.2"
+    run_timestamp: "2026-11-15T11:05:27Z"
+    outcome: {overall_verdict: not-run, exit_status: 2}
+    host: {os: Fedora Linux 43, kernel: 6.17.7-300.fc43.x86_64, architecture: x86_64}
+    artifact:
+      path: build/edge-appliance_1.4.0.raw
+      digest: "sha256:4f2a0c5e8b1d3f6a9c7e2b4d6f8a0c1e3b5d7f9a2c4e6b8d0f1a3c5e7b9d2f4a"
+      expected_version: "1.4.0"
+    next_artifact: {status: unavailable, reason: "next-version artifact not given"}
+    previous_artifact: {status: unavailable, reason: "previous-version artifact not given"}
+    test_payload: {status: unavailable, reason: "untrusted-key test payload not given"}
+    unsigned_payload: {status: unavailable, reason: "unsigned test payload not given"}
+    image_definition_commit: 605926fb3c1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f
+    declaration:
+      path: images/edge-appliance/image-declaration.yaml
+      digest: "sha256:1a3c5e7b9d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c1e3b5d7f9a2c4e6b8d0f1a3c"
+      schema_version: "1.0"
+      image_name: edge-appliance
+    firmware:
+      type: uefi
+      build: {status: unavailable, reason: "no hypervisor found, so no firmware was selected"}
+      secure_boot: {status: unavailable, reason: "nothing booted"}
+    tpm_emulated: {status: unavailable, reason: "nothing booted"}
+    hypervisor:
+      name: {status: unavailable, reason: "qemu-system-x86_64 not found on PATH"}
+      version: {status: unavailable, reason: "no hypervisor found"}
+    machine:
+      architecture: {name: x86_64, source: operator-input}
+      machine_type: {status: unavailable, reason: "no hypervisor found"}
+      cross_architecture: false
+    acceleration: {status: unavailable, reason: "no hypervisor found; acceleration wasn't probed"}
+    timeouts:
+      readiness: {seconds: 300, source: default}
+      update_installation: {seconds: 600, source: default}
+      rollback: {seconds: 1200, source: default}
+      total_margin: {seconds: 120, source: default}
+      update_window: {seconds: 600, source: default}
+      recovery: {seconds: 1200, source: default}
+    scenarios:
+      - name: smoke
+        required: true
+        verdict: not-run
+        flaky: false
+        attempt: 1
+        network: {status: unavailable, reason: "no hypervisor found; no network configuration was built"}
+        phases: []
+        report_lines: []
+        trace_ids: [linux-image-best-practices §A health definition]
+        not_run_cause:
+          reason: "precondition failed: hypervisor qemu-system-x86_64 not found"
+          install_hint: "Install the QEMU system emulator for x86_64 (for example the qemu-system-x86 package)."
+      - name: rollback
+        required: true
+        verdict: not-run
+        flaky: false
+        attempt: 1
+        network: {status: unavailable, reason: "no hypervisor found; no network configuration was built"}
+        phases: []
+        report_lines: []
+        trace_ids: [linux-image-best-practices §F rollback]
+        not_run_cause:
+          reason: "precondition failed: hypervisor not found; next-version artifact not given"
+          install_hint: "Install the QEMU system emulator for x86_64 and pass the next-version artifact with its expected version."
+      - name: downgrade
+        required: true
+        verdict: not-run
+        flaky: false
+        attempt: 1
+        network: {status: unavailable, reason: "no hypervisor found; no network configuration was built"}
+        phases: []
+        report_lines: []
+        trace_ids: [linux-image-best-practices §F downgrade refusal]
+        observed_versions: {status: unavailable, reason: "scenario not-run"}
+        source_requests: {status: unavailable, reason: "scenario not-run"}
+        not_run_cause:
+          reason: "precondition failed: hypervisor not found; previous-version artifact not given"
+          install_hint: "Install the QEMU system emulator for x86_64 and pass the previous-version artifact with its expected version."
+      - name: signature-rejection
+        required: true
+        verdict: not-run
+        flaky: false
+        attempt: 1
+        network: {status: unavailable, reason: "no hypervisor found; no network configuration was built"}
+        phases: []
+        report_lines: []
+        trace_ids: [linux-image-best-practices §F payload signature]
+        signature_variants: {status: unavailable, reason: "scenario not-run"}
+        not_run_cause:
+          reason: "precondition failed: hypervisor not found; untrusted-key test payload not given"
+          install_hint: "Install the QEMU system emulator for x86_64 and pass a test payload signed with a key the image doesn't trust."
+    rollback_observed_versions: {status: unavailable, reason: "rollback scenario not-run"}
+    identity_boots: {status: unavailable, reason: "identity scenario excluded by the operator"}
+    serial_logs: {status: unavailable, reason: "no boot started"}
+  # fail without a health report: the smoke scenario's readiness phase timed out.
+  - schema_version: "1.2"
+    run_timestamp: "2026-11-15T12:20:44Z"
+    outcome: {overall_verdict: fail, exit_status: 1}
+    host: {os: Debian GNU/Linux 13, kernel: 6.12.48-amd64, architecture: x86_64}
+    artifact:
+      path: build/edge-appliance_1.4.0.raw
+      digest: "sha256:4f2a0c5e8b1d3f6a9c7e2b4d6f8a0c1e3b5d7f9a2c4e6b8d0f1a3c5e7b9d2f4a"
+      expected_version: "1.4.0"
+    next_artifact: {status: unavailable, reason: "next-version artifact not given"}
+    previous_artifact: {status: unavailable, reason: "previous-version artifact not given"}
+    test_payload: {status: unavailable, reason: "untrusted-key test payload not given"}
+    unsigned_payload: {status: unavailable, reason: "unsigned test payload not given"}
+    image_definition_commit: 605926fb3c1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f
+    declaration:
+      path: images/edge-appliance/image-declaration.yaml
+      digest: "sha256:1a3c5e7b9d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c1e3b5d7f9a2c4e6b8d0f1a3c"
+      schema_version: "1.1"
+      image_name: edge-appliance
+    firmware: {type: uefi, build: /usr/share/OVMF/OVMF_CODE_4M.fd (edk2 2025.02-8), secure_boot: false}
+    tpm_emulated: false
+    hypervisor: {name: /usr/bin/qemu-system-x86_64, version: "10.0.2"}
+    machine:
+      architecture: {name: x86_64, source: declaration}
+      machine_type: q35
+      cross_architecture: false
+    acceleration: {mode: hardware}
+    timeouts:
+      readiness: {seconds: 300, source: default}
+      update_installation: {seconds: 600, source: default}
+      rollback: {seconds: 1200, source: default}
+      total_margin: {seconds: 120, source: default}
+      update_window: {seconds: 600, source: default}
+      recovery: {seconds: 1200, source: default}
+    scenarios:
+      - name: smoke
+        required: true
+        verdict: fail
+        flaky: false
+        attempt: 1
+        network: {mode: none, config: "-nic none"}
+        phases:
+          - name: readiness
+            timeout_s: 300
+            duration_s: {status: unavailable, reason: "readiness timed out after 300 s without a health report"}
+        report_lines: []
+        trace_ids: [linux-image-best-practices §A health definition]
+    rollback_observed_versions: {status: unavailable, reason: "rollback scenario not planned: next-version artifact not given"}
+    identity_boots: {status: unavailable, reason: "identity scenario excluded by the operator"}
+    serial_logs: [smoke.serial.log]
