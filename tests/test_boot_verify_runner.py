@@ -19,11 +19,17 @@ Three layers:
 """
 from __future__ import annotations
 
+import argparse
 import copy
 import json
 import os
+import signal
+import struct
 import subprocess
 import sys
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -63,7 +69,7 @@ def _spec(**over) -> bv.BootSpec:
 def test_builder_smoke_attaches_artifact_as_snapshot_and_captures_serial():
     argv = bv.build_qemu_command(_spec())
     assert argv[0] == "qemu-system-x86_64"
-    assert "-nodefaults" in argv
+    assert "-nodefaults" in argv and "-no-user-config" in argv
     assert argv[argv.index("-serial") + 1] == "file:/run/smoke.serial.log"
     assert "file=/img/a.raw,format=raw,if=virtio,snapshot=on" in argv
     assert "if=pflash,format=raw,unit=0,readonly=on,file=/fw/CODE.fd" in argv
@@ -90,11 +96,14 @@ def test_builder_switches_uuid_and_comma_escaping():
     raw = {"type": "smbios-type11", "name": "image.update.source"}
     argv = bv.build_qemu_command(_spec(smbios=[bv.switch_value(switch, "1.5.0"), bv.switch_value(raw, "a,b")],
                                        machine_uuid="3f8e2a1c-5b7d-4e9f-a0c2-d4e6f8a1b3c5",
-                                       drive="/img/with,comma.raw"))
+                                       drive="/img/with,comma.raw", qmp_socket="/tmp/a,b/q.sock",
+                                       tpm_socket="/tmp/a,b/swtpm.sock"))
     assert "type=11,value=io.systemd.credential:image.health.fail-version=1.5.0" in argv
     assert "type=11,value=image.update.source=a,,b" in argv
     assert argv[argv.index("-uuid") + 1] == "3f8e2a1c-5b7d-4e9f-a0c2-d4e6f8a1b3c5"
     assert "file=/img/with,,comma.raw,format=raw,if=virtio,snapshot=on" in argv
+    assert argv[argv.index("-qmp") + 1] == "unix:/tmp/a,,b/q.sock,server=on,wait=off"
+    assert argv[argv.index("-chardev") + 1] == "socket,id=chrtpm,path=/tmp/a,,b/swtpm.sock"
 
 
 def test_builder_tpm_device_per_architecture():
@@ -111,7 +120,7 @@ FWD = bv.Forward(host_port=38080)
 
 
 def _argv(network: list[str], *extra: str) -> list[str]:
-    return ["qemu-system-x86_64", "-nodefaults", "-m", "2048", *network, *extra]
+    return ["qemu-system-x86_64", "-nodefaults", "-no-user-config", "-m", "2048", *network, *extra]
 
 
 def test_isolation_accepts_restricted_user_netdev_with_one_guestfwd():
@@ -160,6 +169,12 @@ def test_isolation_requires_nodefaults():
     assert not ok and "-nodefaults" in reason
 
 
+def test_isolation_requires_no_user_config():
+    argv = [a for a in _argv(["-nic", "none"]) if a != "-no-user-config"]
+    ok, reason = bv.assert_network_isolation(argv, None)
+    assert not ok and "-no-user-config" in reason
+
+
 def test_isolation_rejects_device_on_another_netdev():
     argv = _argv(bv.build_network_args(FWD), "-device", "e1000,netdev=n9")
     ok, reason = bv.assert_network_isolation(argv, FWD)
@@ -170,6 +185,38 @@ def test_builder_output_passes_its_own_isolation_assertion():
     for forward in (None, FWD):
         argv = bv.build_qemu_command(_spec(network=bv.build_network_args(forward)))
         assert bv.assert_network_isolation(argv, forward) == (True, "")
+
+
+# --------------------------------------------------------------------------- #
+# Artifact inspection (§B): no qcow2 reference to another file
+# --------------------------------------------------------------------------- #
+def _qcow2(version=3, backing_offset=0, incompatible=0) -> bytes:
+    header = b"QFI\xfb" + struct.pack(">IQI", version, backing_offset, 0)
+    header = header.ljust(72, b"\0")
+    if version >= 3:
+        header += struct.pack(">Q", incompatible)
+    return header.ljust(512, b"\0")
+
+
+@pytest.mark.parametrize("content, expected", [
+    (b"\0" * 512, ("raw", None)),
+    (_qcow2(), ("qcow2", None)),
+    (_qcow2(version=2), ("qcow2", None)),
+    (_qcow2(backing_offset=104), ("qcow2", "backing file")),
+    (_qcow2(version=2, backing_offset=104), ("qcow2", "backing file")),
+    (_qcow2(incompatible=1 << 2), ("qcow2", "external data file")),
+    (_qcow2(incompatible=1 << 0), ("qcow2", None)),  # dirty bit: no reference to another file
+    (_qcow2()[:60], ("qcow2", "truncated")),
+])
+def test_inspect_drive_refuses_a_qcow2_that_refers_to_another_file(tmp_path, content, expected):
+    image = tmp_path / "a.img"
+    image.write_bytes(content)
+    fmt, refusal = bv.inspect_drive(image)
+    assert fmt == expected[0]
+    if expected[1] is None:
+        assert refusal is None
+    else:
+        assert expected[1] in refusal
 
 
 # --------------------------------------------------------------------------- #
@@ -292,10 +339,11 @@ def _reflash_only(doc):
     doc["boot_chain"]["secure_boot"] = "omitted"
 
 
-def _run(tmp_path: Path, path_dir: Path, *extra: str, env_extra=None, artifact=True) -> tuple[int, dict, Path]:
+def _run(tmp_path: Path, path_dir: Path, *extra: str, env_extra=None, artifact=True,
+         image_bytes=b"\0" * 4096) -> tuple[int, dict, Path]:
     out = tmp_path / "run"
     image = tmp_path / "edge-appliance_1.4.0.raw"
-    image.write_bytes(b"\0" * 4096)
+    image.write_bytes(image_bytes)
     args = [sys.executable, str(RUNNER), "--out", str(out), *extra]
     if artifact:
         args += ["--artifact", str(image), "--expected-version", "1.4.0", "--commit", COMMIT]
@@ -390,15 +438,22 @@ if "-version" in argv:
     print("QEMU emulator version 0.0.0 (fake harness double, boots nothing)")
     sys.exit(0)
 if "-help" in argv:
-    print("-uuid %08x-%04x-%04x-%04x-%012x\n                specify machine UUID")
+    if not os.environ.get("FAKE_NO_UUID"):
+        print("-uuid %08x-%04x-%04x-%04x-%012x\n                specify machine UUID")
+    print("-name string1[,process=string2]\n                set the name of the guest")
     sys.exit(0)
 def opt(name):
     return [argv[i + 1] for i in range(len(argv) - 1) if argv[i] == name]
 serial = opt("-serial")[0][len("file:"):]
 smbios = " ".join(opt("-smbios"))
 uid = (opt("-uuid") or ["none"])[0]
+if os.environ.get("FAKE_PIDDIR"):
+    open(os.path.join(os.environ["FAKE_PIDDIR"], str(os.getpid())), "w").close()
 mid = os.environ.get("FAKE_MID") or hashlib.md5(uid.encode()).hexdigest()
+mid = os.environ.get("FAKE_MID_" + os.path.basename(serial).split(".")[0], mid)  # per boot, e.g. identity-1
 mode = os.environ.get("FAKE_MODE", "healthy")
+if mode == "crash":  # exits before any console output
+    sys.exit(3)
 def rep(status, version):
     return ("\x1b[0mIMAGE-HEALTH-REPORT status=%s image_id=edge-appliance image_version=%s "
             "system_state=running failed_units=- machine_id_app=%s\r\n" % (status, version, mid))
@@ -416,6 +471,7 @@ if "image.update.source=" in smbios:
         lines.append(rep("healthy", "1.4.0"))
     else:
         lines.append(rep("healthy", "1.5.0"))
+        lines += [rep("healthy", "1.5.0")] * int(os.environ.get("FAKE_EXTRA_N1", "0"))
 elif mode == "healthy":
     lines.append(rep("healthy", "1.4.0"))
 elif mode == "unhealthy":
@@ -439,7 +495,7 @@ def qmp_server(srv):
             stream.flush()
             if cmd == "quit":
                 os._exit(0)
-            if cmd == "system_reset":
+            if cmd == "system_reset" and not os.environ.get("FAKE_RESET_SILENT"):
                 emit([rep("healthy", "1.5.0")])
         conn.close()
 qmp_opt = opt("-qmp")
@@ -600,3 +656,268 @@ def test_harness_readiness_timeout_is_fail_with_a_valid_protocol_and_no_report_l
     assert smoke["network"] == {"mode": "none", "config": "-nic none"}
     (readiness,) = smoke["phases"]
     assert readiness["name"] == "readiness" and readiness["duration_s"]["status"] == "unavailable"
+
+
+def test_harness_identity_one_malformed_machine_id_is_a_malformed_report_not_a_pass(tmp_path, fake_bin):
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), *_fw(tmp_path),
+                              env_extra={"FAKE_MID_identity-1": "NOT-A-MACHINE-ID"})
+    assert summary["scenarios"] == {"smoke": "pass", "identity": "fail"} and code == 1
+    assert any("boot 1: malformed report: machine_id_app='NOT-A-MACHINE-ID'" in n
+               for n in summary["notes"]["identity"])
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    first, second = protocol["identity_boots"]
+    assert first["machine_id_app"]["status"] == "unavailable"
+    assert len(second["machine_id_app"]) == 32
+
+
+def test_harness_identity_two_malformed_machine_ids_are_not_a_fixed_identity(tmp_path, fake_bin):
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), *_fw(tmp_path),
+                              env_extra={"FAKE_MID": "0F1E2D3C4B5A69788796A5B4C3D2E1F0"})
+    assert summary["scenarios"]["identity"] == "fail" and code == 1
+    notes = summary["notes"]["identity"]
+    assert sum("malformed report: machine_id_app" in n for n in notes) == 2
+    assert not any("same machine_id_app" in n for n in notes)
+    assert _validate(out / "protocol.json") == 0
+
+
+def test_harness_identity_machine_id_dash_is_not_run(tmp_path, fake_bin):
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), *_fw(tmp_path),
+                              env_extra={"FAKE_MID": "-"})
+    assert summary["scenarios"] == {"smoke": "pass", "identity": "not-run"} and code == 0
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    assert "machine_id_app=-" in protocol["scenarios"][1]["not_run_cause"]["reason"]
+
+
+def test_harness_qcow2_artifact_with_a_backing_file_is_refused_before_boot(tmp_path, fake_bin):
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), *_fw(tmp_path),
+                              image_bytes=_qcow2(backing_offset=104))
+    assert code == 2 and set(summary["scenarios"].values()) == {"not-run"}
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    assert all("artifact refused: the qcow2 image names a backing file" in s["not_run_cause"]["reason"]
+               for s in protocol["scenarios"])
+    assert not list(out.glob("*.hypervisor.log"))
+
+
+def test_harness_clean_qcow2_artifact_is_attached_as_qcow2(tmp_path, fake_bin):
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), "--scenarios", "smoke",
+                              *_fw(tmp_path), image_bytes=_qcow2())
+    assert code == 0, summary
+
+
+def test_harness_next_artifact_with_an_external_data_file_is_refused(tmp_path, fake_bin):
+    decl = _write_declaration(tmp_path)
+    extra = _next_artifact(tmp_path)
+    Path(extra[1]).write_bytes(_qcow2(incompatible=1 << 2))
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), "--scenarios", "smoke,rollback",
+                              *_fw(tmp_path), *extra)
+    assert summary["scenarios"] == {"smoke": "pass", "rollback": "not-run"} and code == 2
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    assert "next artifact refused: the qcow2 image uses an external data file" in \
+        protocol["scenarios"][1]["not_run_cause"]["reason"]
+    assert not (out / "rollback.hypervisor.log").exists()
+
+
+@pytest.mark.parametrize("sig", [signal.SIGTERM, signal.SIGHUP])
+def test_harness_signal_stops_the_hypervisor_and_writes_a_not_run_protocol(tmp_path, fake_bin, sig):
+    piddir = tmp_path / "pids"
+    piddir.mkdir()
+    decl = _write_declaration(tmp_path, _reflash_only)
+    image = tmp_path / "a.raw"
+    image.write_bytes(b"\0" * 4096)
+    out = tmp_path / "run"
+    env = {**os.environ, "PATH": str(fake_bin), "PYTHONDONTWRITEBYTECODE": "1", "FAKE_MODE": "silent",
+           "FAKE_PIDDIR": str(piddir)}
+    proc = subprocess.Popen([sys.executable, str(RUNNER), "--out", str(out), "--declaration", str(decl),
+                             "--artifact", str(image), "--expected-version", "1.4.0", "--commit", COMMIT,
+                             "--scenarios", "smoke", *_fw(tmp_path)],
+                            env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    pids: list[int] = []
+    try:
+        deadline = time.monotonic() + 60
+        while not pids:
+            assert proc.poll() is None and time.monotonic() < deadline, "the fake hypervisor never started"
+            time.sleep(0.05)
+            pids = [int(p.name) for p in piddir.iterdir()]
+        proc.send_signal(sig)
+        stdout, _ = proc.communicate(timeout=60)
+        survivors = []
+        for pid in pids:
+            try:
+                os.kill(pid, 0)
+                survivors.append(pid)
+            except ProcessLookupError:
+                pass
+        assert survivors == []
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
+        for pid in pids:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+    assert proc.returncode == 2 and json.loads(stdout)["exit_status"] == 2
+    assert _validate(out / "protocol.json") == 0
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    (smoke,) = protocol["scenarios"]
+    assert smoke["verdict"] == "not-run"
+    assert f"run interrupted by {signal.Signals(sig).name}" in smoke["not_run_cause"]["reason"]
+
+
+def test_reused_out_is_refused_and_keeps_the_earlier_protocol(tmp_path):
+    empty = tmp_path / "bin"
+    empty.mkdir()
+    decl = _write_declaration(tmp_path)
+    _, _, out = _run(tmp_path, empty, "--declaration", str(decl))
+    before = (out / "protocol.json").read_bytes()
+    proc = subprocess.run([sys.executable, str(RUNNER), "--out", str(out), "--declaration", str(decl)],
+                          capture_output=True, text=True, timeout=120, check=False,
+                          env={**os.environ, "PATH": str(empty), "PYTHONDONTWRITEBYTECODE": "1"})
+    assert proc.returncode == 2 and proc.stdout == ""
+    assert "isn't empty" in proc.stderr
+    assert (out / "protocol.json").read_bytes() == before
+
+
+def test_harness_positive_ignores_reports_printed_before_the_reset(tmp_path, fake_bin):
+    """N+1 prints its report twice before the reset, and the reset prints nothing:
+    the buffered second report must not count as the reset boot's report."""
+    decl = _write_declaration(tmp_path)
+    code, summary, _ = _run(tmp_path, fake_bin, "--declaration", str(decl), "--scenarios", "smoke,positive",
+                            "--firmware-code", str(tmp_path / "CODE.fd"), "--firmware-vars",
+                            str(tmp_path / "VARS.fd"), "--timeout-readiness", "2", *_next_artifact(tmp_path),
+                            env_extra={"FAKE_EXTRA_N1": "1", "FAKE_RESET_SILENT": "1"})
+    assert summary["scenarios"]["positive"] == "fail"
+    assert any("no report after the reset" in n for n in summary["notes"]["positive"])
+
+
+def _serving_run(next_artifact: Path, digest: str) -> bv.Run:
+    run = bv.Run.__new__(bv.Run)
+    run.args = argparse.Namespace(next_artifact=next_artifact)
+    run.next_digest = digest
+    return run
+
+
+def test_update_source_serves_exactly_the_next_artifact(tmp_path):
+    build = tmp_path / "build"
+    build.mkdir()
+    nxt = build / "app_1.5.0.raw"
+    nxt.write_bytes(b"N+1 payload")
+    (build / "other.raw").write_bytes(b"other")
+    (tmp_path / "secret.txt").write_text("HOST-SECRET", encoding="utf-8")
+    (build / "link").symlink_to(tmp_path / "secret.txt")
+    forward, server = _serving_run(nxt, bv.sha256_file(nxt))._serve_next()
+    try:
+        base = f"http://127.0.0.1:{forward.host_port}"
+        with urllib.request.urlopen(base + "/app_1.5.0.raw", timeout=10) as reply:
+            assert reply.read() == b"N+1 payload"
+        for path in ("/", "/link", "/other.raw", "/build/", "/app_1.5.0.raw/"):
+            with pytest.raises(urllib.error.HTTPError) as err:
+                urllib.request.urlopen(base + path, timeout=10)
+            assert err.value.code == 404
+    finally:
+        server.shutdown()
+        server.server_close()
+        os.close(server.served_fd)
+
+
+def test_update_source_refuses_a_symlink_and_a_changed_artifact(tmp_path):
+    nxt = tmp_path / "app_1.5.0.raw"
+    nxt.write_bytes(b"N+1 payload")
+    link = tmp_path / "link.raw"
+    link.symlink_to(nxt)
+    with pytest.raises(bv.NotRun, match="without following a symlink"):
+        _serving_run(link, bv.sha256_file(nxt))._serve_next()
+    with pytest.raises(bv.NotRun, match="changed after its digest was recorded"):
+        _serving_run(nxt, "sha256:" + "0" * 64)._serve_next()
+
+
+def test_invalid_protocol_of_a_pass_never_exits_0(tmp_path, capsys):
+    protocol = {"schema_version": "1.1", "outcome": {"overall_verdict": "pass", "exit_status": 0},
+                "scenarios": [{"name": "smoke", "verdict": "pass"}]}
+    assert bv.finalise(protocol, tmp_path, {}) == 2
+    assert (tmp_path / "protocol.invalid.json").exists() and not (tmp_path / "protocol.json").exists()
+    assert json.loads(capsys.readouterr().out)["exit_status"] == 2
+
+
+def _main(tmp_path: Path, monkeypatch, path_dir: Path, *extra: str) -> tuple[int, dict, Path]:
+    """Run the runner in this process, so a test can monkeypatch it."""
+    monkeypatch.setenv("PATH", str(path_dir))
+    image = tmp_path / "edge-appliance_1.4.0.raw"
+    image.write_bytes(b"\0" * 4096)
+    out = tmp_path / "run"
+    code = bv.main(["--out", str(out), "--artifact", str(image), "--expected-version", "1.4.0",
+                    "--commit", COMMIT, *extra])
+    return code, json.loads((out / "protocol.json").read_text(encoding="utf-8")), out
+
+
+def test_harness_emulation_factor_is_at_least_5_without_kvm(tmp_path, fake_bin, monkeypatch, capsys):
+    monkeypatch.setattr(bv, "kvm_usable", lambda arch, host: False)
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, protocol, _ = _main(tmp_path, monkeypatch, fake_bin, "--declaration", str(decl), "--scenarios", "smoke",
+                              "--emulation-factor", "1", *_fw(tmp_path))
+    assert code == 0
+    assert protocol["acceleration"]["mode"] == "emulation"
+    assert protocol["acceleration"]["timeout_factor"] == 5
+    assert protocol["timeouts"]["readiness"]["seconds"] == 15 * 5
+
+
+def test_harness_rejected_isolation_never_launches_the_hypervisor(tmp_path, fake_bin, monkeypatch, capsys):
+    monkeypatch.setattr(bv, "build_network_args", lambda forward: ["-nic", "user"])
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, protocol, out = _main(tmp_path, monkeypatch, fake_bin, "--declaration", str(decl), "--scenarios",
+                                "smoke", *_fw(tmp_path))
+    assert code == 2
+    (smoke,) = protocol["scenarios"]
+    assert smoke["verdict"] == "not-run"
+    assert "network isolation rejected before boot" in smoke["not_run_cause"]["reason"]
+    assert protocol["serial_logs"]["status"] == "unavailable"
+    assert not list(out.glob("*.hypervisor.log"))
+
+
+def test_harness_hypervisor_exit_without_console_output_is_not_run(tmp_path, fake_bin):
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), "--scenarios", "smoke",
+                              *_fw(tmp_path), env_extra={"FAKE_MODE": "crash"})
+    assert code == 2 and summary["scenarios"] == {"smoke": "not-run"}
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    assert "hypervisor exited with status 3 before any console output" in \
+        protocol["scenarios"][0]["not_run_cause"]["reason"]
+
+
+def test_harness_hypervisor_without_uuid_makes_identity_not_run(tmp_path, fake_bin):
+    decl = _write_declaration(tmp_path, _reflash_only)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), *_fw(tmp_path),
+                              env_extra={"FAKE_NO_UUID": "1"})
+    assert summary["scenarios"] == {"smoke": "pass", "identity": "not-run"} and code == 0
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    assert "can't assign a machine UUID" in protocol["scenarios"][1]["not_run_cause"]["reason"]
+    assert protocol["serial_logs"] == ["smoke.serial.log"]
+
+
+def test_boot_stop_kills_a_hypervisor_that_ignores_quit_and_sigterm(tmp_path, monkeypatch):
+    monkeypatch.setattr(bv, "STOP_GRACE_S", 0.2)
+    monkeypatch.setattr(bv, "STOP_TERM_S", 0.2)
+    log = tmp_path / "hypervisor.log"
+    script = ("import signal, sys, time\n"
+              "signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+              "print('ready', flush=True)\n"
+              "time.sleep(120)\n")
+    boot = bv.Boot([sys.executable, "-c", script], tmp_path / "serial.log", log, None)
+    boot.start()
+    try:
+        deadline = time.monotonic() + 30
+        while "ready" not in log.read_text(encoding="utf-8"):
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+        boot.stop()
+        assert boot.proc.poll() == -signal.SIGKILL
+    finally:
+        if boot.proc.poll() is None:
+            boot.proc.kill()
+            boot.proc.wait()

@@ -33,7 +33,6 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import datetime as dt
-import functools
 import hashlib
 import http.server
 import json
@@ -41,12 +40,14 @@ import os
 import platform
 import re
 import shutil
+import signal
 import socket
 import subprocess
 import sys
 import tempfile
 import threading
 import time
+import urllib.parse
 import uuid
 from pathlib import Path
 
@@ -93,6 +94,13 @@ MIN_EMULATION_FACTOR = 5.0
 EXIT_STATUS = {"pass": 0, "fail": 1, "not-run": 2}
 VERDICT_RANK = {"pass": 0, "not-run": 1, "fail": 2}
 COMMIT_RE = re.compile(r"^([0-9a-f]{40}|[0-9a-f]{64})$")
+MACHINE_ID_RE = re.compile(r"[0-9a-f]{32}|-")
+QCOW2_MAGIC = b"QFI\xfb"
+QCOW2_EXTERNAL_DATA_FILE = 1 << 2  # incompatible-feature bit, header version 3
+STOP_GRACE_S = 10.0  # after QMP quit, before SIGTERM to the process group
+STOP_TERM_S = 5.0  # after SIGTERM, before SIGKILL
+INTERRUPT_SIGNALS = (signal.SIGTERM, signal.SIGHUP)
+_received_signals: list[int] = []  # filled by the signal handler, read at the polling points
 UBOOT_SWITCH_REASON = ("no switch transport is established for u-boot firmware "
                        "(spec/project/image-boot-verification/ §I, #740)")
 UBOOT_UUID_REASON = ("no machine-UUID transport is established for u-boot firmware "
@@ -233,13 +241,16 @@ def assert_network_isolation(argv: list[str], forward: Forward | None) -> tuple[
     Without an update source: ``-nic none`` and no other network option. With one:
     exactly one ``-netdev user`` with ``restrict=on`` and exactly one ``guestfwd``
     equal to the declared endpoint, nothing else. ``-nodefaults`` is required in
-    both cases so QEMU can't add a default network device.
+    both cases so QEMU can't add a default network device, and ``-no-user-config``
+    so it can't read a host configuration file that adds one.
     """
     for opaque in ("-readconfig", "-set"):
         if opaque in argv:
             return False, f"{opaque} hides configuration the assertion can't check"
     if "-nodefaults" not in argv:
         return False, "-nodefaults missing, so the hypervisor may add a default network device"
+    if "-no-user-config" not in argv:
+        return False, "-no-user-config missing, so the hypervisor may read a host configuration file"
     nics, nets, netdevs = (_option_values(argv, o) for o in ("-nic", "-net", "-netdev"))
     attached = [d for d in _option_values(argv, "-device") if "netdev=" in d]
     if nets:
@@ -323,16 +334,21 @@ class BootSpec:
 
 
 def build_qemu_command(spec: BootSpec) -> list[str]:
-    """The QEMU argv for one boot. The artifact is attached with snapshot=on (§B)."""
+    """The QEMU argv for one boot. The artifact is attached with snapshot=on (§B).
+
+    ``-nodefaults`` keeps QEMU from adding a default network device, and
+    ``-no-user-config`` from reading a host configuration file the isolation
+    assertion can't see.
+    """
     machine = spec.machine_type
     x86_secure = spec.secure_boot and spec.arch == "x86_64" and spec.firmware_type == "uefi"
     if x86_secure:
         machine += ",smm=on"
-    argv = [spec.binary, "-nodefaults", "-machine", machine, "-accel", spec.accel,
+    argv = [spec.binary, "-nodefaults", "-no-user-config", "-machine", machine, "-accel", spec.accel,
             "-cpu", "host" if spec.accel == "kvm" else "max", "-m", str(spec.memory_mb),
             "-display", "none", "-serial", f"file:{spec.serial_log}"]
     if spec.qmp_socket:
-        argv += ["-qmp", f"unix:{spec.qmp_socket},server=on,wait=off"]
+        argv += ["-qmp", f"unix:{_qemu_escape(spec.qmp_socket)},server=on,wait=off"]
     if spec.firmware_type == "uefi":
         argv += ["-drive", f"if=pflash,format=raw,unit=0,readonly=on,file={_qemu_escape(spec.firmware_code)}"]
         if spec.firmware_vars:
@@ -349,7 +365,7 @@ def build_qemu_command(spec: BootSpec) -> list[str]:
         argv += ["-uuid", spec.machine_uuid]
     if spec.tpm_socket:
         device = "tpm-tis" if spec.arch == "x86_64" else "tpm-tis-device"
-        argv += ["-chardev", f"socket,id=chrtpm,path={spec.tpm_socket}",
+        argv += ["-chardev", f"socket,id=chrtpm,path={_qemu_escape(spec.tpm_socket)}",
                  "-tpmdev", "emulator,id=tpm0,chardev=chrtpm", "-device", f"{device},tpmdev=tpm0"]
     return argv
 
@@ -450,6 +466,10 @@ def host_os() -> str | dict:
     return platform.system() or unavailable("the host operating system couldn't be read")
 
 
+def kvm_usable(arch: str, h_arch: str) -> bool:
+    return arch == h_arch and os.access("/dev/kvm", os.R_OK | os.W_OK)
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -458,9 +478,27 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
-def drive_format(path: Path) -> str:
+def inspect_drive(path: Path) -> tuple[str, str | None]:
+    """(drive format, refusal) for an artifact (§B).
+
+    A qcow2 image can name a backing file (header bytes 8-15, a big-endian
+    offset that is 0 when there is none) or, from header version 3 on, an
+    external data file (incompatible-feature bit 2 at offset 72). Either makes
+    the hypervisor open a host file or fetch a URL the isolation doesn't cover,
+    so such an image is refused, never attached.
+    """
     with path.open("rb") as handle:
-        return "qcow2" if handle.read(4) == b"QFI\xfb" else "raw"
+        header = handle.read(80)
+    if header[:4] != QCOW2_MAGIC:
+        return "raw", None
+    version = int.from_bytes(header[4:8], "big")
+    if len(header) < (80 if version >= 3 else 72):
+        return "qcow2", "the qcow2 header is truncated"
+    if int.from_bytes(header[8:16], "big") != 0:
+        return "qcow2", "the qcow2 image names a backing file"
+    if version >= 3 and int.from_bytes(header[72:80], "big") & QCOW2_EXTERNAL_DATA_FILE:
+        return "qcow2", "the qcow2 image uses an external data file"
+    return "qcow2", None
 
 
 def run_validator(path: Path, kind: str = "declaration") -> tuple[int, dict]:
@@ -514,6 +552,21 @@ class NotRun(Exception):
         self.hint = hint
 
 
+def interrupt_reason() -> str:
+    return f"run interrupted by {signal.Signals(_received_signals[0]).name}; nothing was verified after it"
+
+
+class Interrupted(NotRun):
+    """SIGTERM or SIGHUP arrived; raised at a polling point so every boot is stopped."""
+
+    def __init__(self):
+        super().__init__(interrupt_reason())
+
+
+def _on_signal(signum, _frame) -> None:
+    _received_signals.append(signum)
+
+
 class SerialReader:
     """Reads a serial log as it grows and yields only health reports."""
 
@@ -544,8 +597,16 @@ class SerialReader:
                 self._feed(self.partial)
             self.partial = b""
 
+    def discard(self) -> None:
+        """Drop everything read or buffered so far; later reports come from later output."""
+        self.poll()
+        self.pending.clear()
+        self.partial = b""
+
     def next_report(self, deadline: float, proc: subprocess.Popen) -> Report | None:
         while True:
+            if _received_signals:
+                raise Interrupted()
             self.poll()
             if self.pending:
                 return self.pending.pop(0)
@@ -571,9 +632,11 @@ class Boot:
         self.extra: list[subprocess.Popen] = []
 
     def start(self) -> None:
+        # A session of its own, so it is stopped through its process group, and a
+        # signal to the runner's group reaches only the runner, which then stops it.
         with self.hypervisor_log.open("wb") as log:
             self.proc = subprocess.Popen(self.argv, stdin=subprocess.DEVNULL, stdout=log,
-                                         stderr=subprocess.STDOUT)
+                                         stderr=subprocess.STDOUT, start_new_session=True)
 
     def next_report(self, deadline: float) -> Report | None:
         return self.serial.next_report(deadline, self.proc)
@@ -584,17 +647,49 @@ class Boot:
             qmp(self.qmp_socket, "quit")
         for proc in procs:
             try:
-                proc.wait(timeout=10)
+                proc.wait(timeout=STOP_GRACE_S)
             except subprocess.TimeoutExpired:
-                proc.terminate()
+                _signal_group(proc, signal.SIGTERM)
                 try:
-                    proc.wait(timeout=5)
+                    proc.wait(timeout=STOP_TERM_S)
                 except subprocess.TimeoutExpired:
-                    proc.kill()
+                    _signal_group(proc, signal.SIGKILL)
                     proc.wait()
 
 
-class _QuietHandler(http.server.SimpleHTTPRequestHandler):
+def _signal_group(proc: subprocess.Popen, sig: int) -> None:
+    try:
+        os.killpg(proc.pid, sig)
+    except ProcessLookupError:
+        pass
+
+
+class _ArtifactHandler(http.server.BaseHTTPRequestHandler):
+    """Serves exactly one file at one fixed path; everything else is 404, with no listing."""
+
+    def _serve(self, body: bool) -> None:
+        server = self.server
+        if urllib.parse.urlsplit(self.path).path != server.served_path:
+            self.send_error(404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Length", str(server.served_size))
+        self.end_headers()
+        offset = 0
+        while body and offset < server.served_size:
+            chunk = os.pread(server.served_fd, 1 << 20, offset)
+            if not chunk:
+                break
+            self.wfile.write(chunk)
+            offset += len(chunk)
+
+    def do_GET(self):  # noqa: N802 - name of the base-class hook
+        self._serve(True)
+
+    def do_HEAD(self):  # noqa: N802 - name of the base-class hook
+        self._serve(False)
+
     def log_message(self, format, *args):  # noqa: A002 - signature of the base class
         self.server.request_log.append(format % args)
 
@@ -622,6 +717,7 @@ class Run:
         self.arch = self.hypervisor = self.machine_type = self.accel = None
         self.fw_type = self.fw_code = self.fw_vars = self.qemu_hint = None
         self.artifact_format = "raw"
+        self.next_digest: str | None = None
         self.secure = self.need_tpm = False
         self.t: dict = {}
 
@@ -641,15 +737,18 @@ class Run:
             self._cause("missing input: --declaration")
             return record
         record["path"] = str(path)
-        try:
-            record["digest"] = sha256_file(path)
+        try:  # read once: the digest, the validated copy, and the loaded document are the same bytes
+            content = path.read_bytes()
+            validated = self.sock_dir / "declaration.yaml"
+            validated.write_bytes(content)
+            record["digest"] = "sha256:" + hashlib.sha256(content).hexdigest()
         except OSError as exc:
             reason = f"declaration unreadable: {exc}"
             self._cause(reason)
             record.update(digest=unavailable(reason), schema_version=unavailable(reason),
                           image_name=unavailable(reason))
             return record
-        code, payload = run_validator(path)
+        code, payload = run_validator(validated)
         violations = payload.get("violations", [])
         hard = [v for v in violations if not v.get("rule", "").startswith("conditional.")]
         if code == 2 or payload.get("result") == "not-decidable":
@@ -661,7 +760,7 @@ class Run:
         else:
             import yaml  # the validator accepted the file, so PyYAML is installed and safe here
 
-            self.decl = yaml.safe_load(path.read_text(encoding="utf-8"))
+            self.decl = yaml.safe_load(content.decode("utf-8"))
             rules = {v.get("rule") for v in violations}
             if "conditional.field-updated-requires-update" in rules:
                 self._cause("declaration lacks the update block despite update_model field-updated",
@@ -761,7 +860,8 @@ class Run:
                 extra.append(subprocess.Popen(
                     ["swtpm", "socket", "--tpm2", "--tpmstate", f"dir={state}",
                      "--ctrl", f"type=unixio,path={tpm_socket}", "--terminate"],
-                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
+                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    start_new_session=True))
             except OSError as exc:
                 raise NotRun(f"TPM emulator couldn't start: {exc}", "Install swtpm.") from exc
         qmp_socket = str(self.sock_dir / f"{name}.qmp")
@@ -832,8 +932,12 @@ class Run:
             report, issues = self._boot_to_report(entry, f"identity-{i}", phase, self.args.expected_version,
                                                   machine_uuid=machine_uuid)
             mid = report.get("machine_id_app") if report and not report.error else None
-            boots.append({"machine_uuid": machine_uuid, "machine_id_app": mid if mid and re.fullmatch(
-                r"[0-9a-f]{32}|-", mid) else unavailable("no well-formed machine_id_app in this boot's report")})
+            if mid is not None and not MACHINE_ID_RE.fullmatch(mid):
+                issues = [*issues, f"malformed report: machine_id_app={mid!r} is neither 32 lowercase hex "
+                                   "characters nor -"]
+                mid = None
+            boots.append({"machine_uuid": machine_uuid, "machine_id_app": mid or unavailable(
+                "no well-formed machine_id_app in this boot's report")})
             problems += [f"boot {i}: {p}" for p in issues]
         self.identity_boots = boots
         if problems:
@@ -846,12 +950,34 @@ class Run:
         return "pass", []
 
     def _serve_next(self) -> tuple[Forward, http.server.ThreadingHTTPServer]:
-        directory = self.args.update_source_dir or self.args.next_artifact.parent
+        """Serve the one next-version artifact whose digest the protocol records (§B).
+
+        The file is opened once without following a symlink, its digest is checked
+        against the recorded one, and every request reads from that open file.
+        """
+        path = self.args.next_artifact
         try:
-            server = http.server.ThreadingHTTPServer(
-                ("127.0.0.1", 0), functools.partial(_QuietHandler, directory=str(directory)))
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
         except OSError as exc:
+            raise NotRun(f"next artifact not served: {path} can't be opened without following a symlink "
+                         f"({exc})") from exc
+        try:
+            digest = hashlib.sha256()
+            size = 0
+            while chunk := os.pread(fd, 1 << 20, size):
+                digest.update(chunk)
+                size += len(chunk)
+            if "sha256:" + digest.hexdigest() != self.next_digest:
+                raise NotRun("next artifact changed after its digest was recorded; not served")
+            server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), _ArtifactHandler)
+        except OSError as exc:
+            os.close(fd)
             raise NotRun(f"local update source couldn't start: {exc}") from exc
+        except NotRun:
+            os.close(fd)
+            raise
+        server.served_path = "/" + urllib.parse.quote(path.name)
+        server.served_fd, server.served_size = fd, size
         server.request_log = []
         threading.Thread(target=server.serve_forever, daemon=True).start()
         return Forward(host_port=server.server_address[1]), server
@@ -873,6 +999,7 @@ class Run:
         finally:
             server.shutdown()
             server.server_close()
+            os.close(server.served_fd)
             (self.out / f"{name}.update-source.log").write_text("\n".join(server.request_log) + "\n",
                                                                  encoding="utf-8")
             if failure:
@@ -908,6 +1035,7 @@ class Run:
             return "fail", [f"first report after the update: {p}" for p in problems]
         if failure:
             return self._await_rollback(boot, entry, n, n1, max_attempts, versions, total)
+        boot.serial.discard()  # only a report printed after the reset counts for the reset boot
         if not qmp(boot.qmp_socket, "system_reset"):
             raise NotRun("the hypervisor didn't acknowledge the VM reset (QMP system_reset)")
         report = self._await(boot, entry, "reset-readiness", self.t["readiness"], total)
@@ -1020,7 +1148,7 @@ class Run:
                 hyp["name"] = self.hypervisor
                 hyp["version"] = self._qemu_version()
                 machine_type = self.machine_type = MACHINE_TYPE[self.arch]
-                kvm = self.arch == h_arch and os.access("/dev/kvm", os.R_OK | os.W_OK)
+                kvm = kvm_usable(self.arch, h_arch)
                 self.accel = "kvm" if kvm else "tcg"
                 if kvm:
                     acceleration = {"mode": "hardware"}
@@ -1041,12 +1169,16 @@ class Run:
             if self.need_tpm and shutil.which("swtpm") is None:
                 self._cause("precondition failed: TPM emulator swtpm not found (measured_boot implemented)",
                             "Install swtpm.")
-        if args.artifact is not None and isinstance(artifact, dict) and "digest" in artifact:
-            self.artifact_format = drive_format(args.artifact)
-        if field_updated and args.next_artifact is not None and args.update_source_dir is not None \
-                and not args.update_source_dir.is_dir():
-            self._cause(f"update source directory {args.update_source_dir} not found",
-                        scenarios=("rollback", "positive"))
+        if "digest" in artifact:
+            self.artifact_format, refusal = inspect_drive(args.artifact)
+            if refusal:
+                self._cause(f"artifact refused: {refusal}, which could reach a host file or URL (§B)")
+        if field_updated and "digest" in next_artifact:
+            self.next_digest = next_artifact["digest"]
+            _, refusal = inspect_drive(args.next_artifact)
+            if refusal:
+                self._cause(f"next artifact refused: {refusal}, which could reach a host file or URL (§B)",
+                            scenarios=("rollback", "positive"))
 
         update = decl.get("update") or {}
         timeouts, self.t = compute_timeouts(
@@ -1067,6 +1199,8 @@ class Run:
             causes = list(self.global_causes) + self.causes[name]
             if excluded:
                 causes.insert(0, ("excluded by the operator", None))
+            if _received_signals:
+                causes.append((interrupt_reason(), None))
             if causes:
                 mark_not_run(entry, causes)
             else:
@@ -1133,14 +1267,12 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--commit", help="full commit id of the image definition the artifact was built from")
     p.add_argument("--next-artifact", type=Path, help="next-version artifact (N+1) for rollback/positive")
     p.add_argument("--next-expected-version", help="image_version N+1 must report")
-    p.add_argument("--update-source-dir", type=Path,
-                   help="directory the local update source serves (default: the next artifact's directory)")
     p.add_argument("--arch", choices=sorted(QEMU_TARGET), help="guest architecture (§A)")
     p.add_argument("--scenarios", type=lambda s: [x.strip() for x in s.split(",") if x.strip()],
                    default=list(SCENARIOS), help="comma-separated subset of smoke,rollback,positive,identity")
     p.add_argument("--trace-id", action="append", default=[], metavar="SCENARIO=ID",
                    help="requirement or TC-ID per scenario (§E); repeatable")
-    p.add_argument("--out", type=Path, help="run directory (default .image-boot-verify/<YYYY-MM-DD-HHMM>/)")
+    p.add_argument("--out", type=Path, help="new or empty run directory (default .image-boot-verify/<YYYY-MM-DD-HHMM>/)")
     p.add_argument("--firmware-code", help="firmware code image (UEFI) or U-Boot build (-bios)")
     p.add_argument("--firmware-vars", help="UEFI variables template; copied per boot")
     p.add_argument("--memory", type=int, default=2048, help="guest memory in MiB (default 2048)")
@@ -1162,6 +1294,9 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
 
 def _run_dir(args: argparse.Namespace) -> Path:
     if args.out is not None:
+        if args.out.is_dir() and any(args.out.iterdir()):
+            raise FileExistsError(f"--out {args.out} isn't empty; pass a new or empty directory so no earlier "
+                                  "protocol is taken for this run's")
         args.out.mkdir(parents=True, exist_ok=True)
         return args.out
     base = Path(".image-boot-verify") / dt.datetime.now().strftime("%Y-%m-%d-%H%M")
@@ -1207,14 +1342,22 @@ def main(argv: list[str] | None = None) -> int:
     try:
         out = _run_dir(args)
     except OSError as exc:
-        print(f"ERROR: run directory not writable: {exc}; nothing verified", file=sys.stderr)
+        print(f"ERROR: run directory unusable: {exc}; nothing verified", file=sys.stderr)
         return EXIT_STATUS["not-run"]
-    run = Run(args, out)
+    # SIGTERM/SIGHUP only record the signal; the run raises at its next polling
+    # point, stops the boot, and still writes the protocol with the rest not-run.
+    _received_signals.clear()
+    previous = {sig: signal.signal(sig, _on_signal) for sig in INTERRUPT_SIGNALS}
     try:
-        protocol = run.execute()
+        run = Run(args, out)
+        try:
+            protocol = run.execute()
+        finally:
+            shutil.rmtree(run.sock_dir, ignore_errors=True)
+        return finalise(protocol, out, run.notes)
     finally:
-        shutil.rmtree(run.sock_dir, ignore_errors=True)
-    return finalise(protocol, out, run.notes)
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 
 if __name__ == "__main__":

@@ -47,6 +47,7 @@ The content comes from a research pass on 2026-11-14 across the systemd document
 
 - The image under test, the boot loader, and the kernel **MUST** be the real build artifacts, booted unmodified. A run **MUST NOT** rebuild, patch, or re-sign the image to make it boot
 - A run **MUST** boot from a disposable copy or a copy-on-write overlay of the image, so the artifact under test is never modified by its own boot
+- A run **MUST** refuse an artifact that refers to another file, such as a qcow2 image with a backing file or an external data file, and record the affected scenarios `not-run`, because the reference would let the hypervisor read a host file or fetch a URL outside this isolation
 - Each arrangement is classified in the vocabulary of `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" and held to its §"Arrangement fidelity":
   - **Firmware**: real firmware of the declared type, not a double: UEFI firmware, or a U-Boot build for the hypervisor's machine type. When the declaration's `boot_chain.secure_boot` is `implemented`, the firmware **MUST** run with Secure Boot enabled and only the image's own public keys enrolled; enrolling a broader key set or disabling Secure Boot is a divergence the run **MUST NOT** make
   - **TPM**: a software TPM emulator **MAY** stand in for the hardware TPM; it's a fake. The protocol records that the TPM was emulated

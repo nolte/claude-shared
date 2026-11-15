@@ -30,8 +30,7 @@ The runner asks nothing. A missing input is a failed precondition: the affected 
 | `--declaration` | The image's `image-declaration.yaml`. The bundled `linux-image-audit/scripts/validate_declaration.py` validates it first. |
 | `--artifact`, `--expected-version` | The artifact under test (version N) and the `image_version` it must report. |
 | `--commit` | The full commit id of the image definition that built the artifact. The runner records it as given. |
-| `--next-artifact`, `--next-expected-version` | Version N+1, for the rollback and positive scenarios. |
-| `--update-source-dir` | The directory the local update source serves. Default: the directory of the next artifact. |
+| `--next-artifact`, `--next-expected-version` | Version N+1, for the rollback and positive scenarios. The local update source serves exactly this file. |
 | `--arch` | The guest architecture. Needed only when the declaration names several, or none (schema 1.0). |
 | `--scenarios` | A comma-separated subset of `smoke,rollback,positive,identity`. Default: all that apply. A dropped required scenario is recorded `not-run` ("excluded by the operator"). |
 | `--trace-id SCENARIO=ID` | The requirement or TC-ID per scenario (§E). Repeatable. Default: the image spec section. |
@@ -39,7 +38,7 @@ The runner asks nothing. A missing input is a failed precondition: the affected 
 | `--memory` | Guest memory in MiB. Default 2048. |
 | `--timeout-readiness`, `--timeout-update`, `--timeout-rollback`, `--timeout-margin` | Override a §J timeout in seconds. The protocol records the source `override`. |
 | `--emulation-factor` | The timeout factor under emulation. The runner never uses less than 5 (§J). |
-| `--out` | The run directory. Default `.image-boot-verify/<YYYY-MM-DD-HHMM>/`. The runner warns when it isn't git-ignored. |
+| `--out` | A new or empty run directory. The runner refuses a non-empty one with exit `2`, so an earlier protocol is never taken for this run's. Default `.image-boot-verify/<YYYY-MM-DD-HHMM>/`. The runner warns when it isn't git-ignored. |
 
 ## Host requirements
 
@@ -49,11 +48,14 @@ The runner asks nothing. A missing input is a failed precondition: the affected 
 
 ## What the runner does
 
-1. It validates the declaration and checks every §H precondition. Under `u-boot` firmware, rollback, positive, and identity are `not-run` (§I, #740).
-2. It builds the QEMU command line per §L. The artifact is attached with `snapshot=on`, and the serial console goes to `<scenario>.serial.log`.
-3. Before each boot, it asserts the network configuration (§B): `-nodefaults` plus `-nic none` for smoke and identity, or exactly one `-netdev user` with `restrict=on` and exactly one `guestfwd` to the local source for rollback and positive. It refuses any other configuration before boot and records the scenario as `not-run`.
-4. It interprets only normalised serial lines that begin with `IMAGE-HEALTH-REPORT` and a space. Every other console line is untrusted guest output, stored and never acted on.
-5. It writes `protocol.candidate.json`, validates it with `validate_declaration.py --kind boot-protocol`, and publishes it as `protocol.json` only when it's valid.
+1. It reads the declaration once, validates that copy, and checks every §H precondition. Under `u-boot` firmware, rollback, positive, and identity are `not-run` (§I, #740).
+2. It refuses a qcow2 artifact or next artifact that refers to another file: a backing file (a nonzero backing-file offset in the header) or an external data file (incompatible-feature bit 2 of a version 3 header). Either would let the hypervisor read a host file or fetch a URL outside the isolation of §B, so the affected scenarios are `not-run` with that cause.
+3. It builds the QEMU command line per §L. The artifact is attached with `snapshot=on`, and the serial console goes to `<scenario>.serial.log`.
+4. Before each boot, it asserts the network configuration (§B): `-nodefaults` and `-no-user-config`, plus `-nic none` for smoke and identity, or exactly one `-netdev user` with `restrict=on` and exactly one `guestfwd` to the local source for rollback and positive. It refuses any other configuration before boot and records the scenario as `not-run`.
+5. For rollback and positive, the local update source serves only the next artifact, at `/<file name>`. It opens the file once without following a symlink, checks it against the digest the protocol records, and answers every other path with `404`, without a directory listing.
+6. Before the positive scenario's VM reset, it discards the console output read so far. Only a report printed after the reset counts for the reset boot.
+7. It interprets only normalised serial lines that begin with `IMAGE-HEALTH-REPORT` and a space. Every other console line is untrusted guest output, stored and never acted on.
+8. It writes `protocol.candidate.json`, validates it with `validate_declaration.py --kind boot-protocol`, and publishes it as `protocol.json` only when it's valid.
 
 ## Outputs
 
@@ -62,6 +64,8 @@ The run directory holds:
 - `protocol.json`: written only when the protocol validates against `schemas/image-boot-protocol-v1.1.schema.yaml`. Uncollected fields hold `{"status": "unavailable", "reason": "…"}`. A `fail` without any health report, such as a readiness timeout (§F), carries `report_lines: []` and is a valid protocol.
 - `protocol.invalid.json` (validator exit `1`) or `protocol.unvalidated.json` (validator exit `2`): kept for diagnosis, never evidence (§G).
 - Per boot: `<boot>.serial.log` and `<boot>.hypervisor.log`. Per update scenario: `<scenario>.update-source.log` with the source's requests.
+
+`firmware.secure_boot` records whether the runner enabled Secure Boot, as the declaration's `boot_chain.secure_boot` requires. It's the operator's declaration, not an observation from inside the guest.
 
 On standard output, the runner prints a JSON summary: the overall verdict, the exit status, the protocol path, whether it's valid, the per-scenario verdicts, and the failure notes.
 
@@ -74,3 +78,5 @@ On standard output, the runner prints a JSON summary: the overall verdict, the e
 | `2` | `not-run`: a required scenario is `not-run`. A run whose protocol isn't valid never exits `0`; a `pass` becomes `2`. |
 
 A gate **MUST** treat `2` as not green (§H).
+
+On `SIGTERM` or `SIGHUP`, the runner stops the running boot through its process group, records the interrupted scenario and every later one as `not-run`, and still writes the protocol. A signal during a required scenario never leaves exit `0`: the run exits `2`, or `1` when a scenario failed.
