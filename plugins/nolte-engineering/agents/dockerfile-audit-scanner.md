@@ -125,6 +125,7 @@ Because default provenance makes almost every `build-push-action` push an image 
 ### Phase 4: Check the four mandatory non-label pillars
 
 - **Non-root numeric `USER`:** the final stage MUST end (before `CMD`/`ENTRYPOINT`) with a `USER` set to a numeric UID (e.g. `USER 10001:10001`). Report a failure when the effective user is root (`USER 0`/`USER root`) OR when no `USER` instruction exists at all — hadolint `DL3002` only flags a *last* `USER` of root and does NOT flag a never-set `USER`, so assert existence statically in addition to reading any `DL3002` finding. Flag a non-numeric `USER` name as an advisory sub-finding.
+- **bootc exemption:** when an `image-declaration.yaml` in the repository has `image.toolchain: bootc` and its `image.definition` names this Dockerfile, or the final stage sets the label `containers.bootc` to `1` itself, in any `LABEL` form: `containers.bootc=1`, `containers.bootc="1"`, the legacy `LABEL containers.bootc 1`, or as one of several keys in one `LABEL` instruction (`LABEL ostree.bootable=1 containers.bootc=1`), including continuation lines, the Dockerfile builds a bootc host operating system whose final user is root by design. Report the `USER` check as `N/A (bootc)` with the label's `file:line`, never as a failure (`spec/project/dockerfile-best-practices/` §"Non-root user (mandatory pillar)").
 - **No secrets in layers:** flag any `ARG`/`ENV` whose name matches a secret pattern (`*SECRET*`, `*TOKEN*`, `*PASSWORD*`, `*API_KEY*`, `*_KEY`, `AWS_*`, etc.), and any `COPY` of a credential-shaped path (`.env`, `*.pem`, `id_rsa`, `*.key`). There is no hadolint rule for this — it is a static check. Note the BuildKit secret-mount remedy (`RUN --mount=type=secret`) in the finding.
 - **Base pinned by tag + digest:** every `FROM` MUST pin `registry/image:tag@sha256:<digest>`. Report a failure for a `FROM` on `:latest`, an untagged image, or a tag with no digest. hadolint `DL3006`/`DL3007` cover the tag half; check the digest half statically.
 - **`.dockerignore` present:** check for a `.dockerignore` in the build context (repo root, or alongside the Dockerfile). Its absence is a mandatory-pillar finding.
@@ -172,7 +173,7 @@ CI label injection: <detected in <workflow file(s)> | none found>
 - index-annotation-wiring — <present | MISSING (labels present, index-level annotation wiring absent) | n/a-not-ghcr-published> [<workflow file:line>]
 
 ### Mandatory non-label pillars
-- USER (non-root numeric) — <PASS (USER 10001) | FAIL (no USER instruction) | FAIL (USER root)> [<file:line>]
+- USER (non-root numeric) — <PASS (USER 10001) | FAIL (no USER instruction) | FAIL (USER root) | N/A (bootc)> [<file:line>]
 - Secrets in layers — <PASS | FAIL: <what>> [<file:line>]
 - Base pinned tag+digest — <PASS | FAIL: <FROM ref>> [<file:line, per FROM>]
 - .dockerignore present — <PASS (<path>) | FAIL (absent)>

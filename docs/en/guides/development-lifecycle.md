@@ -64,6 +64,8 @@ flowchart TD
   subgraph Q["6 Quality"]
     qg[quality-gate]
     da[dependency-audit]
+    lia[linux-image-audit]
+    ibv[image-boot-verify]
     pa[portfolio-audit]
     vda[vocab-drift-audit]
     wht[workflow-health-triage]
@@ -166,6 +168,8 @@ Quality skills and agents run mostly in CI and pre-push contexts. Several are al
 |---|---|---|
 | [`quality-gate`](../skills/nolte-engineering/quality-gate.md) | skill | Run lint, typecheck, and test in parallel before commit, PR, or release. |
 | [`dependency-audit`](../skills/nolte-engineering/dependency-audit.md) | skill | Scan the dependency tree for CVEs (Common Vulnerabilities and Exposures), optionally license issues; pre-PR or pre-release gate. |
+| [`linux-image-audit`](../skills/nolte-linux/linux-image-audit.md) | skill | Audit a Linux image definition (pinned inputs, machine identity, update and rollback, SBOM) before a PR or release; `nolte-linux` only. |
+| [`image-boot-verify`](../skills/nolte-linux/image-boot-verify.md) | skill | Boot a built image in a UEFI VM and verify its health report, rollback, and identity; `nolte-linux` only. |
 | [`portfolio-audit`](../skills/nolte-shared/portfolio-audit.md) | skill | Audit the cross-repository capability portfolio for duplicates and gaps. |
 | [`vocab-drift-audit`](../skills/nolte-shared/vocab-drift-audit.md) | skill | Diff the local Vale vocabulary against the pinned `nolte/vale-style` release. |
 | [`workflow-health-triage`](../skills/nolte-shared/workflow-health-triage.md) | skill | Triage a failing required workflow on `develop` or `main` and dispatch the appropriate fix lane. |

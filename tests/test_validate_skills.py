@@ -581,6 +581,7 @@ def test_unrelated_stop_beside_a_cited_spec_is_out_of_class():
 
 @pytest.mark.parametrize("rel, expected", [
     ("plugins/nolte-planning/skills/feature-decompose/SKILL.md", True),
+    ("plugins/nolte-linux/skills/image-boot-verify/SKILL.md", True),
     ("skills/audience-identify/SKILL.md", False),
 ])
 def test_subdirectory_plugin_classification(monkeypatch, tmp_path, rel, expected):

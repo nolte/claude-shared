@@ -30,7 +30,7 @@ Out-of-scope cases are listed under [§Scope & guarantees](#scope--guarantees). 
 
 ## What these plugins ship
 
-This repository is a **plugin monorepo** shipping five plugins: **`nolte-shared`** (the common delivery-lifecycle bundle, at the repo root), **`nolte-media`** (image generation and media processing, under `plugins/nolte-media/`), **`nolte-engineering`** (implementation, test, and code-audit capabilities for code repositories, under `plugins/nolte-engineering/`), **`nolte-claude-dev`** (Claude Code skill and agent authoring, under `plugins/nolte-claude-dev/`), and **`nolte-planning`** (the mission/roadmap/feature/sprint planning cadence, under `plugins/nolte-planning/`). After install, every skill is callable as `/<plugin>:<name>`, for example `/nolte-shared:spec`, `/nolte-media:image-generate`, `/nolte-engineering:quality-gate`, `/nolte-claude-dev:skill-management`, or `/nolte-planning:sprint-plan`. Agents are dispatched by skills, or directly via Claude Code's `Task` tool when the caller knows which agent it wants.
+This repository is a **plugin monorepo** shipping six plugins: **`nolte-shared`** (the common delivery-lifecycle bundle, at the repo root), **`nolte-media`** (image generation and media processing, under `plugins/nolte-media/`), **`nolte-engineering`** (implementation, test, and code-audit capabilities for code repositories, under `plugins/nolte-engineering/`), **`nolte-claude-dev`** (Claude Code skill and agent authoring, under `plugins/nolte-claude-dev/`), **`nolte-planning`** (the mission/roadmap/feature/sprint planning cadence, under `plugins/nolte-planning/`), and **`nolte-linux`** (Linux image and appliance development, under `plugins/nolte-linux/`). After install, every skill is callable as `/<plugin>:<name>`, for example `/nolte-shared:spec`, `/nolte-media:image-generate`, `/nolte-engineering:quality-gate`, `/nolte-claude-dev:skill-management`, or `/nolte-planning:sprint-plan`. Agents are dispatched by skills, or directly via Claude Code's `Task` tool when the caller knows which agent it wants.
 
 ### Skills
 
@@ -86,9 +86,13 @@ A separate plugin for the authoring slice, split on a different consumer audienc
 
 A separate plugin for the project-planning cadence, split on a different consumer audience per `spec/claude/plugin-scoping/`: not every repository plans in `project/`, and repos that track work as issues never author a mission, roadmap, feature, or sprint file. Repos that do run the cadence install it on top of `nolte-shared`. Ships `mission-define`, `mission-revise`, `roadmap-init`, `roadmap-plan`, `roadmap-refine`, `feature-decompose`, `sprint-plan`, `sprint-execute`, and `sprint-review`, plus the `sprint-readiness-reviewer`, `roadmap-coherence-reviewer`, and `feature-consistency-reviewer` agents. The slice is the whole mission-to-sprint chain, not the sprint skills alone—roadmap items carry `target_sprint` and features carry `verifies_sprint_value`, so splitting mid-chain would fragment one workflow across two installs. The governing `spec/project/` corpus stays repo-wide.
 
+### `nolte-linux` (Linux images & appliances)
+
+A separate plugin for repositories that build Linux images or appliances, split on a different consumer audience per `spec/claude/plugin-scoping/`, with a runtime dependency as the secondary signal: only image-building repositories need it, and its boot verification needs QEMU and UEFI firmware on the host, which most consumers can't satisfy. Adopters install it on top of `nolte-shared`; `nolte-engineering` is recommended but not required. It covers the image definition (pinned inputs, no per-machine identity, update and rollback, SBOM, boot-chain integrity, systemd unit hygiene) across mkosi, Yocto/Buildroot, Debian builders, NixOS/OSTree, and bootc, plus boot verification in a VM. The governing specs `spec/project/linux-image-best-practices/` and `spec/project/image-boot-verification/` stay repo-wide.
+
 ## Usage
 
-This repository packages five [Claude Code plugins](https://code.claude.com/docs/en/plugins), each with its own `.claude-plugin/plugin.json` and `skills/` + `agents/`: `nolte-shared` (repo root), `nolte-media` (`plugins/nolte-media/`), `nolte-engineering` (`plugins/nolte-engineering/`), `nolte-claude-dev` (`plugins/nolte-claude-dev/`), and `nolte-planning` (`plugins/nolte-planning/`). All five are listed in `.claude-plugin/marketplace.json`.
+This repository packages six [Claude Code plugins](https://code.claude.com/docs/en/plugins), each with its own `.claude-plugin/plugin.json` and `skills/` + `agents/`: `nolte-shared` (repo root), `nolte-media` (`plugins/nolte-media/`), `nolte-engineering` (`plugins/nolte-engineering/`), `nolte-claude-dev` (`plugins/nolte-claude-dev/`), `nolte-planning` (`plugins/nolte-planning/`), and `nolte-linux` (`plugins/nolte-linux/`). All six are listed in `.claude-plugin/marketplace.json`.
 
 ### Consume in a downstream project
 
@@ -101,12 +105,13 @@ Add this repository as a plugin marketplace, then install whichever plugins you 
 /plugin install nolte-media@nolte-shared         # optional; needs image-generation credentials/binaries
 /plugin install nolte-claude-dev@nolte-shared     # optional; only if you author Claude Code skills or agents
 /plugin install nolte-planning@nolte-shared      # optional; only if you plan in project/ (mission/roadmap/feature/sprint)
+/plugin install nolte-linux@nolte-shared         # optional; only if you build Linux images or appliances
 ```
 
 For local testing without the marketplace flow, load the plugins directly from a checkout (pass `--plugin-dir` once per plugin):
 
 ```bash
-claude --plugin-dir /path/to/claude-shared --plugin-dir /path/to/claude-shared/plugins/nolte-media --plugin-dir /path/to/claude-shared/plugins/nolte-engineering --plugin-dir /path/to/claude-shared/plugins/nolte-claude-dev --plugin-dir /path/to/claude-shared/plugins/nolte-planning
+claude --plugin-dir /path/to/claude-shared --plugin-dir /path/to/claude-shared/plugins/nolte-media --plugin-dir /path/to/claude-shared/plugins/nolte-engineering --plugin-dir /path/to/claude-shared/plugins/nolte-claude-dev --plugin-dir /path/to/claude-shared/plugins/nolte-planning --plugin-dir /path/to/claude-shared/plugins/nolte-linux
 ```
 
 Plugin skills are namespaced by plugin name—for example `/nolte-shared:spec`, `/nolte-claude-dev:skill-management`, `/nolte-media:image-generate`, `/nolte-planning:sprint-plan`.
@@ -116,7 +121,7 @@ Plugin skills are namespaced by plugin name—for example `/nolte-shared:spec`, 
 When developing inside this repository, launch Claude Code with all in-repo plugins pointed at their roots so the skills are discovered without duplicating files:
 
 ```bash
-claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering --plugin-dir ./plugins/nolte-claude-dev --plugin-dir ./plugins/nolte-planning
+claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering --plugin-dir ./plugins/nolte-claude-dev --plugin-dir ./plugins/nolte-planning --plugin-dir ./plugins/nolte-linux
 ```
 
 Use `/reload-plugins` to pick up changes during a session without restarting.
@@ -151,9 +156,9 @@ The `ci` workflow gates the same three categories on `develop` as separate requi
 
 ### Notes
 
-- **Self-hosted marketplace source**: `marketplace.json` lists five plugins: `nolte-shared` at `"source": "."`, `nolte-media` at `"source": "./plugins/nolte-media"`, `nolte-engineering` at `"source": "./plugins/nolte-engineering"`, `nolte-claude-dev` at `"source": "./plugins/nolte-claude-dev"`, and `nolte-planning` at `"source": "./plugins/nolte-planning"` (relative paths). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
+- **Self-hosted marketplace source**: `marketplace.json` lists six plugins: `nolte-shared` at `"source": "."`, `nolte-media` at `"source": "./plugins/nolte-media"`, `nolte-engineering` at `"source": "./plugins/nolte-engineering"`, `nolte-claude-dev` at `"source": "./plugins/nolte-claude-dev"`, `nolte-planning` at `"source": "./plugins/nolte-planning"`, and `nolte-linux` at `"source": "./plugins/nolte-linux"` (relative paths). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
 - **Contact**: No email is published in `plugin.json` or `marketplace.json`. Use the GitHub repository (`https://github.com/nolte/claude-shared`) for issues and contact.
-- **Dogfooding requires `--plugin-dir` per plugin**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from, and each in-repo plugin needs its own flag (`--plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering --plugin-dir ./plugins/nolte-claude-dev --plugin-dir ./plugins/nolte-planning`). Without them, `/skills` in this repo won't list the bundled skills.
+- **Dogfooding requires `--plugin-dir` per plugin**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from, and each in-repo plugin needs its own flag (`--plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering --plugin-dir ./plugins/nolte-claude-dev --plugin-dir ./plugins/nolte-planning --plugin-dir ./plugins/nolte-linux`). Without them, `/skills` in this repo won't list the bundled skills.
 - **Workflow platform constraints (two of them)**: first, GitHub Actions doesn't cascade workflow runs from events produced by a `GITHUB_TOKEN`-authenticated step: in this repo `release-drafter.yml` doesn't fire after an `automerge.yaml` squash-merge, and `release-cd-refresh-master.yml` doesn't fire after a `release-publish.yml` publish. Second, `GITHUB_TOKEN` is itself a GitHub App identity, so it can't push a change under `.github/workflows/` at all: a presentation-branch refresh is rejected whenever its diff carries a workflow file, regardless of branch protection. Both are documented in `spec/project/workflow-health/` §Known platform constraints. The portfolio-level fix for both is one credential in `nolte/gh-plumbing` (tracking: [`nolte/gh-plumbing#330`](https://github.com/nolte/gh-plumbing/issues/330), originally scoped to the `GITHUB_TOKEN` cascade gap; the second constraint additionally requires that credential to carry workflow-file scope, which the issue's scope as written doesn't yet cover). Until it ships, a user-authored commit re-fires `release-drafter`, and `main` is fast-forwarded manually after a publish.
 - **Changelog**: The authoritative per-release content lives on the [GitHub Releases page](https://github.com/nolte/claude-shared/releases); no Markdown changelog is kept in git.
 
@@ -163,7 +168,7 @@ The `ci` workflow gates the same three categories on `develop` as separate requi
 .
 ├── .claude-plugin/
 │   ├── plugin.json         # nolte-shared manifest (name, version, author)
-│   └── marketplace.json    # marketplace catalog listing all five plugins
+│   └── marketplace.json    # marketplace catalog listing all six plugins
 ├── skills/                 # nolte-shared skills
 │   └── <name>/SKILL.md
 ├── agents/                 # nolte-shared sub-agents
@@ -172,8 +177,9 @@ The `ci` workflow gates the same three categories on `develop` as separate requi
 │   ├── nolte-media/        # second plugin: own .claude-plugin/, skills/, agents/
 │   ├── nolte-engineering/  # third plugin: own .claude-plugin/, skills/, agents/
 │   ├── nolte-claude-dev/   # fourth plugin: own .claude-plugin/, skills/, agents/
-│   └── nolte-planning/     # fifth plugin: own .claude-plugin/, skills/, agents/
-├── spec/                   # bilingual specifications governing all five plugins
+│   ├── nolte-planning/     # fifth plugin: own .claude-plugin/, skills/, agents/
+│   └── nolte-linux/        # sixth plugin: own .claude-plugin/, skills/, agents/
+├── spec/                   # bilingual specifications governing all six plugins
 └── README.md
 ```
 

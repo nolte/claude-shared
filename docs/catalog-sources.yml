@@ -51,3 +51,13 @@ sources:
     agents_path: agents
     repo_url: https://github.com/nolte/claude-shared
     branch: main
+  # Sixth in-repo plugin (Linux image and appliance development). Scoped to
+  # plugins/nolte-linux/; adopted on top of nolte-shared only by repositories
+  # that build Linux images or appliances. See spec/claude/plugin-scoping/
+  # §"When to split into a separate plugin".
+  - name: nolte-linux
+    local: ./plugins/nolte-linux
+    skills_path: skills
+    agents_path: agents
+    repo_url: https://github.com/nolte/claude-shared
+    branch: main

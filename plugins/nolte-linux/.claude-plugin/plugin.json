@@ -1,0 +1,11 @@
+{
+  "name": "nolte-linux",
+  "version": "0.1.11",
+  "description": "Linux image and appliance development for repositories that build bootable operating-system images: a toolchain-neutral image audit (mkosi, Yocto/Buildroot, Debian builders, NixOS/OSTree, bootc) covering pinned inputs, per-machine identity, update and rollback, SBOM, and boot-chain integrity, an image-definition developer, and VM boot verification. Adopt this on top of nolte-shared only if your repository builds Linux images or appliances; boot verification needs QEMU and UEFI firmware on the host.",
+  "author": {
+    "name": "nolte",
+    "url": "https://github.com/nolte"
+  },
+  "repository": "https://github.com/nolte/claude-shared",
+  "homepage": "https://github.com/nolte/claude-shared"
+}

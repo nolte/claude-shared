@@ -32,6 +32,11 @@
       "name": "nolte-planning",
       "source": "./plugins/nolte-planning",
       "description": "Project-planning cadence for repositories that plan in project/: SMART mission authoring, roadmap init/planning/refinement, roadmap-item decomposition into features, and the sprint lifecycle from planning through execution to review, with the matching readiness, coherence, and consistency reviewers. Adopt this on top of nolte-shared only if your repository runs a mission/roadmap/feature/sprint cadence; repositories that track work as issues never do."
+    },
+    {
+      "name": "nolte-linux",
+      "source": "./plugins/nolte-linux",
+      "description": "Linux image and appliance development for repositories that build bootable operating-system images: a toolchain-neutral image audit (mkosi, Yocto/Buildroot, Debian builders, NixOS/OSTree, bootc) covering pinned inputs, per-machine identity, update and rollback, SBOM, and boot-chain integrity, an image-definition developer, and VM boot verification. Adopt this on top of nolte-shared only if your repository builds Linux images or appliances; boot verification needs QEMU and UEFI firmware on the host."
     }
   ]
 }

@@ -74,6 +74,7 @@ Canonical language: `en` · Translations: `de`
 | project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-11-09 |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | local | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | local | unversioned |
+| project | image-boot-verification | Image Boot Verification | Boot-Verifikation von Images | draft | local | unversioned |
 | project | issue-batch-integration | Issue Batch Integration | Issue-Bündel-Integration | draft | local | 2026-11-09 |
 | project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | 2026-11-09 |
 | project | kpi-definition-process | KPI Definition Process | KPI-Definitionsprozess | draft | portfolio | unversioned |
@@ -82,6 +83,7 @@ Canonical language: `en` · Translations: `de`
 | project | lektorat-auto-revise | Lektorat Auto-Revise | Lektorat Auto-Revise | draft | local | unversioned |
 | project | license-check | License Check | Lizenzprüfung | draft | local | unversioned |
 | project | link-validation | Link Validation | Link-Validierung | draft | local | unversioned |
+| project | linux-image-best-practices | Linux Image Best Practices | Best Practices für Linux-Images | draft | local | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | local | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | local | unversioned |
 | project | mkdocs-structure | MkDocs Site Structure | MkDocs-Site-Struktur | draft | local | unversioned |

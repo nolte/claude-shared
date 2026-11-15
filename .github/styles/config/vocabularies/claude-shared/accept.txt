@@ -104,3 +104,19 @@ Rekor
 Kyverno
 [Kk]eyless
 attestor(s)?
+# Linux image and appliance vocabulary (added with
+# spec/project/linux-image-best-practices/; toolchain and project names, upstream
+# PR candidates for the technical vocabulary of nolte/vale-style).
+systemd
+bootc
+mkosi
+mmdebstrap
+OSTree
+Yocto
+Buildroot
+SWUpdate
+nixpkgs
+Pengutronix
+Igalia
+libvirt
+greenboot

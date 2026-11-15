@@ -49,6 +49,9 @@ The plugin is designed for these scenarios:
   (`/nolte-planning:sprint-plan`, `/nolte-planning:roadmap-plan`)—when your
   repository plans that way; repositories that track work as issues skip this
   plugin entirely.
+- Audit and build **Linux images and appliances**, and verify that they boot
+  (`/nolte-linux:linux-image-audit`, `/nolte-linux:image-boot-verify`), when
+  your repository builds operating-system images.
 - Author and review **skills, agents, and specs** against shared authoring rules
   (`/nolte-claude-dev:skill-management`, `/nolte-shared:spec`, and the review skills).
 - Keep **project structure, documentation, and release automation** aligned with
@@ -77,6 +80,7 @@ The companion plugins are optional and installed the same way, on top of
 /plugin install nolte-planning@nolte-shared     # repositories that plan in project/
 /plugin install nolte-media@nolte-shared        # needs image-generation credentials
 /plugin install nolte-claude-dev@nolte-shared   # only if you author skills or agents
+/plugin install nolte-linux@nolte-shared        # repositories that build Linux images
 ```
 
 After install, every skill is callable as `/<plugin>:<name>` (for example

@@ -9,5 +9,6 @@ under `portfolio/schemas/`. All are meta-validated by
 | Schema file | Title | `$id` | Consuming spec |
 | --- | --- | --- | --- |
 | [`schemas/spec-config-v1.0.schema.yaml`](spec-config-v1.0.schema.yaml) | Spec Configuration | `https://github.com/nolte/claude-shared/blob/main/schemas/spec-config-v1.0.schema.yaml` | `spec/project/portfolio-inherited-spec-layer/` (governs `spec/.spec-config.yml`) |
+| [`schemas/image-declaration-v1.0.schema.yaml`](image-declaration-v1.0.schema.yaml) | Image Declaration | `https://github.com/nolte/claude-shared/blob/main/schemas/image-declaration-v1.0.schema.yaml` | `spec/project/linux-image-best-practices/` (governs `image-declaration.yaml` next to each image definition in a consumer repository) |
 | [`schemas/skill-agent-frontmatter-v1.0.schema.yaml`](skill-agent-frontmatter-v1.0.schema.yaml) | Skill and Agent Frontmatter | `https://github.com/nolte/claude-shared/blob/main/schemas/skill-agent-frontmatter-v1.0.schema.yaml` | `spec/claude/skill-agent-frontmatter/` (governs SKILL.md and `agents/*.md` frontmatter) |
 | [`portfolio/schemas/tech-stack-v1.0.schema.yaml`](../portfolio/schemas/tech-stack-v1.0.schema.yaml) | Portfolio Tech Stack Manifest | `https://github.com/nolte/claude-shared/blob/main/portfolio/schemas/tech-stack-v1.0.schema.yaml` | `spec/portfolio/tech-stack/` (governs `portfolio/tech-stack.yml`) |

@@ -23,7 +23,7 @@ portfolio/ and project/{blog-triggers,requirements,portfolio.yml}.
 
 **What this context *is***:
 
-- The repository `nolte/claude-shared`, published via the plugin marketplace as the Claude Code plugin `nolte-shared` plus the four companion plugins `nolte-media`, `nolte-engineering`, `nolte-claude-dev`, and `nolte-planning` under `plugins/`, all versioned in lockstep (the authoritative version is whatever `.claude-plugin/plugin.json` carries; no copy of it is restated here, so this file can't drift against a release).
+- The repository `nolte/claude-shared`, published via the plugin marketplace as the Claude Code plugin `nolte-shared` plus the five companion plugins `nolte-media`, `nolte-engineering`, `nolte-claude-dev`, `nolte-planning`, and `nolte-linux` under `plugins/`, all versioned in lockstep (the authoritative version is whatever `.claude-plugin/plugin.json` carries; no copy of it is restated here, so this file can't drift against a release).
 - It bundles reusable **skills** (`skills/<name>/SKILL.md`), **agents** (`agents/<name>.md`) and **specs** (`spec/`, EN-canonical, partly with DE translations) for portfolio-wide use.
 - It also contains the MkDocs documentation setup (`docs/`, bilingual) and the Taskfile-based automation.
 
@@ -61,6 +61,9 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
 
 - **Skill/agent-authoring adopters of `nolte-claude-dev`** — _id_: `authoring-consumer` · _category_: direct-consumer · _track_: `user-docs` · _surface_: `/nolte-claude-dev:*` (skill-management, skill-review, agent-review, skills-agents-sweep, skill-agent-catalog-apply) plus the `claude-plugin-developer` agent, installed on top of `nolte-shared` by the minority of consumers who author skills/agents (F-18 flip 2026-07-22) · _expects_: authoring machinery stays out of the majority's skill-list weight; the governing `spec/claude/` corpus stays repo-wide, not plugin-shipped · _status_: `assumed` · _criticality_: secondary
 - **Planning-cadence adopters of `nolte-planning`** — _id_: `planning-consumer` · _category_: direct-consumer · _track_: `user-docs` · _surface_: `/nolte-planning:*` (mission-define, mission-revise, roadmap-init, roadmap-plan, roadmap-refine, feature-decompose, sprint-plan, sprint-execute, sprint-review) plus the `sprint-readiness-reviewer`, `roadmap-coherence-reviewer`, and `feature-consistency-reviewer` agents, installed on top of `nolte-shared` by the repositories that plan in `project/` (carve-out 2026-08-28) · _expects_: the planning cadence stays out of the skill-list weight of repos that track work as issues; the whole mission-to-sprint chain ships together so no roadmap or feature field is left unserviceable; the governing `spec/project/` corpus stays repo-wide, not plugin-shipped · _status_: `assumed` · _criticality_: secondary
+  - Open questions: none
+
+- **Linux image and appliance builders adopting `nolte-linux`** — _id_: `linux-image-consumer` · _category_: direct-consumer · _track_: `user-docs` · _surface_: `/nolte-linux:*` (`linux-image-audit`, `image-boot-verify`) plus the `linux-image-scanner` and `linux-image-developer` agents, installed on top of `nolte-shared` by repositories that build bootable Linux images or appliances (mkosi, Yocto/Buildroot, Debian builders, NixOS/OSTree, bootc) (carve-out 2026-11-14) · _expects_: one toolchain-neutral image checklist instead of per-toolchain tooling; boot verification fails closed (`not-run`, never `pass`) on a host without QEMU or UEFI firmware; the governing `spec/project/` corpus stays repo-wide, not plugin-shipped · _status_: `assumed` · _criticality_: secondary
   - Open questions: none
 
 - **`nolte/blog` as blog-trigger consumer** — _id_: `blog-consumer` · _category_: direct-consumer · _track_: `developer-docs` · _surface_: `project/blog-triggers/` records written on feature `in_progress → done` events, consumed cross-repo per `spec/project/blog-author-trigger/` · _expects_: trigger records conform to the contract; no cross-repo writes from this side beyond the declared rule · _status_: `assumed` · _criticality_: peripheral
@@ -136,7 +139,7 @@ reasoned exclusion:
 - Only "Plugin author dogfooding inside this repo" is tagged `confirmed` so far (validated by the author's first end-to-end dogfood sprint on 2026-05-11). All other entries remain `assumed` until they are validated against a real representative or an authoritative source.
 - A versioning and communication policy for breaking spec changes is not yet defined; it affects the governing-party (portfolio anchors) and indirect (other portfolio repos) audiences simultaneously.
 - The distinction between "other portfolio repos as passive convention consumers" (Indirect) and "downstream projects as plugin users" (Direct) needs a concrete check per repo the next time this artifact is revisited.
-- Which adopting repos install which of the four companion plugins (`nolte-engineering`, `nolte-media`, `nolte-claude-dev`, `nolte-planning`) is not yet inventoried; a per-repo adoption matrix would graduate the four per-plugin entries from `assumed`.
+- Which adopting repos install which of the five companion plugins (`nolte-engineering`, `nolte-media`, `nolte-claude-dev`, `nolte-planning`, `nolte-linux`) is not yet inventoried; a per-repo adoption matrix would graduate the five per-plugin entries from `assumed`.
 
 ## Revisit triggers
 
