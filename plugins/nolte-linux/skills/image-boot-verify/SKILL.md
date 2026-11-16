@@ -79,7 +79,7 @@ Ask for anything missing before booting; a missing input is a failed preconditio
 
 ## Runner
 
-For a pipeline gate, or a run without questions, use the non-interactive runner `python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-boot-verify/scripts/boot_verify.py"`. It implements the operation above except the update-security scenarios of step 5, and is the local entry point the pipeline shares (§D). It writes protocol version 1.1, which can't name those scenarios, so for a `field-updated` image its exit status `0` doesn't cover downgrade or signature-rejection, and `linux-image-audit` keeps their requirements blocking (spec Open Questions, #728). Read `references/runner.md` for its inputs, outputs, and exit statuses before you run it.
+For a pipeline gate, or a run without questions, use the non-interactive runner `python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-boot-verify/scripts/boot_verify.py"`. It implements the operation above, including the update-security scenarios of step 5, writes protocol version 1.2, and is the local entry point the pipeline shares (§D). Read `references/runner.md` for its inputs, outputs, and exit statuses before you run it.
 
 ## Gotchas
 
