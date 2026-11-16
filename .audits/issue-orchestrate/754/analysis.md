@@ -81,5 +81,16 @@ none blocking; §G's rule for non-field-updated protocol version is read from th
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| HIGH: a 404 on a wrong path counted as "source contacted" → false `pass` for downgrade/signature-rejection | review round 1 | fixed directly: contact = full delivery of served_path | probe guest requesting `/not-served.raw` | — |
+| MEDIUM: test payload only checked ≠ N, not newer than N | review round 1 | fixed directly: `compare_versions` + `_payload_version_problem` | `--untrusted-payload-version 1.3.0`, N=1.4.0 | — |
+| LOW: half-written report discarded before reset; key-material heuristic; SIGTERM still boots variant 2; fw-cfg block too broad | review round 1 | fixed directly, each with a test | per test names | — |
+| LOW: zero-padded versions (1.4 vs 1.4.0); OpenSSH `SHA256:` fingerprint refused | review round 2 | fixed directly | `_payload_version_problem("…","1.4")` | — |
+| LOW: small payload sets `delivered` despite client abort; local host process can fake contact; truncated N+1 report → `fail` not `not-run`; variant reason after SIGTERM | review round 2 | dismissed for this PR (no false pass; theoretical or wrong reason only): recorded in Risk / rollout notes | reviewer probes | — |
 
 ## Dispatch log
+
+- 2026-11-16 P1–P3 generalist (`general-purpose`, no matching specialised agent loaded) — v1.2 for every run, four scenarios, overlay for commit-boundary; tests 267 → 284 passed
+- 2026-11-16 review round 1 (`general-purpose`, fresh, read-only) — 1 HIGH, 1 MEDIUM, 5 LOW confirmed by probes; all fixed
+- 2026-11-16 review round 2 — fixes hold, every reverted fix caught by a test; 2 LOW fixed, 4 LOW recorded
+- 2026-11-16 P4 spec close-out via `nolte-shared:spec` contract (inline) — runner-coverage Open Question removed, §G sentence, Runner status, best-practices "Signature-rejection runs" updated (EN+DE)
+- 2026-11-16 verify — `task lint` + markdownlint green; `task test` 1584 passed / 21 skipped
