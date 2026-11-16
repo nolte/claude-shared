@@ -302,8 +302,8 @@ AI-content disclosure norms:
 
 German typography:
 
-- [Duden—Anführungszeichen](https://www.duden.de/sprachwissen/rechtschreibregeln/anfuehrungszeichen)
-- [Wikipedia:Typografie—Anführungszeichen und Gedankenstrich](https://de.wikipedia.org/wiki/Wikipedia:Typografie)
+- [Quotation marks—Duden](https://www.duden.de/sprachwissen/rechtschreibregeln/anfuehrungszeichen)
+- [Typography: quotation marks and dashes—German Wikipedia](https://de.wikipedia.org/wiki/Wikipedia:Typografie)
 
 "Show your work" exemplar blogs:
 
