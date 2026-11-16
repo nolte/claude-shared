@@ -126,6 +126,7 @@ NO_TOOL = "no tool closes the gap"
 NO_CONTROL_REASON = "no positive control: neither rollback nor positive passed"
 NOT_CONTACTED_REASON = "update source not contacted within the update window"
 NO_COMMIT_REASON = "no committed version: positive scenario didn't pass"
+NOT_OLDER_REASON = "previous-version artifact isn't older than N"
 
 
 def unavailable(reason: str) -> dict:
@@ -1711,10 +1712,17 @@ class Run:
                             scenarios=("rollback", "positive", "interrupted-update"))
         if field_updated and "digest" in previous_artifact:
             self.prev_digest = previous_artifact["digest"]
-            if (compare_versions(args.previous_expected_version, args.expected_version) or 0) > 0:
+            order = compare_versions(args.previous_expected_version, args.expected_version)  # zero-padded
+            # The same digest also catches N's own path: an unreadable N makes the whole run not-run.
+            same_file = previous_artifact["digest"] == artifact.get("digest")
+            if (order or 0) > 0:
                 self._cause(f"precondition failed: the previous-version artifact's version "
                             f"{args.previous_expected_version} is newer than N's version {args.expected_version}; "
-                            "the downgrade scenario needs one that isn't newer (§H)", scenarios=("downgrade",))
+                            "the downgrade scenario needs one that is strictly older (§H)", scenarios=("downgrade",))
+            elif order == 0 or args.previous_expected_version == args.expected_version or same_file:
+                # §H: an installation of the same version can't be told from a refusal; equal strings
+                # count even when they aren't dotted numeric, so compare_versions gives no order.
+                self._cause(NOT_OLDER_REASON, scenarios=("downgrade",))
             _, refusal = inspect_drive(args.previous_artifact)
             if refusal:
                 self._cause(f"previous-version artifact refused: {refusal}, which could reach a host file or URL "
@@ -1820,7 +1828,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
                    help="next-version artifact (N+1) for rollback, positive, and interrupted-update")
     p.add_argument("--next-expected-version", help="image_version N+1 must report")
     p.add_argument("--previous-artifact", type=Path,
-                   help="artifact not newer than N for the downgrade scenario (N-1, or N itself)")
+                   help="artifact strictly older than N for the downgrade scenario, such as N-1")
     p.add_argument("--previous-expected-version", help="image_version of the previous-version artifact")
     p.add_argument("--untrusted-payload", type=Path,
                    help="signature-rejection test payload signed with a throwaway key the image doesn't trust")

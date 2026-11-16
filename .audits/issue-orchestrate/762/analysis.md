@@ -76,5 +76,13 @@ none
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
 | §I step 4 says "request", runner counts delivery | acquire measurement | fix directly in P1 | `en.md:132` vs `_observe_refusal` | — |
+| B1: equal non-numeric versions let downgrade boot | review | fix directly (P2) | N/prev `1.4.0-rc1`, different file | — |
+| N2/N3: SKILL.md:70, runner.md step 7, schema `source_requests` still say "request" | review | fix directly (P2) | `git grep` | — |
+| N4/N5: spec lacks version-comparison rule; DE step 4 tautological | review | fixed in spec | — | — |
+| `tests/test_check_prose.py::test_real_vale_ignores_a_masked_prefix_but_still_checks_the_summary` fails with fresh vale-style v0.2.1 styles (PR casing no longer enforced); CI `test` job has no vale binary and skips it; unrelated to #762 | local `task test` | separate fix (one-line term change `pr`→`yaml`), proposed to operator | `pytest tests/test_check_prose.py -k masked_prefix` after `vale sync` | — |
 
 ## Dispatch log
+- 2026-11-16 P1 via `nolte-shared:spec` (inline) — three rules + delivery wording + two ACs, EN/DE parity 129/129
+- 2026-11-17 P2 generalist (`general-purpose`, no matching specialised agent loaded) — not-older precondition, docs, schema descriptions, pinning tests; 295 passed; mutation probes caught
+- 2026-11-17 review round 1 (fresh read-only) — B1 blocking (equal non-numeric versions booted) + N1–N5; all fixed; round 2: no blocking finding, B1 closed by CLI probe
+- 2026-11-17 verify — `task lint` green; `task test` 1595 passed / 1 failed: unrelated `test_check_prose.py` real-vale test (fails on develop with fresh vale-style v0.2.1 styles, skipped in CI)
