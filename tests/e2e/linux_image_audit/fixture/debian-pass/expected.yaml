@@ -43,7 +43,7 @@ results:
     row: "§C SOURCE_DATE_EPOCH from source"
     match: ["SOURCE_DATE_EPOCH|epoch"]
     expected: pass
-    spec: "§C SOURCE_DATE_EPOCH derived from the source (the last commit), never the wall clock; §J row '§C SOURCE_DATE_EPOCH from source': git log -1 --format=%ct in the entry point; §I table Debian 'supported'. §I.3's 'same moment as the snapshot' is profile wording, and a profile adds no obligation (§I preamble), so the core rule decides"
+    spec: "§C SOURCE_DATE_EPOCH derived from the source (the last commit), never the wall clock; §J row '§C SOURCE_DATE_EPOCH from source': git log -1 --format=%ct in the entry point; §I table Debian 'supported'. §I.3 accepts the last-commit timestamp as well as the snapshot moment read from the committed pin"
   - id: c-reproducibility-switch
     section: "§C"
     row: "§C reproducibility switch"

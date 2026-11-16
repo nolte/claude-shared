@@ -64,7 +64,7 @@ REQUIRED_COVERAGE = {
     **{f"family:{f}:fail": f"negative {f} fixture" for f in FAMILIES},
     "pillar:c-unpinned-mirror": "§C unpinned mirror",
     "pillar:c-wall-clock-epoch": "§C wall-clock SOURCE_DATE_EPOCH",
-    "pillar:c-literal-epoch": "§C committed literal SOURCE_DATE_EPOCH",
+    "pillar:c-epoch-zero": "§C committed epoch-zero SOURCE_DATE_EPOCH",
     "pillar:d-machine-id": "§D populated machine-id in an overlay",
     "pillar:d-ssh-host-key": "§D committed SSH host key",
     "pillar:f-field-updated-without-update": "§F field-updated without update block",
@@ -83,7 +83,7 @@ REQUIRED_COVERAGE = {
 PILLAR_RESULTS = {
     "pillar:c-unpinned-mirror": ("§C", "c-inputs-pinned"),
     "pillar:c-wall-clock-epoch": ("§C", "c-source-date-epoch"),
-    "pillar:c-literal-epoch": ("§C", "c-source-date-epoch"),
+    "pillar:c-epoch-zero": ("§C", "c-source-date-epoch"),
     "pillar:d-machine-id": ("§D", "d-machine-id"),
     "pillar:d-ssh-host-key": ("§D", "d-host-keys"),
     "pillar:g-legal-info-only": ("§G", "g-not-legal-info-alone"),

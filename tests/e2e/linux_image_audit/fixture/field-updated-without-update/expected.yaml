@@ -4,7 +4,7 @@
 case: field-updated-without-update
 summary: >-
   Debian image declared field-updated with a failure switch but without the
-  update block.
+  update block, built with a committed constant SOURCE_DATE_EPOCH.
 covers: [pillar:f-field-updated-without-update]
 declaration:
   path: image-declaration.yaml
@@ -24,3 +24,9 @@ results:
     match: [conditional]
     expected: violation
     spec: "§F; validator rule conditional.field-updated-requires-update (audit skill: §F Critical)"
+  - id: c-source-date-epoch
+    section: "§C"
+    row: "§C SOURCE_DATE_EPOCH from source"
+    match: ["SOURCE_DATE_EPOCH|epoch"]
+    expected: pass
+    spec: "§J row '§C SOURCE_DATE_EPOCH from source': a committed constant other than 0 is a pass the audit reports with a Warning; the scanner marks it 'committed constant literal' in the evidence (matchers select rows, so the marker itself isn't asserted here)"

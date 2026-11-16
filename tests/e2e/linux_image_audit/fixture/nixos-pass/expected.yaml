@@ -5,7 +5,7 @@ case: nixos-pass
 summary: >-
   NixOS flake updated in the field (update mechanism nixos) with a committed
   flake.lock, boot counting, require-sigs, and an sbomnix SPDX SBOM.
-covers: [family:nixos:pass, cause:resolvable]
+covers: [family:nixos:pass, cause:resolvable, cause:unverified]
 declaration:
   path: image-declaration.yaml
   result: valid
@@ -37,6 +37,13 @@ results:
     match: ["lock|manifest", "commit|tracked|present|version control|checked in"]
     expected: pass
     spec: "§C; §J row static-file: flake.lock exists and is tracked; §I table NixOS 'supported'"
+  - id: c-source-date-epoch
+    section: "§C"
+    row: "§C SOURCE_DATE_EPOCH from source"
+    match: ["SOURCE_DATE_EPOCH|epoch"]
+    expected: not-decidable
+    cause: unverified
+    spec: "§I.4 NixOS: the definition relies on the standard environment and commits no SOURCE_DATE_EPOCH; the setup-hook derivation is [unverified], so not-decidable (cause unverified), never fail; §I table NixOS 'experimental'"
   - id: f-payload-signature
     section: "§F"
     row: "§F payload signature verified"
