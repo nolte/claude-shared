@@ -303,7 +303,7 @@ AI-content disclosure norms:
 German typography:
 
 - [Duden—Anführungszeichen](https://www.duden.de/sprachwissen/rechtschreibregeln/anfuehrungszeichen)
-- [Wikipedia:Typografie—Anführungszeichen und Gedankenstrich](https://de.wikipedia.org/wiki/Wikipedia:Typografie)
+- [German Wikipedia style guide on typography: quotation marks and dashes](https://de.wikipedia.org/wiki/Wikipedia:Typografie)
 
 "Show your work" exemplar blogs:
 
