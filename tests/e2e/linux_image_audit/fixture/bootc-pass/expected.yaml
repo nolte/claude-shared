@@ -43,7 +43,7 @@ results:
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: ["lock|manifest", "commit|tracked"]
+    match: ["lock|manifest", "commit|tracked|present|version control|checked in"]
     expected: [pass, not-decidable]
     cause: [delegated, spec-gap]
     spec: "§I table bootc: lock file committed 'supported', but §I.5 names no lock file; the pin is the digest in the tracked Containerfile (§C bootc pinning delegated to spec/project/dockerfile-best-practices/), so pass, delegated, or spec-gap (§I 'Not covered: no entry names a knob or file') are spec-consistent; fail isn't"

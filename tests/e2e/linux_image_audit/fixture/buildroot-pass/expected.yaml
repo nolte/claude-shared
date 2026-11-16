@@ -35,7 +35,7 @@ results:
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: ["lock|manifest", "commit|tracked"]
+    match: ["lock|manifest", "commit|tracked|present|version control|checked in"]
     expected: not-decidable
     cause: spec-gap
     spec: "§I table Buildroot: lock file committed 'not covered'; §J cause spec-gap"
@@ -50,7 +50,7 @@ results:
     section: "§D"
     row: "§D no host keys or secrets"
     match: ["host key|secret"]
-    exclude: [credential, layer]
+    exclude: [credential, layer, log]
     expected: pass
     spec: "§D no SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): no committed key file in the overlay"
   - id: g-sbom-produced

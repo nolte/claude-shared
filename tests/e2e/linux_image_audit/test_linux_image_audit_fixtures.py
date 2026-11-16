@@ -150,11 +150,22 @@ def test_prepared_path_names_no_case(case, prepared):
     assert "pass" not in path and "fail" not in path
 
 
-def test_prepared_fixture_tracks_the_fixture_tree_only(prepared):
-    repo = prepared("bootc-pass")
-    src = scenario.CASES_DIR / "bootc-pass" / "repo"
+@pytest.mark.parametrize("case", CASES)
+def test_prepared_fixture_tracks_every_fixture_file(prepared, case, tmp_path, monkeypatch):
+    """Global git ignores of the operator (``*.lock``, ``*_key``) must not untrack fixture files."""
+    ignore = tmp_path / "ignore"
+    ignore.write_text("*.lock\n*_key\n*.pem\n", encoding="utf-8")
+    gitconfig = tmp_path / "gitconfig"
+    gitconfig.write_text(f"[core]\n\texcludesFile = {ignore}\n", encoding="utf-8")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(gitconfig))
+    repo = prepared(case)
+    src = scenario.CASES_DIR / case / "repo"
     on_disk = sorted(p.relative_to(src).as_posix() for p in src.rglob("*") if p.is_file())
     assert scenario.tracked_files(repo) == on_disk
+
+
+def test_prepared_fixture_tracks_the_fixture_tree_only(prepared):
+    repo = prepared("bootc-pass")
     assert (repo / scenario.SPEC_REL).is_file()
     assert scenario.SPEC_REL.as_posix() not in scenario.tracked_files(repo)
     checks = scenario.declaration_checks(repo)
@@ -196,7 +207,9 @@ PARAPHRASES = {
                                       "payload signature verified before install"],
     "§F install and reboot without input, unhealthy reboot": [
         "installs a newer version and reboots without input", "reboot after an unhealthy report"],
-    "§F refuses a version that isn't newer": ["refuses a downgrade", "rejects a version that is not newer"],
+    "§F refuses a version that isn't newer": ["refuses a downgrade", "rejects a version that is not newer",
+                                              "refuses to install a version that isn't newer",
+                                              "refuses to install an older version"],
     "§F failure switch ignored once committed": ["failure switch has no effect once committed",
                                                  "commit boundary"],
     "§G SBOM produced": ["SBOM generated for every build", "machine-readable SBOM per build",
@@ -376,8 +389,11 @@ def test_timed_out_run_stays_in_scorecard_as_failed_sample(monkeypatch):
     case = scenario.case_names()[0]
     expected = scenario.load_expected(case)
 
+    monkeypatch.setenv("EVAL_TIMEOUT", "42")
+
     def raise_timeout(*args, **kwargs):
-        raise subprocess.TimeoutExpired(cmd="claude", timeout=kwargs.get("timeout"))
+        assert kwargs["timeout"] == 42
+        raise subprocess.TimeoutExpired(cmd="claude", timeout=kwargs["timeout"])
 
     repo = scenario.prepare_fixture(case)
     try:
@@ -394,6 +410,17 @@ def test_timed_out_run_stays_in_scorecard_as_failed_sample(monkeypatch):
     assert text == ""
     assert timed_out["run-completed"] is False
     assert not any(timed_out.values())
+    assert finished["run-completed"] is True
     assert finished.keys() == timed_out.keys()
-    assert aggregate_samples(f"x/{case}", [finished, timed_out]).pass_count == 0
-    assert expected["results"]
+    result = aggregate_samples(f"x/{case}", [finished, timed_out])
+    assert {a.name: a.pass_count for a in result.assertions}["run-completed"] == 1
+    assert len(expected["results"]) + 2 <= len(timed_out)  # run-completed, inventory-shape, one per result
+
+
+@pytest.mark.parametrize("line", [
+    "- §F atomic A/B update, automatic rollback — fail — no rollback",
+    "- §F payload signature verified by the updater — fail — no key",
+    "- §D no populated machine-id (left empty for systemd-firstboot) — fail — machine-id set",
+])
+def test_should_marker_never_excuses_a_must_fail(line):
+    assert scenario.check_output(line, "no-pillar-fail", {}) is False

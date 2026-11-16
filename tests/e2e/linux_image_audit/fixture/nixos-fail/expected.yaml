@@ -27,7 +27,7 @@ results:
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: ["lock|manifest", "commit|tracked"]
+    match: ["lock|manifest", "commit|tracked|present|version control|checked in"]
     expected: fail
     spec: "§C commit the lock file; §I.4 committed flake.lock; §J row '§C lock file committed' (static-file); §I table NixOS 'supported'"
   - id: c-inputs-pinned

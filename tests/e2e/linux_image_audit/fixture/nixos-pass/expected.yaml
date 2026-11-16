@@ -34,7 +34,7 @@ results:
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: ["lock|manifest", "commit|tracked"]
+    match: ["lock|manifest", "commit|tracked|present|version control|checked in"]
     expected: pass
     spec: "§C; §J row static-file: flake.lock exists and is tracked; §I table NixOS 'supported'"
   - id: f-payload-signature
@@ -49,7 +49,7 @@ results:
     section: "§F"
     row: "§F install and reboot without input, unhealthy reboot"
     match: ["install|reboot"]
-    exclude: [gates, "health definition", signature]
+    exclude: [gates, "health definition", signature, refuse, downgrade, "isn't newer", "not newer", older, atomic, "once committed", "failure switch"]
     expected: not-decidable
     cause: resolvable
     scenario: rollback
@@ -57,8 +57,8 @@ results:
   - id: f-downgrade
     section: "§F"
     row: "§F refuses a version that isn't newer"
-    match: ["downgrade|newer"]
-    exclude: [install]
+    match: ["downgrade|newer|older"]
+    exclude: [reboot]
     expected: not-decidable
     cause: resolvable
     scenario: downgrade

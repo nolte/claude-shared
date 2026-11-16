@@ -34,7 +34,7 @@ results:
   - id: c-lock-committed
     section: "§C"
     row: "§C lock file committed"
-    match: ["lock|manifest", "commit|tracked"]
+    match: ["lock|manifest", "commit|tracked|present|version control|checked in"]
     expected: pass
     spec: "§C lock file committed; §J row static-file: kas.lock.yml exists and is tracked; §I table 'supported'"
   - id: c-source-date-epoch
@@ -48,7 +48,7 @@ results:
     section: "§D"
     row: "§D no host keys or secrets"
     match: ["host key|secret"]
-    exclude: [credential, layer]
+    exclude: [credential, layer, log]
     expected: pass
     spec: "§D no SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): no committed key file in the overlay"
   - id: f-payload-signature
@@ -61,7 +61,7 @@ results:
     section: "§F"
     row: "§F install and reboot without input, unhealthy reboot"
     match: ["install|reboot"]
-    exclude: [gates, "health definition", signature]
+    exclude: [gates, "health definition", signature, refuse, downgrade, "isn't newer", "not newer", older, atomic, "once committed", "failure switch"]
     expected: not-decidable
     cause: resolvable
     scenario: rollback
@@ -69,8 +69,8 @@ results:
   - id: f-downgrade
     section: "§F"
     row: "§F refuses a version that isn't newer"
-    match: ["downgrade|newer"]
-    exclude: [install]
+    match: ["downgrade|newer|older"]
+    exclude: [reboot]
     expected: not-decidable
     cause: resolvable
     scenario: downgrade

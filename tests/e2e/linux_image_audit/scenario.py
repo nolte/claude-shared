@@ -109,6 +109,10 @@ SHOULD_ROWS = (
 )
 _SHOULD_MARKERS = ("updater", "renovate", "twice", "diffoscope", "non-determinism", "nondeterminism",
                    "firstboot", "a/b", "partition layout", "previous generation")
+# MUST-row vocabulary that vetoes a SHOULD marker: "payload signature verified by
+# the updater", "atomic A/B update, automatic rollback", or "machine-id (left empty
+# for systemd-firstboot)" are MUST lines that merely share a marker word.
+_MUST_VETO = ("signature", "atomic", "rollback", "machine-id", "machine identity")
 
 
 def j_rows(spec_text: str | None = None) -> tuple[str, ...]:
@@ -130,7 +134,8 @@ def is_should_line(line: "Line") -> bool:
     """
     head = line.requirement.lower()
     return ("SHOULD" in line.requirement or "SHOULD" in line.status
-            or any(marker in head for marker in _SHOULD_MARKERS))
+            or (any(marker in head for marker in _SHOULD_MARKERS)
+                and not any(word in head for word in _MUST_VETO)))
 
 
 _STR_OR_LIST = {"oneOf": [{"type": "string", "minLength": 1},
@@ -353,7 +358,8 @@ def prepare_fixture(case: str) -> Path:
     shutil.copytree(CASES_DIR / case / "repo", dst)
     git = ["git", "-C", str(dst), "-c", "init.defaultBranch=main"]
     subprocess.run([*git, "init", "-q"], check=True)
-    subprocess.run([*git, "add", "-A"], check=True)
+    # --force and an empty excludesFile: the operator's global ignores must not untrack lock or key files
+    subprocess.run([*git, "-c", "core.excludesFile=/dev/null", "add", "-A", "--force"], check=True)
     (dst / SPEC_REL).parent.mkdir(parents=True)
     shutil.copyfile(SPEC, dst / SPEC_REL)
     return dst

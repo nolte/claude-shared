@@ -59,11 +59,13 @@ def test_scanner_inventory(case, record_scorecard, n_samples, threshold):
     try:
         for _ in range(n_samples):
             text, sample = scenario.run_one_sample(plugin_dir, repo, case)
+            completed = sample["run-completed"]
             if use_judge:
                 rubric = RUBRIC.format(summary=" ".join(expected["summary"].split()))
-                sample["judge:rubric"] = judge.judge_score(text, rubric) >= 0.5
+                # no judge call for a timed-out run: nothing to judge, and its own timeout would drop the case
+                sample["judge:rubric"] = completed and judge.judge_score(text, rubric) >= 0.5
             samples.append(sample)
-            reasons.extend(scenario.explain(text, expected))
+            reasons.extend(scenario.explain(text, expected) if completed else ["run timed out"])
     finally:
         shutil.rmtree(repo.parent, ignore_errors=True)
 

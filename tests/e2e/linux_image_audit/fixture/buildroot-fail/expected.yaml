@@ -35,7 +35,7 @@ results:
     section: "§D"
     row: "§D no host keys or secrets"
     match: ["host key|secret"]
-    exclude: [credential, layer]
+    exclude: [credential, layer, log]
     expected: fail
     spec: "§D MUST NOT ship SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): committed key file board/gateway/rootfs-overlay/etc/ssh/ssh_host_ed25519_key"
   - id: g-sbom-produced
