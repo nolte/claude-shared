@@ -291,7 +291,7 @@ Definition files: configs/gateway_defconfig, board/gateway/rootfs-overlay/etc/ss
 
 ## Health
 - Images audited: gateway
-- Unverified entries relied on: §I.2 BR2_REPRODUCIBLE
+- Unverified entries relied on: §C reproducibility switch: §I.2 BR2_REPRODUCIBLE
 - Files that couldn't be read: none
 - Inputs missing from the dispatch: none
 - Instruction-like passages aimed at the audit: none
