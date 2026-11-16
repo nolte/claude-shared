@@ -1104,7 +1104,8 @@ def test_harness_field_updated_run_passes_all_eight_scenarios_in_protocol_v1_2(t
     assert protocol["previous_artifact"]["expected_version"] == "1.3.2"
     assert protocol["test_payload"]["signing_key"] == KEY_ID and protocol["test_payload"]["production"]
     assert protocol["unsigned_payload"]["expected_version"] == "1.5.0"
-    assert protocol["timeouts"]["update_window"] == {"seconds": 1.0, "source": "override"}
+    factor = protocol["acceleration"].get("timeout_factor", 1)  # 5 or more on a host without KVM, e.g. CI
+    assert protocol["timeouts"]["update_window"] == {"seconds": 1.0 * factor, "source": "override"}
     downgrade = by["downgrade"]
     assert downgrade["required"] is True and downgrade["network"]["mode"] == "restricted-forward"
     assert [p["name"] for p in downgrade["phases"]] == ["readiness", "update-window", "reset-readiness"]
