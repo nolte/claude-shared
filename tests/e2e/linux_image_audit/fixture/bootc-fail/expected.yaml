@@ -29,7 +29,7 @@ results:
     row: "§C SOURCE_DATE_EPOCH from source"
     match: ["SOURCE_DATE_EPOCH|epoch"]
     expected: fail
-    spec: "§J row '§C SOURCE_DATE_EPOCH from source': the committed constant 0 is a fail (an epoch-zero OSTree commit breaks rpm-ostree status); any other committed constant would pass with a Warning; §I.5 bootc 'supported'"
+    spec: "§J row '§C SOURCE_DATE_EPOCH from source': for bootc, whose commit timestamp takes the value, the committed constant 0 is a fail (an epoch-zero OSTree commit breaks rpm-ostree status); any other committed constant would pass with a Warning; §I.5 bootc 'supported'"
   - id: c-inputs-pinned
     section: "§C"
     row: "§C inputs pinned"
