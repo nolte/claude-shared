@@ -1,0 +1,26 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: field-updated-without-update
+summary: >-
+  Debian image declared field-updated with a failure switch but without the
+  update block.
+covers: [pillar:f-field-updated-without-update]
+declaration:
+  path: image-declaration.yaml
+  result: invalid
+  exit_code: 1
+  violations: [conditional.field-updated-requires-update]
+  spec: "§F: a field-updated image names update.source_switch and update.max_boot_attempts; §J row '§F failure and source switches, max_boot_attempts'"
+checks: [f-applies]
+results:
+  - id: declaration-schema
+    section: declaration
+    match: [schema]
+    expected: valid
+    spec: "§A: the schema half holds; only the conditional rule is violated"
+  - id: declaration-conditional
+    section: declaration
+    match: [conditional]
+    expected: violation
+    spec: "§F; validator rule conditional.field-updated-requires-update (audit skill: §F Critical)"

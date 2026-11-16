@@ -1,0 +1,25 @@
+#!/bin/sh
+# Health definition of the appliance: decides once whether this boot is healthy,
+# writes the IMAGE-HEALTH-REPORT line to every configured console, and exits
+# non-zero when unhealthy so the unit's FailureAction reboots the system.
+set -u
+. /etc/os-release
+state="$(systemctl is-system-running 2>/dev/null || true)"
+failed="$(systemctl list-units --state=failed --plain --no-legend | awk '{print $1}' | paste -sd, -)"
+app_id="$(systemd-id128 machine-id --app-specific=6dc31fbecafb40ec9395fe013ebd2c7c 2>/dev/null || echo -)"
+status=healthy
+switch="${CREDENTIALS_DIRECTORY:-/nonexistent}/image.health.fail-version"
+if [ -r "$switch" ] && [ "$(cat "$switch")" = "${IMAGE_VERSION:-}" ] \
+    && [ ! -e "/var/lib/appliance/good-${IMAGE_VERSION:-}" ]; then
+  status=unhealthy
+fi
+[ -n "$failed" ] && status=unhealthy
+line="IMAGE-HEALTH-REPORT status=$status image_id=${IMAGE_ID:-} image_version=${IMAGE_VERSION:-} system_state=$state failed_units=${failed:--} machine_id_app=$app_id"
+for console in /dev/console /dev/ttyS0; do
+  echo "$line" > "$console" 2>/dev/null || true
+done
+if [ "$status" = healthy ]; then
+  mkdir -p /var/lib/appliance && touch "/var/lib/appliance/good-${IMAGE_VERSION:-}"
+  exit 0
+fi
+exit 1

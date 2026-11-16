@@ -1,0 +1,4 @@
+FROM quay.io/fedora/fedora-bootc:42@sha256:3f1d2c4b5a6978e0f1d2c3b4a5968778695a4b3c2d1e0f9a8b7c6d5e4f3a2b1c
+LABEL containers.bootc=1
+COPY overlay/ /
+RUN systemctl enable appliance-health.service && bootc container lint

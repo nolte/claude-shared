@@ -1,0 +1,39 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: debian-fail
+summary: >-
+  reflash-only mmdebstrap image from the live deb.debian.org mirror with
+  SOURCE_DATE_EPOCH taken from date +%s.
+covers: [family:debian:fail, pillar:c-unpinned-mirror, pillar:c-wall-clock-epoch]
+declaration:
+  path: image-declaration.yaml
+  result: valid
+  exit_code: 0
+  violations: []
+  spec: "§A image declaration (schema v1.2); validator §F conditional rules"
+checks: [f-exempt]
+results:
+  - id: declaration-schema
+    section: declaration
+    match: [schema]
+    expected: valid
+    spec: "§A image declaration; scanner Phase 2 relays the validator result unchanged"
+  - id: declaration-conditional
+    section: declaration
+    match: [conditional]
+    expected: ok
+    spec: "§F preamble; validator conditional.* rules all hold"
+  - id: c-inputs-pinned
+    section: "§C"
+    row: "§C inputs pinned"
+    match: [pin]
+    exclude: ["lock file committed", "lock committed", updat, renovate]
+    expected: fail
+    spec: "§C: a build resolving the newest version from a live mirror is a hard failure; §I.3; §I table Debian 'supported'"
+  - id: c-source-date-epoch
+    section: "§C"
+    row: "§C SOURCE_DATE_EPOCH from source"
+    match: ["SOURCE_DATE_EPOCH|epoch"]
+    expected: fail
+    spec: "§C never from the wall clock; §J row '§C SOURCE_DATE_EPOCH from source': date +%s is a wall-clock expression; §I table Debian 'supported'"

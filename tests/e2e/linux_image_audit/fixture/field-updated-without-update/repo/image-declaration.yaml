@@ -1,0 +1,21 @@
+schema_version: "1.2"
+image:
+  name: kiosk
+  toolchain: debian
+  definition: build.sh
+  architectures: [x86_64]
+  firmware: uefi
+update_model: field-updated
+boot_chain:
+  secure_boot: omitted
+  uki: omitted
+  dm_verity: omitted
+  measured_boot: omitted
+health:
+  definition:
+    kind: unit
+    name: appliance-health.service
+  tolerated_units: []
+  failure_switch:
+    type: systemd-credential
+    name: image.health.fail-version

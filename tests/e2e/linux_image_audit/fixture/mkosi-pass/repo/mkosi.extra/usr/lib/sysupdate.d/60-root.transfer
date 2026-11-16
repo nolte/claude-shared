@@ -1,0 +1,14 @@
+[Transfer]
+Verify=yes
+
+[Source]
+Type=url-file
+Path=https://updates.example.org/edge-appliance/
+MatchPattern=edge-appliance_@v.root.raw
+
+[Target]
+Type=partition
+Path=auto
+MatchPattern=root-@v
+MatchPartitionType=root
+InstancesMax=2

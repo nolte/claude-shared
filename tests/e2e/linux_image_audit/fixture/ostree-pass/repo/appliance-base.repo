@@ -1,0 +1,5 @@
+[appliance-base]
+name=Appliance base packages
+baseurl=https://packages.example.org/appliance/42/x86_64/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-appliance

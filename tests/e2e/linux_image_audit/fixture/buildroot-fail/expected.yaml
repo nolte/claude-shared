@@ -1,0 +1,53 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: buildroot-fail
+summary: >-
+  reflash-only Buildroot tree with BR2_REPRODUCIBLE not set, a committed SSH
+  host key in the rootfs overlay, and make legal-info as the only SBOM.
+covers: [family:buildroot:fail, pillar:d-ssh-host-key, pillar:g-legal-info-only, cause:unverified]
+declaration:
+  path: image-declaration.yaml
+  result: valid
+  exit_code: 0
+  violations: []
+  spec: "§A image declaration (schema v1.2); validator §F conditional rules"
+checks: [f-exempt]
+results:
+  - id: declaration-schema
+    section: declaration
+    match: [schema]
+    expected: valid
+    spec: "§A image declaration; scanner Phase 2 relays the validator result unchanged"
+  - id: declaration-conditional
+    section: declaration
+    match: [conditional]
+    expected: ok
+    spec: "§F preamble; validator conditional.* rules all hold"
+  - id: c-reproducibility-switch
+    section: "§C"
+    row: "§C reproducibility switch"
+    match: [switch]
+    expected: not-decidable
+    cause: unverified
+    spec: "§I.2: '# BR2_REPRODUCIBLE is not set' counts as the switch not enabled, but the entry is [unverified]; §J: never fail on an [unverified] entry"
+  - id: d-host-keys
+    section: "§D"
+    row: "§D no host keys or secrets"
+    match: ["host key|secret"]
+    exclude: [credential, layer, log]
+    expected: fail
+    spec: "§D MUST NOT ship SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): committed key file board/gateway/rootfs-overlay/etc/ssh/ssh_host_ed25519_key"
+  - id: g-sbom-produced
+    section: "§G"
+    row: "§G SBOM produced"
+    match: ["produc|generat|per build|machine-readable"]
+    exclude: [OCI, legal, publish, "next to"]
+    expected: fail
+    spec: "§G SPDX or CycloneDX per build; §I.2 Buildroot needs a separate generator; §J row '§G SBOM produced'"
+  - id: g-not-legal-info-alone
+    section: "§G"
+    row: "§G not legal-info alone"
+    match: ["legal"]
+    expected: fail
+    spec: "§G MUST NOT count make legal-info alone; §J row '§G not legal-info alone'"

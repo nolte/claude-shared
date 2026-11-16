@@ -22,6 +22,14 @@ def test_build_cli_command_shape():
     assert cmd[cmd.index("--output-format") + 1] == "json"
 
 
+def test_build_cli_command_extra_args_are_opt_in():
+    base = runner.build_cli_command("x", "/repo", allowed_tools=("Read",), permission_mode="plan", model="m")
+    assert base[-2:] == ["--output-format", "json"]
+    cmd = runner.build_cli_command("x", "/repo", allowed_tools=("Read",), permission_mode="plan", model="m",
+                                   extra_args=("--setting-sources", "project"))
+    assert cmd == [*base, "--setting-sources", "project"]
+
+
 def test_build_cli_command_defaults_model_from_env(monkeypatch):
     monkeypatch.setenv("EVAL_MODEL", "claude-opus-4-7")
     cmd = runner.build_cli_command(
