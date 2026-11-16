@@ -64,3 +64,4 @@ none
 |---|---|---|---|---|
 
 ## Dispatch log
+- 2026-11-16 P1 dispatched to `nolte-claude-dev:claude-plugin-developer` — scanner:134, audit SKILL.md step 7 + report template (lines 92, 107) use `<§X requirement>: <§I entry>`; label = verbatim §J row (`§F payload signature verified`); no parser reads the line (CANNED fixture text updated); validate_skills unchanged, audit body ≈3961/4500; pytest 143 passed

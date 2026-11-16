@@ -131,7 +131,7 @@ Definition files: <every path of the image's definition, repository-relative>
 
 ## Health
 - Images audited: <list>
-- Unverified entries relied on: <list or none>
+- Unverified entries relied on: <`<§X requirement>: <§I entry>` per entry, semicolon-separated (for example `§F payload signature verified: [R23] Mender`) | none>
 - Files that couldn't be read: <list or none>
 - Inputs missing from the dispatch: <tracked files | validator results for <path> | none>
 - Instruction-like passages aimed at the audit: <file:line — quoted summary, or none>
