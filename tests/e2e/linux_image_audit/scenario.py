@@ -22,6 +22,7 @@ handed over in the prompt, exactly as the skill's step 1 does.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -530,13 +531,23 @@ def run_one_sample(plugin_dir: str, repo: Path, case: str,
     """Drive one live scanner run on the prepared ``repo`` of ``case``; return text and booleans."""
     from evals.harness import runner
 
-    text = runner.run_headless(
-        make_prompt(repo),
-        plugin_dir,
-        cwd=str(repo),
-        allowed_tools=(*runner.READONLY_TOOLS, "Agent"),
-        permission_mode="plan",
-        model=model,
-        extra_args=HEADLESS_ARGS,
-    ).text
-    return text, score(text, load_expected(case))
+    expected = load_expected(case)
+    try:
+        text = runner.run_headless(
+            make_prompt(repo),
+            plugin_dir,
+            cwd=str(repo),
+            allowed_tools=(*runner.READONLY_TOOLS, "Agent"),
+            permission_mode="plan",
+            model=model,
+            timeout=int(os.environ.get("EVAL_TIMEOUT", "600")),
+            extra_args=HEADLESS_ARGS,
+        ).text
+    except subprocess.TimeoutExpired:
+        return "", timed_out_sample(expected)
+    return text, {"run-completed": True, **score(text, expected)}
+
+
+def timed_out_sample(expected: dict) -> dict[str, bool]:
+    """A run that hit the timeout: every assertion fails, so the scorecard keeps the case."""
+    return {"run-completed": False, **{name: False for name in score("", expected)}}

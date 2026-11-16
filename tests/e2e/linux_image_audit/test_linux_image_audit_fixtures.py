@@ -364,3 +364,36 @@ def test_scenario_and_output_checks():
         "injection-reported", injected)
     assert not scenario.check_output(
         "- Instruction-like passages aimed at the audit: none\n- build.sh read", "injection-reported", injected)
+
+
+def test_timed_out_run_stays_in_scorecard_as_failed_sample(monkeypatch):
+    """A run hitting the timeout is a failed sample with the completed run's keys, not a gap."""
+    import subprocess
+
+    from evals.harness import runner
+    from evals.harness.scorecard import aggregate_samples
+
+    case = scenario.case_names()[0]
+    expected = scenario.load_expected(case)
+
+    def raise_timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd="claude", timeout=kwargs.get("timeout"))
+
+    repo = scenario.prepare_fixture(case)
+    try:
+        monkeypatch.setattr(runner, "run_headless", raise_timeout)
+        text, timed_out = scenario.run_one_sample("plugin", repo, case)
+
+        def completed(*args, **kwargs):
+            return runner.RunResult(text="", returncode=0, cost_usd=None, raw_stdout="")
+
+        monkeypatch.setattr(runner, "run_headless", completed)
+        _, finished = scenario.run_one_sample("plugin", repo, case)
+    finally:
+        shutil.rmtree(repo.parent, ignore_errors=True)
+    assert text == ""
+    assert timed_out["run-completed"] is False
+    assert not any(timed_out.values())
+    assert finished.keys() == timed_out.keys()
+    assert aggregate_samples(f"x/{case}", [finished, timed_out]).pass_count == 0
+    assert expected["results"]

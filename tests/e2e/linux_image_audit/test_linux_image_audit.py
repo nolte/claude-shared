@@ -18,7 +18,9 @@ Skipped unless RUN_EVALS=1. One full run, 19 headless runs (one per case):
     RUN_EVALS=1 EVAL_SAMPLES=1 python3 -m pytest tests/e2e/linux_image_audit
 
 writes the scorecard to evals/out/scorecard.json (or $EVAL_SCORECARD). Without
-EVAL_SAMPLES the harness default of 3 samples applies (57 runs).
+EVAL_SAMPLES the harness default of 3 samples applies (57 runs). EVAL_TIMEOUT sets
+the per-run timeout in seconds (default 600); a run that hits it is recorded as a
+failed sample (`run-completed` false), never dropped from the scorecard.
 """
 from __future__ import annotations
 
