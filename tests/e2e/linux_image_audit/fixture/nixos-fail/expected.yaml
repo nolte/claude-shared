@@ -37,3 +37,9 @@ results:
     exclude: ["lock file committed", "lock committed", updat, renovate]
     expected: fail
     spec: "§C pin Nix inputs through a committed lock file; without flake.lock the flake inputs resolve the newest revision; §I table NixOS 'supported'"
+  - id: c-source-date-epoch
+    section: "§C"
+    row: "§C SOURCE_DATE_EPOCH from source"
+    match: ["SOURCE_DATE_EPOCH|epoch"]
+    expected: fail
+    spec: "§I.4 NixOS wall-clock signals: builtins.currentTime and nix build --impure; §J row '§C SOURCE_DATE_EPOCH from source': a wall-clock expression is a fail"

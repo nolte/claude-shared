@@ -4,7 +4,7 @@
 set -eu
 PODMAN="quay.io/podman/stable:v5.6.2"
 IMAGE="ghcr.io/example/appliance:${RELEASE_TAG}"
-SOURCE_DATE_EPOCH=1735689600
+SOURCE_DATE_EPOCH=0
 mkdir -p dist
 podman run --rm --privileged -v "$PWD:/src:Z" -w /src "$PODMAN" \
   podman build --source-date-epoch="$SOURCE_DATE_EPOCH" --rewrite-timestamp \

@@ -109,5 +109,14 @@ none (decision recorded above)
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| `bootc-fail` encoded the old rule (constant 1735689600 expected `fail`, citing the removed Open Question) | restatement sweep (`grep -rni "committed literal"`) | fixed directly: literal → `0`, tag `pillar:c-literal-epoch` → `pillar:c-epoch-zero` | `tests/e2e/linux_image_audit/fixture/bootc-fail/expected.yaml:32` | — |
+| Audit triage had no path from a `pass` to a Warning, so §J's constant-literal Warning could never appear | claude-plugin-developer (P2) | fixed directly: `linux-image-audit/SKILL.md` step 4 rule | `SKILL.md:64-71` before the change | — |
+| No fixture pinned a non-zero constant literal | class sweep | fixed directly: `field-updated-without-update` uses `1735689600`, expects `pass` | — | — |
+| The eval can't assert the `committed constant literal` evidence marker (matchers select rows by label only) | fixture test `test_every_matcher_hits_exactly_its_row` | dismissed for this PR: recorded in Risk / rollout notes | matcher test failure when `constant literal` added to `match` | — |
 
 ## Dispatch log
+
+- 2026-11-16 P1 run via `nolte-shared:spec` (inline skill) — §C, §I.3, §I.4, §I table, §J row, new AC, Open Question removed; EN/DE parity 17/22/43 (AC/headings/requirements)
+- 2026-11-16 P2 dispatched to `nolte-claude-dev:claude-plugin-developer` — scanner line 98 rewritten; follow-up triage rule in audit SKILL.md; `validate_skills.py` 0C, nothing for nolte-linux
+- 2026-11-16 P3 generalist — fixtures nixos-pass (`not-decidable`/`unverified`), nixos-fail (`fail`), bootc-fail (epoch 0), debian-pass citation, field-updated-without-update (constant → `pass`); mutation probe on bootc-fail: 2 failures, restored green
+- 2026-11-16 verify — `task test` 1543 passed / 21 skipped; pre-commit + markdownlint green; offline link check: no finding in touched files (156 vs 4 on develop = missing generated catalog in fresh worktree)

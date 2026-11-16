@@ -3,9 +3,9 @@
 # spec/project/linux-image-best-practices/en.md it is derived from.
 case: bootc-fail
 summary: >-
-  bootc image built with a committed literal --source-date-epoch value and a
+  bootc image built with a committed epoch-zero --source-date-epoch value and a
   CycloneDX-only SBOM.
-covers: [family:bootc:fail, pillar:c-literal-epoch]
+covers: [family:bootc:fail, pillar:c-epoch-zero]
 declaration:
   path: image-declaration.yaml
   result: valid
@@ -29,7 +29,7 @@ results:
     row: "§C SOURCE_DATE_EPOCH from source"
     match: ["SOURCE_DATE_EPOCH|epoch"]
     expected: fail
-    spec: "§J row '§C SOURCE_DATE_EPOCH from source': a committed literal goes stale with the next commit and is a fail (Open Question 'Constant SOURCE_DATE_EPOCH literals' undecided, so §J applies as written); §I.5 bootc 'supported'"
+    spec: "§J row '§C SOURCE_DATE_EPOCH from source': the committed constant 0 is a fail (an epoch-zero OSTree commit breaks rpm-ostree status); any other committed constant would pass with a Warning; §I.5 bootc 'supported'"
   - id: c-inputs-pinned
     section: "§C"
     row: "§C inputs pinned"
