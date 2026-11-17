@@ -120,7 +120,7 @@ The core D4 rule holds: this is **semantic** duplication, not textual similarity
 
 ### F6—Frontend performance visible in the source (extends D7)
 
-Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` runs with `react-best-practices` or `web-design-guidelines` available, request waterfalls, barrel imports and missing route splits, and full renders of large collections are delegated to those skills; the conditional memoization judgment and expensive derivation stay primary here. A run without the covering skill applies every rule below as a fallback.
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `vercel-react-best-practices` to completion in the same audit, request waterfalls, barrel imports, and missing route splits are delegated to it; when it ran `web-design-guidelines` to completion, full renders of large collections are delegated to that skill; the conditional memoization judgment and expensive derivation stay primary here. Any rule whose covering skill didn't run to completion applies as a fallback.
 
 This dimension is capped at what the source shows. Measured budgets route to `spec/frontend/webview-ui-optimization/`.
 
@@ -143,7 +143,7 @@ This dimension is capped at what the source shows. Measured budgets route to `sp
 
 ### F8—Accessibility defects visible in code
 
-Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` runs with `web-design-guidelines` available, non-semantic controls, missing labels and accessible names, missing alternative text, removed focus indicators without replacement, and missing live regions are delegated to that skill; role promises without interaction behaviour, focus handling across dialogs and routes, and label association across component boundaries stay primary here. A run without the covering skill applies every rule below as a fallback.
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `web-design-guidelines` to completion in the same audit, non-semantic controls, missing labels and accessible names, missing alternative text, removed focus indicators without replacement, and missing live regions are delegated to that skill; role promises without interaction behaviour, focus handling across dialogs and routes, and label association across component boundaries stay primary here. Any rule whose covering skill didn't run to completion applies as a fallback.
 
 Capped at what a reviewer decides from the source; the conformance question routes out.
 
@@ -170,7 +170,7 @@ The core D10 rule holds: these are **flagged and routed**, never investigated in
 
 ### F10—User-facing text and locale handling in code
 
-Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` runs with `web-design-guidelines` available, manual date, number, and currency formatting is delegated to that skill; hardcoded strings, assembled sentences, plural handling, and dynamic keys stay primary here. A run without the covering skill applies every rule below as a fallback.
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `web-design-guidelines` to completion in the same audit, manual date, number, and currency formatting is delegated to that skill; hardcoded strings, assembled sentences, plural handling, and dynamic keys stay primary here. Any rule whose covering skill didn't run to completion applies as a fallback.
 
 - **MUST** report user-facing strings hardcoded in components where the project ships an internationalisation layer, including the surfaces a naive scan misses: accessible names, alternative text, tooltips, and document titles
 - **MUST** report sentences assembled from concatenated or interpolated fragments, which can't be reordered or inflected by a translator, and quantity-dependent text without plural handling

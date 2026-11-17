@@ -144,7 +144,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 ### Accessibility (WCAG 2.2 Level AA)
 
-Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Läuft `frontend-audit` mit verfügbarem `web-design-guidelines`, sind die generischen HTML- und CSS-Regeln dieser Domäne (Namen für Icon-Buttons, `div`-Click-Handler, `outline: none` ohne Ersatz) an diesen Skill delegiert; jede Regel zu MUI, react-hook-form, notistack und Recharts und jede WCAG-Schwelle bleibt hier primär. Die Regeltabelle von `webview-ui-optimize` beurteilt weiterhin jede Regel unten; die Delegation betrifft nur den Lauf von `frontend-audit`.
+Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `web-design-guidelines` vollständig ausgeführt, sind die generischen HTML- und CSS-Regeln dieser Domäne (Namen für Icon-Buttons, `div`-Click-Handler, `outline: none` ohne Ersatz) an diesen Skill delegiert; jede Regel zu MUI, react-hook-form, notistack und Recharts und jede WCAG-Schwelle bleibt hier primär. Die Regeltabelle von `webview-ui-optimize` beurteilt weiterhin jede Regel unten; die Delegation betrifft nur den Lauf von `frontend-audit`.
 
 #### Dokumentstruktur
 
@@ -244,7 +244,7 @@ Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Läuft `fron
 
 ### UX und Native-Feel
 
-Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Läuft `frontend-audit` mit verfügbarem `web-design-guidelines`, sind die generischen CSS-Regeln dieser Domäne (`prefers-reduced-motion`, Safe-Area-Insets, `transition: all`) an diesen Skill delegiert; jede Regel zu MUI, React Router, react-hook-form und notistack bleibt hier primär. Die Regeltabelle von `webview-ui-optimize` beurteilt weiterhin jede Regel unten; die Delegation betrifft nur den Lauf von `frontend-audit`.
+Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `web-design-guidelines` vollständig ausgeführt, sind die generischen CSS-Regeln dieser Domäne (`prefers-reduced-motion`, Safe-Area-Insets, `transition: all`) an diesen Skill delegiert; jede Regel zu MUI, React Router, react-hook-form und notistack bleibt hier primär. Die Regeltabelle von `webview-ui-optimize` beurteilt weiterhin jede Regel unten; die Delegation betrifft nur den Lauf von `frontend-audit`.
 
 #### Lade- und Feedback-Hierarchie
 

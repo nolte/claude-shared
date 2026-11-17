@@ -12,7 +12,8 @@ every strand runs and the delegated own rules stay off.
 
 `frontend/package.json` depends on `react` and `vite`; `src/` holds a
 component tree and a router. `.claude/skills/` contains
-`web-design-guidelines`, `vercel-react-best-practices`, and
+`web-design-guidelines`, `react-best-practices` (frontmatter name
+`vercel-react-best-practices`, the name the session lists), and
 `playwright-cli`; `skills-lock.json` records their commits. The
 `frontend-design` plugin is installed. `playwright-cli --version`
 prints a version and a browser is installed.
@@ -23,9 +24,12 @@ prints a version and a browser is installed.
    categories of `react-best-practices` are `not applicable`.
 2. All four skills reported `available` with location and commit or
    version; no coverage gap.
-3. The plan (step 4) lists the F6, F8, and F10 rules and the generic
-   webview-ui Accessibility and UX rules as delegated; no fallback.
-4. Code, static UI, and rendered strands run; rendered evidence is
-   attached to findings, never the sole basis above Info.
+3. The three third-party skills run first and all complete, so the
+   F6, F8, and F10 rules and the generic webview-ui Accessibility and
+   UX rules are delegated; no fallback, nothing uncovered.
+4. The reviewers and the rendered strand run; `playwright-cli` opens
+   with `--config=.audits/frontend-audit/evidence/cli.config.json`, so
+   snapshots and screenshots land under `evidence/`. Rendered evidence
+   is attached to findings, never the sole basis above Info.
 5. The report header records the guidelines fetch time and SHA-256;
    every finding carries `source`; no third-party finding is Critical.

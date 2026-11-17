@@ -81,7 +81,7 @@ The caller gives you one of:
 4. **Stack-wide concern**: a phrase that names a cross-domain pipeline ("the CSP plus Vite plus Emotion pipeline", "the prefers-reduced-motion coverage", "the RTL pipeline end-to-end").
 5. **Audit-row drilldown**: the phrase "deep-review for finding <rule-id> in the latest audit" — triggers a single-rule deep dive scoped to every file affected by that rule.
 
-When `frontend-audit` dispatches you, it also passes which generic Accessibility and UX rules are **delegated** to `web-design-guidelines` for this run (per `spec/frontend/third-party-audit-skills/` §F) and which are **active fallbacks**. Skip delegated rules and list them in the report's Scope section as `delegated to web-design-guidelines`; without that input, apply every rule. Don't fetch the third-party rules yourself.
+When `frontend-audit` dispatches you, it also passes which generic Accessibility and UX rules are **delegated** because `web-design-guidelines` ran to completion in this audit (per `spec/frontend/third-party-audit-skills/` §F) and which are **active fallbacks** because it didn't. Skip delegated rules and list them in the report's Scope section as `delegated to web-design-guidelines`; without that input, apply every rule. Don't fetch the third-party rules yourself.
 
 If the input is ambiguous or empty, return a request for a concrete target and stop — a subagent has no channel for a mid-run question, so the caller re-dispatches. Don't invent a target.
 

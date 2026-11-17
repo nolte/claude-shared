@@ -120,7 +120,7 @@ Die Kern-D4-Regel gilt: Es geht um **semantische** Duplizierung, nicht um textue
 
 ### F6 — Frontend-Performance im Quelltext (erweitert D7)
 
-Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Läuft `frontend-audit` mit verfügbarem `react-best-practices` oder `web-design-guidelines`, sind Request-Wasserfälle, Barrel-Imports und fehlende Route-Splits sowie vollständiges Rendern großer Collections an diese Skills delegiert; das bedingte Memoization-Urteil und teure Ableitungen bleiben hier primär. Ein Lauf ohne den abdeckenden Skill wendet jede Regel unten als Fallback an.
+Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `vercel-react-best-practices` vollständig ausgeführt, sind Request-Wasserfälle, Barrel-Imports und fehlende Route-Splits an diesen Skill delegiert; hat es `web-design-guidelines` vollständig ausgeführt, ist vollständiges Rendern großer Collections an jenen Skill delegiert; das bedingte Memoization-Urteil und teure Ableitungen bleiben hier primär. Jede Regel, deren abdeckender Skill nicht vollständig gelaufen ist, gilt als Fallback.
 
 Diese Dimension ist auf das begrenzt, was der Quelltext zeigt. Gemessene Budgets werden an `spec/frontend/webview-ui-optimization/` geroutet.
 
@@ -143,7 +143,7 @@ Diese Dimension ist auf das begrenzt, was der Quelltext zeigt. Gemessene Budgets
 
 ### F8 — Im Code sichtbare Accessibility-Defekte
 
-Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Läuft `frontend-audit` mit verfügbarem `web-design-guidelines`, sind nicht-semantische Controls, fehlende Labels und zugängliche Namen, fehlender Alternativtext, entfernte Fokusindikatoren ohne Ersatz und fehlende Live-Regionen an diesen Skill delegiert; Rollen-Versprechen ohne Interaktionsverhalten, Fokusbehandlung über Dialoge und Routen sowie Label-Zuordnung über Component-Grenzen bleiben hier primär. Ein Lauf ohne den abdeckenden Skill wendet jede Regel unten als Fallback an.
+Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `web-design-guidelines` vollständig ausgeführt, sind nicht-semantische Controls, fehlende Labels und zugängliche Namen, fehlender Alternativtext, entfernte Fokusindikatoren ohne Ersatz und fehlende Live-Regionen an diesen Skill delegiert; Rollen-Versprechen ohne Interaktionsverhalten, Fokusbehandlung über Dialoge und Routen sowie Label-Zuordnung über Component-Grenzen bleiben hier primär. Jede Regel, deren abdeckender Skill nicht vollständig gelaufen ist, gilt als Fallback.
 
 Begrenzt auf das, was ein Reviewer aus dem Quelltext entscheidet; die Konformitätsfrage wird weitergeroutet.
 
@@ -170,7 +170,7 @@ Die Kern-D10-Regel gilt: Diese Findings werden **gemeldet und geroutet**, nie hi
 
 ### F10 — Nutzersichtbarer Text und Locale-Behandlung im Code
 
-Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Läuft `frontend-audit` mit verfügbarem `web-design-guidelines`, ist manuelle Datums-, Zahlen- und Währungsformatierung an diesen Skill delegiert; hartkodierte Strings, zusammengesetzte Sätze, Plural-Behandlung und dynamische Keys bleiben hier primär. Ein Lauf ohne den abdeckenden Skill wendet jede Regel unten als Fallback an.
+Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `web-design-guidelines` vollständig ausgeführt, ist manuelle Datums-, Zahlen- und Währungsformatierung an diesen Skill delegiert; hartkodierte Strings, zusammengesetzte Sätze, Plural-Behandlung und dynamische Keys bleiben hier primär. Jede Regel, deren abdeckender Skill nicht vollständig gelaufen ist, gilt als Fallback.
 
 - **MUSS** nutzersichtbare Zeichenketten melden, die in Components hartkodiert sind, wenn das Projekt eine Internationalisierungsschicht mitliefert — einschließlich der Oberflächen, die ein naiver Scan verfehlt: zugängliche Namen, Alternativtexte, Tooltips und Dokumenttitel
 - **MUSS** Sätze melden, die aus konkatenierten oder interpolierten Fragmenten zusammengesetzt sind und von einer Übersetzerin weder umgestellt noch flektiert werden können, sowie mengenabhängigen Text ohne Pluralbehandlung

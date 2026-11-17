@@ -144,7 +144,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 ### Accessibility (WCAG 2.2 Level AA)
 
-Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` runs with `web-design-guidelines` available, the generic HTML and CSS rules in this domain (icon-button names, `div` click handlers, `outline: none` without replacement) are delegated to that skill; every MUI, react-hook-form, notistack, and Recharts rule and every WCAG threshold stays primary here. The `webview-ui-optimize` rule table still judges every rule below; delegation only affects the `frontend-audit` run.
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `web-design-guidelines` to completion in the same audit, the generic HTML and CSS rules in this domain (icon-button names, `div` click handlers, `outline: none` without replacement) are delegated to that skill; every MUI, react-hook-form, notistack, and Recharts rule and every WCAG threshold stays primary here. The `webview-ui-optimize` rule table still judges every rule below; delegation only affects the `frontend-audit` run.
 
 #### Document structure
 
@@ -244,7 +244,7 @@ Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-a
 
 ### UX and native feel
 
-Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` runs with `web-design-guidelines` available, the generic CSS rules in this domain (`prefers-reduced-motion`, safe-area insets, `transition: all`) are delegated to that skill; every MUI, React Router, react-hook-form, and notistack rule stays primary here. The `webview-ui-optimize` rule table still judges every rule below; delegation only affects the `frontend-audit` run.
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `web-design-guidelines` to completion in the same audit, the generic CSS rules in this domain (`prefers-reduced-motion`, safe-area insets, `transition: all`) are delegated to that skill; every MUI, React Router, react-hook-form, and notistack rule stays primary here. The `webview-ui-optimize` rule table still judges every rule below; delegation only affects the `frontend-audit` run.
 
 #### Loading and feedback hierarchy
 

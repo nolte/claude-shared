@@ -9,9 +9,9 @@ own rules it covers.
 
 ## Input files
 
-Same React app as Example 01, but `.claude/skills/` lacks
-`vercel-react-best-practices` and no user or plugin skill of that name
-is listed. No URL is given.
+Same React app as Example 01, but the session lists no skill named
+`vercel-react-best-practices` (project, user, or plugin). No URL is
+given.
 
 ## Expected behaviour
 
@@ -19,8 +19,9 @@ is listed. No URL is given.
    coverage gap with the pinned command
    `npx skills add vercel-labs/agent-skills@<ref> --skill react-best-practices -a claude-code`.
 2. The skill runs no install command itself.
-3. `frontend-code-reviewer` is dispatched with F6's delegated rules
-   (waterfalls, barrel imports, full renders) marked as active
-   fallbacks; the header lists them.
+3. `web-design-guidelines` runs to completion, so full renders of
+   large collections stay delegated to it; `frontend-code-reviewer` is
+   dispatched with F6's waterfall, barrel-import, and route-split rules
+   as active fallbacks, and the header lists them.
 4. The rendered strand is a coverage gap ("no application URL
    supplied"); no app is started.
