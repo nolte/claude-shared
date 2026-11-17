@@ -68,6 +68,6 @@ jobs:
       contents: read
       pull-requests: read
       issues: read
-    uses: nolte/gh-plumbing/.github/workflows/reusable-pr-lint.yaml@0e88a921db456b1939a31b4c15a3b1adf28602e8 # v2.3.0
+    uses: nolte/gh-plumbing/.github/workflows/reusable-pr-lint.yaml@d664e75afc4d57de958af926987f842c1fc1f420 # v2.3.1
     with:
       spec-anchor: true
