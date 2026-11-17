@@ -161,7 +161,7 @@ def test_real_vale_ignores_a_masked_prefix_but_still_checks_the_summary():
     try:
         masked = check_prose.run_vale(check_prose.mask_title("fix(ci): update the lint job") + "\n")
         unmasked = check_prose.run_vale("fix(ci): update the lint job\n")
-        summary_error = check_prose.run_vale(check_prose.mask_title("fix(ci): update the pr checks") + "\n")
+        summary_error = check_prose.run_vale(check_prose.mask_title("fix(ci): update the yaml checks") + "\n")
     except check_prose.CheckUnavailable as exc:
         pytest.skip(f"vale styles not synced here: {exc}")
     if not unmasked:
@@ -170,4 +170,4 @@ def test_real_vale_ignores_a_masked_prefix_but_still_checks_the_summary():
         pytest.skip("vale styles not synced here: a known term error produced no alert")
     assert masked == []
     assert [a["Match"] for a in unmasked if a["Check"] == "Vale.Terms"] == ["ci"]
-    assert [a["Match"] for a in summary_error if a["Check"] == "Vale.Terms"] == ["pr"]
+    assert [a["Match"] for a in summary_error if a["Check"] == "Vale.Terms"] == ["yaml"]
