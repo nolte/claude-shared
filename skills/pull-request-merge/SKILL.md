@@ -1,6 +1,6 @@
 ---
 name: pull-request-merge
-description: Promotes an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
+description: Promotes an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Reviews the real worktree diff via `code-review <PR#>` plus a read-only review agent (and a security-briefed one for security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green and red non-required checks are classified, and verifies the merge commit landed on `develop`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [pull-request]
 phase: review
 summary: "Promotes a draft PR to merged on develop, passing every pull-request-workflow gate."
@@ -27,7 +27,7 @@ Promotes an open draft pull request (typically the one opened by `pull-request-c
 
 ## Why this is a skill, not an agent
 
-Externally visible PR mutations gate on mid-flow confirmation, and the skill orchestrates `review`/`security-review`/`workflow-health`; read `references/skill-vs-agent-rationale.md` when challenging the choice.
+Externally visible PR mutations gate on mid-flow confirmation, and the skill orchestrates `code-review`, read-only review agents, and `workflow-health-triage`; read `references/skill-vs-agent-rationale.md` when challenging the choice.
 
 ## User-language policy
 
@@ -62,27 +62,28 @@ Run in parallel:
 
 Confirm the PR is open, draft, targets `develop`, and reports `mergeable: MERGEABLE`. If `mergeable: CONFLICTING`, stop and hand back to the user—conflicts are resolved in the working tree, not by this skill.
 
-### 2. Delegate pre-merge review
+### 2. Review the real diff
 
-Invoke the `review` skill with the PR number so it performs a final review of the diff (`Skill(skill="review")`). Wait for its report. If the review raises any blocking finding, surface it to the user verbatim and stop—don't flip the draft or merge until the user resolves the finding or explicitly overrides it.
+The gate is the branch's diff, `git -C <worktree> diff origin/develop...HEAD`, where `<worktree>` holds the branch. The review is (a) the built-in `code-review` with the PR number as target, run from a working copy that holds the branch, and (b) an independent read-only review agent given the worktree path and that range: the always-available path, required when the session cwd isn't the branch's worktree. When the diff touches a security-sensitive path (workflows, settings, shell, secrets, auth or signing code; full list in the reference), also dispatch a read-only review agent briefed for security with the worktree path and range; use the built-in `security-review` only when the session cwd is that worktree, since it takes no target and reads the cwd.
 
-If the diff touches a security-sensitive path—any of `.github/workflows/`, `.github/settings.yml`, `**/*.sh`, files that contain `secret` / `token` / `password` references, auth or signing code—additionally invoke the `security-review` skill. Block on any blocking finding from that skill the same way.
+When the PR notes record a review with this head SHA (an orchestrate skill's review before the PR opens or a lane returns `committed-locally`), this step confirms it over the same diff instead of starting from zero; a later commit beyond an `.audits/` removal, or a different file list, means a fresh review.
 
-Both built-ins compose their diff from fixed `git ... origin/HEAD...` substitutions that take no path argument, so they read **this session's** working directory rather than any path you pass them. Run them from a working copy that actually holds the change, and check the reported file list against `git diff --stat origin/develop...HEAD` before believing a clean result. A clean report over an empty diff is a failed gate rather than a pass, per `spec/project/issue-orchestration/` §Verification and traceability. This matters most when the branch was produced by `issue-orchestrate`, whose worktree isolation puts the change somewhere the session isn't.
+Surface any blocking finding verbatim and stop until the user resolves or overrides it. A clean result over an empty diff, or over a file list that doesn't match `git -C <worktree> diff --stat origin/develop...HEAD`, is a failed gate rather than a pass, per `spec/project/issue-orchestration/` §Verification and traceability. Read `references/pre-merge-review.md` when choosing lanes, briefing the agent, or confirming a prior review.
 
 ### 3. Derive and apply labels
 
 Build a candidate label set and intersect it with the labels that actually exist in the repository (collected in step 1). **Never create a new label**; a candidate label that doesn't exist is reported as a portfolio gap to close via `.github/settings.yml` (directly or via `nolte/gh-plumbing:.github/commons-settings.yml`), not silently added.
 
-Read `references/label-derivation.md` when deriving the candidate set — it carries the full candidate table (the type-label Conventional-Commits prefix map and the touched-path → area-label rows), the single `gh pr edit --add-label` apply call, and the rule to report both applied labels and skipped candidates.
+Read `references/label-derivation.md` when deriving the candidate set — it carries the candidate table (Conventional-Commits type map, touched-path → area rows), the single `gh pr edit --add-label` call, and the rule to report applied labels and skipped candidates.
 
 ### 4. Verify required checks
 
-Re-run `gh pr checks <number>` after the label edit. Require **every** required status check declared for `develop` in `.github/settings.yml` to report `SUCCESS`. Three outcomes:
+Re-run `gh pr checks <number>` after the label edit. Require **every** required status check declared for `develop` in `.github/settings.yml` to report `SUCCESS`. Outcomes:
 
 - **All green** → proceed to step 5.
-- **At least one pending** → default behavior is to report the pending checks and stop; the user reruns the skill once checks complete. When the user opts in to **wait mode** (see "Wait mode" below), re-check the same `gh pr checks` call under the bounded caps in `references/wait-mode.md` until every required check is green; on timeout, stop and report the still-pending checks just like the default path. **Polling is permitted only inside wait mode**; outside wait mode, the no-poll rule still applies.
+- **At least one pending** → default behavior is to report the pending checks and stop; the user reruns the skill once checks complete. In **wait mode**, re-check the same `gh pr checks` call under the caps in `references/wait-mode.md` until every required check is green; on timeout, report the still-pending checks as in the default path.
 - **At least one failed** → don't flip draft and don't merge, even in wait mode. Hand off to the `workflow-health-triage` skill (which implements `spec/project/workflow-health/<canonical_language>.md`): classify the failure (`defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`) and route the fix through a separate PR. Never retry the merge by re-running failed checks blindly—that's drift per the workflow-health spec.
+- **A red check on the head commit that isn't required** → before step 5, classify it via `workflow-health-triage`, or show the same check red on `develop` too, and report the result. "Not required" isn't a classification; a `defect` the PR introduces blocks like a failed required check.
 
 ### 5. Flip draft → ready
 
@@ -127,9 +128,9 @@ git fetch origin develop
 git log --oneline -1 origin/develop
 ```
 
-If `state == MERGED` and `mergeCommit.oid` appears on `origin/develop`, report back and proceed to step 8. If `state == OPEN` and at least one required check is still running, the default behavior is to report the outstanding checks and stop—the merge will complete automatically once `pascalgn/automerge-action` sees green required checks. When the user opts in to **wait mode** (see "Wait mode" below), re-check `gh pr view --json state,mergedAt,mergeCommit` under the bounded caps in `references/wait-mode.md` until `state == MERGED`; on timeout, stop and report the still-`OPEN` state plus the most recent `gh pr checks` snapshot.
+If `state == MERGED` and `mergeCommit.oid` appears on `origin/develop`, report back and proceed to step 8. If `state == OPEN` and at least one required check is still running, by default report the outstanding checks and stop—the merge will complete automatically once `pascalgn/automerge-action` sees green required checks. In **wait mode**, re-check `gh pr view --json state,mergedAt,mergeCommit` under the caps in `references/wait-mode.md` until `state == MERGED`; on timeout, report the still-`OPEN` state plus the latest `gh pr checks` snapshot.
 
-**7b. Audit the automerge workflow when the PR is `OPEN` with all required checks green and the `automerge` label applied.** Read `references/automerge-verification.md` when 7a leaves the PR `OPEN` with green required checks — it carries the runbook that pulls the workflow's internal `mergeResult` out of the run logs, the `merge_failed` classification (a `workflow-health` incident, **not** a retryable label-apply — never re-apply `automerge` or re-run the workflow blindly), and the common `stale pin` cause with its bump target.
+**7b. Audit the automerge workflow.** Read `references/automerge-verification.md` when 7a leaves the PR `OPEN` with green required checks and the `automerge` label applied — it carries the runbook that pulls the workflow's internal `mergeResult` out of the run logs, the `merge_failed` classification (a `workflow-health` incident, **not** a retryable label-apply — never re-apply `automerge` or re-run the workflow blindly), and the common `stale pin` cause with its bump target.
 
 Report back: PR URL, merged-at timestamp, merge commit SHA on `origin/develop`, the labels that were applied, and—if 7b caught a silent no-op—the workflow-health classification and the remediation the user needs to take next.
 
@@ -156,7 +157,7 @@ Finally, surface what still holds the slot (`gh pr list --state open --base deve
 
 ## Wait mode
 
-The skill is single-shot by default: when step 4 finds pending checks or step 7a finds the PR still `OPEN`, the skill reports and stops; the user re-invokes once GitHub is in the next state. **Wait mode** is an opt-in that lets the skill wait for state transitions inside a single invocation, bounded by hard caps (interval ≥60s, wall-clock ≤15 min, ≤10 retries per wait point, visible status line per round, failure short-circuits to workflow-health). Read `references/wait-mode.md` when the user opts in via `--wait` or an unambiguous "wait until X" instruction in the prompt — the reference covers activation, every cap with its rationale, the per-step implementation pattern (step 4 vs. step 7a), and the prompt-cache trade-off that justifies the bounds.
+The skill is single-shot by default: when step 4 finds pending checks or step 7a finds the PR still `OPEN`, the skill reports and stops; the user re-invokes once GitHub is in the next state. **Wait mode** is an opt-in that lets the skill wait for state transitions inside a single invocation, bounded by hard caps and a visible status line per round. Read `references/wait-mode.md` when the user opts in via `--wait` or an unambiguous "wait until X" instruction in the prompt — it covers activation, every cap with its rationale, the step 4 vs. step 7a pattern, and the prompt-cache trade-off.
 
 ## Examples
 
@@ -166,11 +167,11 @@ The skill is single-shot by default: when step 4 finds pending checks or step 7a
 
 ## Gotchas
 
-Read `references/gotchas.md` when a `gh` call or merge signal behaves unexpectedly — the exact-spelling `automerge` label, `automerge.yaml` `SUCCESS` not proving the merge, the required-checks list living in `.github/settings.yml` (not the UI), and `Closes #N` autolinks not firing on `develop` merges. The load-bearing versions are also in the Hard rules and the numbered steps.
+Read `references/gotchas.md` when a `gh` call or merge signal behaves unexpectedly — the exact-spelling `automerge` label, `automerge.yaml` `SUCCESS` not proving the merge, the required-checks list living in `.github/settings.yml` (not the UI), and unreliable `Closes #N` autolinks on `develop` merges.
 
 ## Resumability
 
-Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/pull-request-merge/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/pull-request-merge/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope and its fail-closed semantics live in the spec.
 
 ## Hard rules
 
@@ -179,7 +180,8 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** pass `--admin` to `gh pr merge`. `enforce_admins: true` on `develop` has no exception path.
 - **Never** use a merge strategy other than `--squash`. Squash-merge is mandated by the `pull-request-workflow` spec.
 - **Never** create a new GitHub label from this skill. Label candidates that don't exist in the repository are reported as a gap, not silently added.
-- **Never** skip the `review` skill delegation. A final review is the cheapest pre-merge gate; only an explicit user override bypasses it.
+- **Never** skip the step 2 review of the real worktree diff, and never accept a clean result over an empty diff. A final review is the cheapest pre-merge gate; only an explicit user override bypasses it.
+- **Never** let a red check on the head commit pass silently because it isn't required: classify it via `workflow-health-triage`, or show it red on `develop` too, before step 5.
 - **Never** rebase or merge `develop` into the feature branch silently to fix a lag. Branch-freshness gaps return control to the user, consistent with `pull-request-create`.
 - **Never** merge two PRs at once. Per the pull-request-workflow spec they merge one at a time; after each merge every remaining open PR lags `develop` and must be rebased onto the new tip (enforced by the Preconditions lag-check) before this skill proceeds, in dependency order where one PR builds on another.
 - **Never** poll, sleep, or loop waiting for checks to complete **unless the user has opted in to wait mode** (see "Wait mode" below). Outside wait mode, report the outstanding state and stop; the user re-invokes the skill when ready. Inside wait mode, polling is permitted but bounded by the documented retry / interval / timeout caps and **never** silently in the background — every wait round produces a visible status line.

@@ -23,7 +23,7 @@ Readers: skill authors maintaining the checker; reviewers verifying its findings
 
 - Implementing or repairing error handlers—the check reports gaps; a developer fixes them
 - The whole-codebase OWASP security audit owned by `spec/project/code-security-audit/`; this spec is the narrow error-response slice, and a leakage finding here is a pointer into that broader audit, not a substitute for it
-- General code-quality or correctness review (owned by the `review` skill); this check judges only the error-handling contract
+- General code-quality or correctness review (owned by the pre-merge review in `pull-request-merge` step 2); this check judges only the error-handling contract
 - Defining a project's error contract: the check measures against whatever contract the project declares, it doesn't impose a canonical schema on projects that have none
 - Runtime fault injection or live API probing; the check is static (reads source, doesn't call the running API)
 - Localisation of error messages (owned by `spec/project/i18n-completeness/`)

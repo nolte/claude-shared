@@ -128,7 +128,7 @@ Readers: operators running a grouped backlog pass, skill and agent authors imple
 - **MUST** remove every transient artifact (§D) before the bundle merges, so the durable trail is the pull-request body plus the per-issue comments
 - **MUST**, when a member has to be dropped after the bundle pull request is open, remove that member's changes from the integration branch—in Mode B by dropping its merge—and update both the artifact and the pull-request body, or close the bundle and re-group; a bundle **MUST NOT** merge while claiming a member it no longer carries
 - **MUST NOT** merge the bundle itself; the group process stops at an open, audit-trailed pull request and hands the merge to `pull-request-merge`
-- **MUST**, when the group runs as a lane of an orchestrated run (§J), stop at the verified integration branch, committed and not pushed (`committed-locally`), instead of opening the bundle pull request; the orchestrating run opens it when the branch reaches the head of the train, per `pull-request-workflow` §"Serial pull-request flow"
+- **MUST**, when the group runs as a lane of an orchestrated run (§J), stop at the verified integration branch, committed and not pushed (`committed-locally`), after an independent read-only review of the integration branch's diff whose findings are triaged and recorded in the group artifact, instead of opening the bundle pull request; the orchestrating run opens it when the branch reaches the head of the train, per `pull-request-workflow` §"Serial pull-request flow"
 
 ### H. Closeout
 

@@ -307,7 +307,9 @@ verifiziert und gemergt ist.
   Audit→Fix→Verify-Kette statt einem einzelnen Dispatch: der read-only
   `code-security-reviewer`-Agent fasst die Oberfläche ab, ein coding-fähiger
   Spezialist (oder, mangels Match, der Generalist unter der Gap-Regel) verfasst den
-  Fix, und das eingebaute `security-review`-Skill verifiziert den Diff
+  Fix, und ein Diff-Review mit Security-Briefing verifiziert ihn (ein read-only
+  Reviewer oder das eingebaute `security-review` aus einer im Worktree verwurzelten
+  Session)
 - **MUSS [MUST]** ein Arbeitspaket, für das kein Spezialist passt, als Portfoliolücke
   gemäß `continuous-improvement` §Portfoliolücken-Schließung behandeln: Der Orchestrator
   hält den No-Match fest, wendet die Drei-Wiederholungen-Regel an und **KANN [MAY]**
@@ -345,11 +347,23 @@ verifiziert und gemergt ist.
 - **MUSS [MUST]** verlangen, dass `quality-gate` auf der erzeugten Änderung grün
   durchläuft, bevor der Pull Request geöffnet wird, und **MUSS [MUST]** für jedes
   Paket, das einen security-sensitiven Pfad berührt, den read-only
-  `code-security-reviewer`-Agent zur Abfassung der Oberfläche und das eingebaute
-  `security-review`-Skill zur Verifikation des erzeugten Diffs laufen lassen, bevor
-  der PR geöffnet wird. (`security-review` ist das Claude-Code-Harness-Built-in, kein
+  `code-security-reviewer`-Agent zur Abfassung der Oberfläche laufen lassen und den
+  erzeugten Diff, bevor der PR geöffnet wird, durch einen read-only Reviewer mit
+  Security-Briefing verifizieren oder durch das eingebaute `security-review`-Skill,
+  wenn die Session im Worktree verwurzelt ist. (`security-review` ist das Claude-Code-Harness-Built-in, kein
   `nolte-shared`-Plugin-Agent; es wird als `security-review`-Skill aufgerufen, nicht
   über `Agent(subagent_type="nolte-shared:security-review")`.)
+- **MUSS [MUST]** ein unabhängiges Review des erzeugten Diffs (`git -C <worktree> diff
+  origin/develop...HEAD`) durch einen read-only Reviewer laufen lassen, der die Änderung
+  nicht erzeugt hat, bevor der Pull Request geöffnet wird oder, wenn der Lauf eine Lane
+  ist, bevor er `committed-locally` zurückgibt; seine Befunde triagieren und mit dem
+  Head-Commit, den sie abdecken, im Pre-Analysis-Artefakt und in den **Risk / rollout
+  notes** des Pull Requests (als Lane im zurückgegebenen Body-Entwurf) festhalten, dem
+  dauerhaften Nachweis, der die Entfernung des
+  Artefakts überdauert. `pull-request-merge`
+  bestätigt dieses Review dann über denselben Head, nach dem ein späterer Commit nur die
+  `.audits/`-Artefakte des Laufs entfernen darf, statt der Änderung den ersten Blick
+  zu geben, der ein auf den Merge verschobenes Review sonst wäre
 - **MUSS [MUST]** diese Diff-Verifikation aus einer Arbeitskopie erfüllen, die die
   Änderung tatsächlich enthält, und **DARF NICHT [MUST NOT]** darauf bauen, dem
   Built-in den Worktree-Pfad zu übergeben. Das Built-in setzt seine Änderungsmenge
@@ -559,9 +573,13 @@ Diese Kriterien gelten für Läufe, die begonnen haben, nachdem die Transient-Re
 - [ ] Kein von dieser Orchestrierung produzierter Pull Request wurde von der
   Orchestrierung selbst gemergt, und keiner zeigt einen Branch-Protection-Override,
   eine `enforce_admins: false`-Ausnahme oder einen Required-Check-Bypass
+- [ ] Für jeden Lauf lief ein unabhängiges read-only Review des erzeugten Diffs, bevor der
+  PR geöffnet wurde oder, bei einer Lane, bevor sie `committed-locally` zurückgab, und das
+  Artefakt hält seine Befunde mit dem Head-Commit fest, den sie abdecken
 - [ ] Für jedes `security`-Issue liefen sowohl der read-only
-  `code-security-reviewer`-Agent als auch das eingebaute `security-review`-Skill,
-  bevor der PR geöffnet wurde (Audit, dann Diff-Verifikation), festgehalten im
+  `code-security-reviewer`-Agent als auch ein Diff-Review mit Security-Briefing (ein
+  read-only Reviewer oder das eingebaute `security-review` aus einer im Worktree
+  verwurzelten Session), bevor der PR geöffnet wurde (Audit, dann Diff-Verifikation), festgehalten im
   Artefakt und in den PR-Notes, oder Artefakt und PR-Notes halten fest, warum
   `code-security-reviewer` nicht verfügbar war
 - [ ] Für jeden Lauf, der die Pipeline-Route genommen hat oder genommen hätte, während

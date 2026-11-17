@@ -70,7 +70,9 @@ created: ""
 ## Risks
 
 <!-- Each risk with a one-line mitigation. Security-sensitive paths MUST note the
-     code-security-reviewer / security-review requirement before PR. -->
+     code-security-reviewer surface scoping and the security-briefed read-only diff
+     review required before the PR (security-review only from a session rooted in
+     the worktree). -->
 
 ## Open questions
 
@@ -78,8 +80,10 @@ created: ""
 
 ## Findings
 
-<!-- One row per finding raised beside the work packages (reviewer, verification pass,
-     class sweep, specialist result), triaged per references/finding-triage.md.
+<!-- One row per finding raised beside the work packages (operation 6 diff review as
+     "diff review @ <head-sha>", with a "no findings" row when it raised none;
+     verification pass, class sweep, specialist result), triaged per
+     references/finding-triage.md.
      Outcome: fixed directly (listed under the PR's Changes) | filed (referenced in
      Risk / rollout notes) | dismissed (unreproduced, with the settling observation).
 | Finding | Source | Outcome | Reproduction | Issue |

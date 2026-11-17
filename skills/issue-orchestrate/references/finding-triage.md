@@ -1,7 +1,7 @@
 # Finding triage in a single-issue run
 
-Loaded by operation 5 before the first dispatch, and by operation 6 whenever a reviewer,
-a verification pass, the class sweep, or a specialist's result raises a finding beside
+Loaded by operation 5 before the first dispatch, and by operation 6 whenever the diff
+review, a verification pass, the class sweep, or a specialist's result raises a finding beside
 the issue's own work packages. The rule is `spec/project/issue-orchestration/`
 §"Verification and traceability"; this file says how the orchestrator applies it. It's
 the same triage `issue-batch-orchestrate` runs per member
@@ -63,7 +63,16 @@ Every brief carries this clause beside the refutation clause of
 Without the clause a specialist reads its package as a fence and returns findings as a
 list, and each listed item turns into an issue nobody needed.
 
-## The class-sweep remainder
+## The class guard and the sweep remainder
+
+When the run closes a defect, decide before the pull request opens whether the fix
+leaves a mechanical guard refusing the class (G1) that enumerates the class, not the
+reported sites (G3), whose selector is as wide as the property it asserts (G6), and that
+asserts nothing the fix didn't repair (G7), per `spec/project/defect-class-guards/`.
+Where none is possible, the deliverable is a note in the issue saying why. A guard too
+large for this change becomes its own referenced issue, never a pull-request-body
+intention, which is lost at merge. Record the decision in the `fix` pull request's
+`## Class sweep` section and run the predicate; never estimate it.
 
 On a `fix` run, when `Repaired` is less than `Hits`, triage the remaining sites the same
 way: repair in this change every site that meets (a) to (c) and count it in `Repaired`.
@@ -82,6 +91,11 @@ Add one row per finding to the pre-analysis artifact's `## Findings` table:
 |---|---|---|---|---|
 | stale comment at `<path>:<line>` | specialist result | fixed directly | `<command>` and its output | none |
 | sibling call site at `<path>:<line>` | class sweep | filed | `<command>` and its output | #nnn |
+| missing input check at `<path>:<line>` | diff review @ `<head-sha>` | fixed directly | `<command>` and its output | none |
+
+The operation 6 diff review records its source as `diff review @ <head-sha>`, the
+`git -C <worktree> rev-parse HEAD` it covered, plus one row `no findings` when it raised
+none, so the record shows that it ran and which head it covered.
 
 The pull request lists each directly fixed finding under **Changes** with its
 reproduction, and references each filed one in **Risk / rollout notes**. The artifact is

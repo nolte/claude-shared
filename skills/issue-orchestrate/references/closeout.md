@@ -5,7 +5,8 @@ exact contracts, so the body doesn't have to.
 
 ## 1. Remove the pre-analysis artifact
 
-With every package implemented and the gate green:
+With every package implemented, the gate green, and operation 6's diff review recorded
+with its head SHA:
 
 ```bash
 git rm .audits/issue-orchestrate/<n>/analysis.md
@@ -27,6 +28,12 @@ Two things that look like shortcuts and aren't:
 - **Never remove the requirement artefact** under `project/requirements/`. It's
   durable by design and outlives the run; the spec requires it to still be on the
   default branch after the merge.
+
+The removal commit changes the head after the review. That's expected: it only deletes
+the transient artifact, and `pull-request-merge`'s confirmation of the review accepts
+commits after the reviewed head that only remove `.audits/` artifacts. Any other commit
+after the review (a fix for a finding included) needs the review run again over the new
+head before this step.
 
 ## 2. Open the pull request, or return `committed-locally` as a lane
 
@@ -56,6 +63,9 @@ externally-visible-action gate. The pull request must carry:
 - **every triaged finding** per `references/finding-triage.md`: a finding fixed
   directly is listed under **Changes** with its reproduction, a filed one is referenced
   in **Risk / rollout notes**.
+- **the diff review** in **Risk / rollout notes**: the reviewed head SHA, its
+  `--stat` file list, the lanes that ran, and the blocking-finding count. It's the
+  record `pull-request-merge` step 2 confirms, and it survives the artifact's removal.
 
 The per-package line is what makes the run auditable after the fact. A reader must be
 able to tell which specialist produced which part of the diff without replaying the
@@ -72,7 +82,8 @@ it's what a later reader finds first.
 **As a lane**, return: status `committed-locally`, branch, worktree, the commit SHA
 of the branch tip, this run's id (`.resume/issue-orchestrate/<run-id>.yml`), the
 drafted pull-request title and body, the classification, the dispatched specialists,
-and anything blocked. Nothing is pushed.
+the diff review (reviewed head SHA, lanes, findings and their outcomes), and anything
+blocked. Nothing is pushed.
 
 **Standalone**, the orchestration stops at an open, audit-trailed pull request. **The merge belongs to
 `pull-request-merge`**, which re-validates the gate.

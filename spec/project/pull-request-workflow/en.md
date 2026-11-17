@@ -134,6 +134,7 @@ The section **MUST** carry these four fields, as a list, with these exact labels
 - **MUST** require every declared check to report success before a PR can merge into `develop`
 - **MUST** configure the `automerge.yaml` workflow so it merges a PR only when every required status check on the PR's head commit reports success and every review-related protection rule configured for `develop` (for example `required_approving_review_count` or Code Owner reviews) is satisfied; the workflow **MUST NOT** bypass any protection rule, and repositories that don't require approving reviews (`required_approving_review_count: 0`) still merge only once every required status check on the head commit is green
 - **MUST** set `enforce_admins: true` for `develop` branch protection so that admin overrides can't bypass a failing required check; the CI gate has no exception path, and a waiver isn't permitted—if a required check is persistently broken, the correct remedy is a PR against `.github/settings.yml` (which itself passes the gate) to remove or replace the check, not a one-off bypass
+- **MUST** classify a red check on the head commit that isn't required through the workflow-health triage (`spec/project/workflow-health/`), or show it's red on `develop` too, before the merge; a red non-required check never passes silently. Not being required decides only that it can't block automerge, not that it can be ignored
 - **SHOULD** block merge while any review explicitly requests changes, even after CI becomes green
 
 ### Merge strategy
@@ -178,6 +179,7 @@ The section **MUST** carry these four fields, as a list, with these exact labels
 - [ ] `.github/pull_request_template.md` exists and its section headings match the five headings listed in "PR description structure," in order
 - [ ] `.github/settings.yml` declares required status checks for `develop` (directly or via the `nolte/gh-plumbing` commons extension)
 - [ ] `enforce_admins` is `true` for the `develop` branch protection rule; no waiver mechanism exists in the repository
+- [ ] A PR whose head commit carries a red non-required check is merged only after that check was classified through the workflow-health triage or shown to be red on `develop` too
 - [ ] For the last 10 PRs merged into `develop`, every required status check was green at merge time (spot-check via `gh pr list --state merged --base develop --limit 10 --json number,title,mergedAt,statusCheckRollup`)
 - [ ] For the same 10 PRs, titles match the Conventional Commits form and the `type` corresponds to the branch prefix; a PR from an allowlisted dependency bot is held to the title form and type vocabulary only
 - [ ] The source branches of the same 10 PRs used one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, `exp/`, and the PR title type matched the prefix verbatim, except PRs opened by an allowlisted dependency bot

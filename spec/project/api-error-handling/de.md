@@ -23,7 +23,7 @@ Leser: Skill-Autoren, die den Checker pflegen; Reviewer, die seine Befunde prüf
 
 - Fehler-Handler implementieren oder reparieren — die Prüfung berichtet Lücken; ein Entwickler behebt sie
 - Das Whole-Codebase-OWASP-Security-Audit, das `spec/project/code-security-audit/` besitzt; diese Spec ist die enge Fehlerantwort-Scheibe, und ein Leckage-Befund hier ist ein Zeiger in dieses breitere Audit, kein Ersatz dafür
-- Allgemeines Code-Quality- oder Korrektheits-Review (Eigentum des `review`-Skills); diese Prüfung beurteilt nur den Fehlerbehandlungs-Contract
+- Allgemeines Code-Quality- oder Korrektheits-Review (Eigentum des Pre-Merge-Reviews in Schritt 2 von `pull-request-merge`); diese Prüfung beurteilt nur den Fehlerbehandlungs-Contract
 - Den Fehler-Contract eines Projekts definieren: Die Prüfung misst gegen den Contract, den das Projekt deklariert, sie zwingt Projekten ohne Contract kein kanonisches Schema auf
 - Laufzeit-Fault-Injection oder Live-API-Probing; die Prüfung ist statisch (liest Quellcode, ruft die laufende API nicht auf)
 - Lokalisierung von Fehlermeldungen (Eigentum von `spec/project/i18n-completeness/`)

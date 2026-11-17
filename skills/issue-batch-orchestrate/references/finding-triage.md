@@ -1,7 +1,8 @@
 # Finding triage and the per-member verification pass
 
-Loaded by operation 5, after a member's result is recorded. It says what happens to a
-finding that a reviewer, a verification pass, or a check raises against a member's change.
+Loaded by operation 5, after a member's result is recorded and before the bundle opens.
+It says what happens to a finding that a reviewer, a verification pass, the
+integration-branch diff review, or a check raises against the group's change.
 
 ## The per-member verification pass
 
@@ -14,6 +15,25 @@ pass exists because the author's context shares the author's blind spots.
 Run the built-in review skills from a working copy that holds the change, and compare
 their file list with `git diff --stat origin/develop...HEAD`; a clean report over an empty
 diff is a failed pass.
+
+## The integration-branch diff review
+
+After the per-member passes and the green `quality-gate` on the integration branch tip,
+and before the bundle opens or a lane returns `committed-locally`, review the whole
+group's diff once more: `git -C <worktree> diff origin/develop...HEAD` on the
+integration branch, by a read-only agent that produced none of it, briefed for security
+when the diff touches a security-sensitive path. With no pull request yet, only those
+read-only lanes apply (no PR number for `code-review`). The lanes, the agent brief, and the
+failed-gate rule are `pull-request-merge`'s `references/pre-merge-review.md`; don't
+restate them here. The member passes don't replace this review: they each saw one slice,
+and the bundle is what merges.
+
+Record its source as `diff review @ <head-sha>` (the `git -C <worktree> rev-parse HEAD`
+it covered), with a `no findings` row when it raised none, and carry the head SHA, the
+`--stat` file list, the lanes, and the findings into the bundle's Risk / rollout notes
+(as a lane: the returned payload). A finding fixed after the review adds a commit, so
+review the new head again; only the bundle's `git rm` of `.audits/` artifacts may follow
+the reviewed head, which `pull-request-merge`'s confirmation accepts.
 
 ## The triage
 
