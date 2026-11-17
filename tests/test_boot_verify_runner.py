@@ -371,13 +371,13 @@ def _reflash_only(doc):
 
 
 def _run(tmp_path: Path, path_dir: Path, *extra: str, env_extra=None, artifact=True,
-         image_bytes=b"\0" * 4096) -> tuple[int, dict, Path]:
+         image_bytes=b"\0" * 4096, expected_version="1.4.0") -> tuple[int, dict, Path]:
     out = tmp_path / "run"
     image = tmp_path / "edge-appliance_1.4.0.raw"
     image.write_bytes(image_bytes)
     args = [sys.executable, str(RUNNER), "--out", str(out), *extra]
     if artifact:
-        args += ["--artifact", str(image), "--expected-version", "1.4.0", "--commit", COMMIT]
+        args += ["--artifact", str(image), "--expected-version", expected_version, "--commit", COMMIT]
     env = {**os.environ, "PATH": str(path_dir), "PYTHONDONTWRITEBYTECODE": "1", **(env_extra or {})}
     proc = subprocess.run(args, capture_output=True, text=True, env=env, timeout=120, check=False)
     summary = json.loads(proc.stdout)
@@ -1210,11 +1210,15 @@ def test_harness_signature_rejection_accepting_an_untrusted_key_fails(tmp_path, 
 
 
 def test_harness_signature_rejection_without_positive_control_is_not_run(tmp_path, fake_bin):
-    _, _, _, by, _ = _security_run(tmp_path, fake_bin, "smoke,signature-rejection")
+    """§H, §I: the control decides only the scenario verdict; a delivered, refused variant keeps pass."""
+    code, _, _, by, _ = _security_run(tmp_path, fake_bin, "smoke,signature-rejection")
     signature = by["signature-rejection"]
-    assert signature["verdict"] == "not-run"
+    assert signature["verdict"] == "not-run" and code == 2
     assert signature["not_run_cause"]["reason"] == bv.NO_CONTROL_REASON
     assert [v["verdict"] for v in signature["signature_variants"]] == ["pass", "pass"]
+    untrusted = signature["signature_variants"][0]
+    assert untrusted["name"] == "untrusted-key" and "reason" not in untrusted
+    assert untrusted["observed_versions"] == ["1.4.0", "1.4.0"] and untrusted["source_requests"] >= 1
 
 
 def test_harness_payload_offering_n_version_makes_its_variant_not_run(tmp_path, fake_bin):
@@ -1376,6 +1380,87 @@ def test_harness_previous_version_newer_than_n_is_a_failed_precondition(tmp_path
     assert downgrade["name"] == "downgrade" and downgrade["verdict"] == "not-run"
     assert "is newer than N's version 1.4.0" in downgrade["not_run_cause"]["reason"]
     assert not (out / "downgrade.serial.log").exists() and _validate(out / "protocol.json") == 0
+
+
+def _downgrade_precondition_run(tmp_path, fake_bin, version=None, previous=None, expected_version="1.4.0"):
+    """A smoke,rollback,downgrade run whose previous-version input is replaced before the runner starts."""
+    decl = _write_declaration(tmp_path)
+    extra = _security_inputs(tmp_path)
+    if version is not None:
+        extra[extra.index("--previous-expected-version") + 1] = version
+    if previous is not None:
+        extra[extra.index("--previous-artifact") + 1] = str(previous)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), "--scenarios",
+                              "smoke,rollback,downgrade", *_fw(tmp_path), *_next_artifact(tmp_path), *extra,
+                              expected_version=expected_version)
+    assert _validate(out / "protocol.json") == 0
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    return code, summary, {s["name"]: s for s in protocol["scenarios"]}, out
+
+
+@pytest.mark.parametrize("version", ["1.4.0", "1.4"])  # equal to N, also once zero-padded
+def test_harness_previous_version_equal_to_n_makes_downgrade_not_run_without_booting(tmp_path, fake_bin, version):
+    """§H: an installation of the same version can't be told from a refusal."""
+    code, summary, by, out = _downgrade_precondition_run(tmp_path, fake_bin, version=version)
+    assert by["downgrade"]["verdict"] == "not-run" and code == 2
+    assert by["downgrade"]["not_run_cause"]["reason"] == bv.NOT_OLDER_REASON
+    assert summary["scenarios"]["rollback"] == "pass"
+    assert not (out / "downgrade.serial.log").exists()
+    assert not (out / "downgrade.update-source.log").exists()
+
+
+@pytest.mark.parametrize("version", ["1.3.2", "1.3.2-rc1"])  # the same file is caught without a version order
+@pytest.mark.parametrize("same", ["path", "digest"])  # N's own path is caught through its digest
+def test_harness_artifact_under_test_as_previous_artifact_makes_downgrade_not_run(tmp_path, fake_bin, same, version):
+    image = tmp_path / "edge-appliance_1.4.0.raw"  # the artifact under test that _run writes
+    if same == "path":
+        previous = tmp_path / "alias" / ".." / image.name  # resolves to the artifact under test
+        (tmp_path / "alias").mkdir()
+    else:
+        (tmp_path / "copy").mkdir()
+        previous = tmp_path / "copy" / "edge-appliance_1.3.2.raw"
+        previous.write_bytes(b"\0" * 4096)  # the same bytes as N, so the same digest
+    code, _, by, out = _downgrade_precondition_run(tmp_path, fake_bin, version=version, previous=previous)
+    assert by["downgrade"]["verdict"] == "not-run" and code == 2
+    assert by["downgrade"]["not_run_cause"]["reason"] == bv.NOT_OLDER_REASON
+    assert not (out / "downgrade.serial.log").exists()
+
+
+def test_harness_equal_non_numeric_versions_on_another_file_make_downgrade_not_run(tmp_path, fake_bin):
+    """§H: equal version strings count as equal although compare_versions gives no order for them."""
+    _, _, by, out = _downgrade_precondition_run(tmp_path, fake_bin, version="1.4.0-rc1",
+                                                expected_version="1.4.0-rc1")
+    assert by["downgrade"]["verdict"] == "not-run"
+    assert by["downgrade"]["not_run_cause"]["reason"] == bv.NOT_OLDER_REASON
+    assert not (out / "downgrade.serial.log").exists()
+
+
+def test_harness_unparseable_previous_version_of_another_file_still_runs_downgrade(tmp_path, fake_bin):
+    """Without a version order only the same-file check applies; nothing else new is recorded."""
+    _, summary, by, out = _downgrade_precondition_run(tmp_path, fake_bin, version="1.3.2-rc1")
+    assert summary["scenarios"]["rollback"] == "pass" and by["downgrade"]["verdict"] == "pass"
+    assert "not_run_cause" not in by["downgrade"] and (out / "downgrade.serial.log").exists()
+
+
+@pytest.mark.parametrize("failure", [{"FAKE_RESET_UNHEALTHY": "downgrade"}, {"FAKE_ACCEPT": "downgrade"}])
+def test_harness_downgrade_failed_assertion_without_delivery_is_fail(tmp_path, fake_bin, failure):
+    """§H, §I step 4: a failed step-3 assertion is fail even when the source delivered nothing."""
+    code, summary, _, by, _ = _security_run(tmp_path, fake_bin, "smoke,rollback,downgrade",
+                                             env_extra={"FAKE_NO_FETCH": "downgrade", **failure})
+    downgrade = by["downgrade"]
+    assert summary["scenarios"]["rollback"] == "pass"
+    assert downgrade["verdict"] == "fail" and code == 1
+    assert downgrade["source_requests"] == 0 and "not_run_cause" not in downgrade
+
+
+def test_harness_signature_variant_failed_assertion_without_delivery_is_fail(tmp_path, fake_bin):
+    code, _, _, by, _ = _security_run(tmp_path, fake_bin, "smoke,rollback,signature-rejection",
+                                      env_extra={"FAKE_NO_FETCH": "signature-rejection-untrusted-key",
+                                                 "FAKE_ACCEPT": "signature-rejection-untrusted-key"})
+    signature = by["signature-rejection"]
+    untrusted = signature["signature_variants"][0]
+    assert untrusted["verdict"] == "fail" and untrusted["source_requests"] == 0
+    assert signature["verdict"] == "fail" and code == 1
 
 
 def test_harness_interrupted_update_half_written_n1_report_before_the_reset_is_not_run(tmp_path, fake_bin):

@@ -176,10 +176,12 @@ properties:
       - $ref: "#/$defs/Unavailable"
   previous_artifact:
     description: >-
-      The version that isn't newer than N (N-1, or N itself when the operator
-      passes it) which the local source served in the downgrade scenario (§H,
-      §I); unavailable, with the reason, when the input wasn't given or the
-      scenario wasn't planned.
+      The artifact of a version strictly older than N, such as N-1, offered to
+      the local source for the downgrade scenario (§H, §I); unavailable, with
+      the reason, when the input wasn't given or the scenario wasn't planned.
+      It isn't served when the downgrade is not-run before booting: an equal
+      version or N's own artifact makes it not-run with the reason
+      "previous-version artifact isn't older than N".
     oneOf:
       - $ref: "#/$defs/Artifact"
       - $ref: "#/$defs/Unavailable"
@@ -716,7 +718,7 @@ $defs:
               minLength: 1
           - $ref: "#/$defs/Unavailable"
       source_requests:
-        description: How many guest requests the local source recorded.
+        description: How many guest requests for the served file the local source recorded; a variant pass needs the file delivered in full (§I).
         oneOf:
           - type: integer
             minimum: 0
@@ -1033,9 +1035,11 @@ $defs:
           - $ref: "#/$defs/Unavailable"
       source_requests:
         description: >-
-          How many guest requests the local source recorded; only on downgrade
-          and interrupted-update. A pass needs at least one, since a source the
-          guest never contacted verifies nothing (§I).
+          How many guest requests for the served file the local source
+          recorded; only on downgrade and interrupted-update. A pass needs the
+          served file delivered in full within the window, since a source that
+          delivered nothing verifies nothing (§I); a failed assertion is a fail
+          even without delivery.
         oneOf:
           - type: integer
             minimum: 0
