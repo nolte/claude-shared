@@ -92,7 +92,7 @@ The mission statement **MUST** satisfy each of the following five constraints, i
 - **MUST NOT** allow any post-MVP roadmap item (`mvp: false`) to transition `proposed → active` while `mvp_status` is any of `defining`, `in_progress`, or `achieved`. The transition is permitted only when `mvp_status: stabilised`.
 - **MUST** require the operator (or a future automation skill) to flip `mvp_status` to `stabilised` explicitly; the flip **MUST NOT** be inferred silently from satisfying the conditions above. The flip records the decision; the conditions justify it.
 - **MUST** revert `mvp_status: stabilised → in_progress` when an MVP item re-opens to `status: active` (for example because a defect surfaced after stabilisation); the gate then re-applies and post-MVP items already in `status: active` at the time of the revert **MAY** continue to completion but no new post-MVP item **MUST** be allowed to start until stabilisation is restored.
-- **MAY** record the stabilisation evidence (the sprint number that satisfied the one-full-subsequent-sprint condition, the date of the operator decision) in `## Source` for the audit trail.
+- **MUST** record the stabilisation evidence (the sprint number that satisfied the one-full-subsequent-sprint condition, the date of the operator decision) in `## Source` for the audit trail when the flip doesn't use the retroactive exemption; without it, a flip that skipped the condition can't be told apart from one that met it, and `scripts/validate_mission.py` refuses the flip.
 
 ### Audience tailoring
 

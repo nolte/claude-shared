@@ -92,7 +92,7 @@ Das Mission Statement **MUSS [MUST]** jede der folgenden fünf Bedingungen erfü
 - **DARF NICHT [MUST NOT]** zulassen, dass ein Post-MVP-Roadmap-Item (`mvp: false`) `proposed → active` übergeht, solange `mvp_status` einer von `defining`, `in_progress` oder `achieved` ist. Der Übergang ist nur zulässig, wenn `mvp_status: stabilised`.
 - **MUSS [MUST]** verlangen, dass der Operator (oder ein zukünftiger Automations-Skill) `mvp_status` explizit auf `stabilised` umlegt; das Umlegen **DARF NICHT [MUST NOT]** still aus der Erfüllung der obigen Bedingungen abgeleitet werden. Der Schalter-Akt protokolliert die Entscheidung; die Bedingungen rechtfertigen sie.
 - **MUSS [MUST]** `mvp_status: stabilised → in_progress` zurücksetzen, sobald ein MVP-Item auf `status: active` zurückgeht (zum Beispiel weil ein Defekt nach der Stabilisierung auftaucht); das Gate greift dann erneut, und Post-MVP-Items, die zum Zeitpunkt der Rücksetzung bereits in `status: active` sind, **KÖNNEN [MAY]** zu Ende geführt werden, aber kein neues Post-MVP-Item **DARF [MUST]** gestartet werden, bevor die Stabilisierung wiederhergestellt ist.
-- **KANN [MAY]** die Stabilisierungs-Belege (die Sprint-Nummer, die die Bedingung „ein voller Folgesprint" erfüllt hat, das Datum der Operator-Entscheidung) für den Audit-Trail in `## Source` festhalten.
+- **MUSS [MUST]** die Stabilisierungs-Belege (die Sprint-Nummer, die die Bedingung „ein voller Folgesprint" erfüllt hat, das Datum der Operator-Entscheidung) für den Audit-Trail in `## Source` festhalten, wenn der Flip die rückwirkende Ausnahme nicht nutzt; ohne sie lässt sich ein Flip, der die Bedingung übersprungen hat, nicht von einem unterscheiden, der sie erfüllt hat, und `scripts/validate_mission.py` weist den Flip ab.
 
 ### Audience-Tailoring
 

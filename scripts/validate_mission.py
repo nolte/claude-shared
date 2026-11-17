@@ -342,6 +342,70 @@ def check_revision_rationale(old_text: str, new_text: str, target: str) -> list[
     return []
 
 
+_STABILISED_RE = re.compile(r"""^mvp_status:\s*["']?stabilised["']?\s*(?:#.*)?$""", re.MULTILINE)
+_ISO_DATE_IN_TEXT_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+# Fixed evidence vocabulary (EN + DE, since `## Source` follows the file's language).
+_SUBSEQUENT_SPRINT_RE = re.compile(r"(?:subsequent\s+|folge-?\s*)sprint\W{0,3}\d+", re.IGNORECASE)
+_EXEMPTION_NAMED_RE = re.compile(r"(?=.*\b(?:retroactive|rückwirkend))(?=.*(?:exemption|ausnahme))",
+                                 re.IGNORECASE | re.DOTALL)
+_SPRINT_NUMBER_RE = re.compile(r"\bsprint\W{0,3}\d+", re.IGNORECASE)
+_ENDED_DATE_RE = re.compile(r"\b(?:ended|endete)\b[^0-9\n]{0,15}\d{4}-\d{2}-\d{2}", re.IGNORECASE)
+_COMMIT_RE = re.compile(r"\b(?=[0-9a-f]{0,39}\d)[0-9a-f]{7,40}\b")  # a SHA, not a hex-only word like "defaced"
+
+
+def check_stabilisation_evidence(old_text: str, new_text: str, target: str) -> list[Finding]:
+    """spec/project/mission/ §Stabilisation gate: a flip to `stabilised` records its evidence.
+
+    Guard origin (spec/project/defect-class-guards/ G5): #750. Predicate (G3): every
+    change whose earlier version isn't `mvp_status: stabilised` and whose later
+    version is. The lines that change adds to `## Source` must carry one of:
+
+    - the retroactive-MVP exemption rationale: once the added text names the
+      exemption (`retroactive`/`rückwirkend` plus `exemption`/`Ausnahme`), it must
+      carry every evidence field the spec's MUST lists: the MVP-closing sprint's
+      number (`sprint <n>`) and `ended` date (`ended`/`endete`, then an ISO date),
+      the commit that first added `project/mission.md` (a 7-40 char hex SHA), and
+      the operator decision date (a second ISO date);
+    - otherwise the subsequent-sprint evidence: the sprint that satisfied the
+      one-full-subsequent-sprint condition (`subsequent sprint <n>` or
+      `Folgesprint <n>`) and the operator decision date (an ISO date).
+
+    Like `check_revision_rationale`, it compares two versions, because the file
+    alone can't show that the flip happened in this change.
+    """
+    old, new = _split(old_text), _split(new_text)
+    if old is None or new is None:
+        return []
+    if _STABILISED_RE.search(old[0]) or not _STABILISED_RE.search(new[0]):
+        return []
+    old_lines = set(_source_section(old[1]).splitlines())
+    added = "\n".join(line for line in _source_section(new[1]).splitlines() if line not in old_lines)
+    dates = len(_ISO_DATE_IN_TEXT_RE.findall(added))
+
+    if _EXEMPTION_NAMED_RE.search(added):
+        missing = []
+        if not _SPRINT_NUMBER_RE.search(added):
+            missing.append("the MVP-closing sprint's number")
+        if not _ENDED_DATE_RE.search(added):
+            missing.append("that sprint's `ended` date")
+        if not _COMMIT_RE.search(added):
+            missing.append("the commit that first added project/mission.md")
+        if dates < 2:
+            missing.append("the operator decision date")
+        if missing:
+            return [Finding("Critical", target, "mission.stabilisation-exemption-evidence",
+                            "the flip to `mvp_status: stabilised` names the retroactive-MVP exemption, but its "
+                            "`## Source` rationale lacks " + "; ".join(missing))]
+        return []
+
+    if _SUBSEQUENT_SPRINT_RE.search(added) and dates >= 1:
+        return []
+    return [Finding("Critical", target, "mission.stabilisation-evidence-missing",
+                    "the flip to `mvp_status: stabilised` adds to `## Source` neither the subsequent-sprint "
+                    "evidence (`subsequent sprint <n>` and the decision date) nor the retroactive-MVP "
+                    "exemption rationale with its evidence")]
+
+
 def _committed_version(path: Path, ref: str) -> str | None:
     try:
         rel = path.resolve().relative_to(REPO).as_posix()
@@ -367,6 +431,7 @@ def check_mission(path: Path) -> list[Finding]:
                                 f"MISSION_BASE_REF={base} names no readable version of {rel}; fetch full history"))
     elif committed is not None:
         findings.extend(check_revision_rationale(committed, text, rel))
+        findings.extend(check_stabilisation_evidence(committed, text, rel))
     return findings
 
 
