@@ -189,3 +189,19 @@ The R-9 follow-on: the two strands deferred out of sprint 0005 (which delivered 
 **Delivered 2026-07-20 (ad hoc / operator-driven; R-11 stayed Backlog, never sprint-activated).** *Lifecycle deviation acknowledged (2026-Q3 audit, `project-roadmap.r11-direct-proposed-to-done`, #498): `proposed → done` skipped the legal intermediate states because no feature ever entered `in_progress`; recorded here per the feature files' deviation records, history unchanged.* Both strands closed: **F-17** ran the full `skills-agents-sweep` over all 113 shared artefacts and found **0 deep-rework candidates** (the R-11 deep-rework report (retired to git history)), so the per-candidate-rework strand (P2) closes with no features. **F-18** decided the authoring-slice carve-out is **keep** on the skill axis — the ~10.4 % skill-description saving does not outweigh the standing fourth-plugin lockstep cost absent an acute skill-budget limit; re-open on a stated trigger (the F-18 carve-out decision (retired to git history)). A deferrable Info-level polish backlog (PB-1..PB-6) from the sweep remains, tracked in the sweep report.
 
 **F-18 re-opened & flipped 2026-07-22 (ad hoc / operator-driven).** The operator fired a **new** revision trigger (c): the standing ~10.4 % skill-list overhead every non-authoring consumer carries is now judged worth the fourth-plugin cost — a **consumer-audience** split per `spec/claude/plugin-scoping/`, reversing the `keep` verdict. Original triggers stay honest in the record: (a) skill-budget warning not observed; (b) slice growth measured **not** fired (10.43 % ≈ 10.4 % baseline). Decision-revision: the F-18 reopen decision record (PR #422; retired to git history); requirement: `project/requirements/claude-authoring-plugin.md`. Execution (carve the slice into the fourth plugin **`nolte-claude-dev`** = 5 authoring skills + `claude-plugin-developer`) is the successor work now in flight on branch `feat/claude-authoring-plugin`.
+
+## Phase 6 — Delivery-flow ergonomics
+
+### R-12 — Delivery skills: standing authorisation, visible waiting, per-repository verification policy
+
+```yaml
+id: R-12
+title: "Delivery skills: standing authorisation, visible waiting, per-repository verification policy"
+detail: coarse
+outcomes: [O-1]
+target_sprint: null
+mvp: false
+status: proposed
+```
+
+The delivery skills (`backlog-delivery-orchestrate`, `issue-orchestrate`, the pull-request skills, `quality-gate`) cost the operator round-trips and give no feedback during long waits: three changes from issue #777 (retrospective on nolte/kamerplanter-appliance, 2026-11-12…17). (1) A standing authorisation and default path that cover the routine gates, including member-issue closure, which `spec/project/pull-request-workflow/` §"Serial pull-request flow" (en.md:64) doesn't name yet (`backlog-delivery-orchestrate` SKILL.md:3 and `references/merge-train.md:18` already carry the train's authorisation). (2) A visible waiting/status pattern for long-running checks and merges (the merge train already runs in the background). (3) A per-repository verification policy, a new configuration key that doesn't exist yet in `skills/`, `spec/` or `project/portfolio.yml` (measured 2026-11-17). Split into one feature per change via `feature-decompose`. Requirements aren't elicited yet: operator override for queuing; `requirements-elicit` runs before decomposition.
