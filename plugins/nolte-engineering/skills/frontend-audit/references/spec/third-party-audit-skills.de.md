@@ -6,7 +6,7 @@ Status: draft
 
 Die eigenen Frontend-Reviews des Plugins (`spec/frontend/source-code-review/` mit seinem F1–F11-Overlay und `spec/frontend/webview-ui-optimization/` mit seinen fünf Domänen) werden in diesem Repository geschrieben und gepflegt. Für ein ausführliches Audit reicht das allein nicht: Gepflegte Skill-Sammlungen von Drittanbietern kodieren bereits große, kuratierte Regelwerke für dieselbe Oberfläche. Vercels Web Interface Guidelines umfassen mehr als hundert UI-Regeln, Vercels React Best Practices ordnen rund siebzig Performance-Regeln nach Wirkung, Anthropics Skill `frontend-design` benennt die visuellen Merkmale schablonenhaften, generierten Designs, und Microsofts `playwright-cli` steuert einen echten Browser, sodass ein Audit die gerenderte Seite ansehen kann, statt sie aus dem Quelltext zu erschließen.
 
-Diese Spec macht diese Drittanbieter-Skills zum **Kern** eines ausführlichen Frontend-Audits und macht die eigenen Reviewer des Plugins zu Orchestrator und Ergänzung: Eine eigene Regel läuft dort, wo keine Drittanbieter-Regel denselben Defekt abdeckt, oder als Fallback, wenn der abdeckende Skill fehlt. Sie legt je Skill fest, **wann** er läuft und **was erfüllt sein muss**, bevor er laufen kann, und sie regelt, wie seine Befunde in einen gemeinsamen, attribuierten Report eingehen.
+Diese Spec macht diese Drittanbieter-Skills zum **Kern** eines ausführlichen Frontend-Audits und macht die eigenen Reviewer des Plugins zu Orchestrator und Ergänzung: Eine eigene Regel läuft dort, wo keine Drittanbieter-Regel denselben Defekt abdeckt, oder als Fallback, wenn der abdeckende Skill nicht vollständig gelaufen ist. Sie legt je Skill fest, **wann** er läuft und **was erfüllt sein muss**, bevor er laufen kann, und sie regelt, wie seine Befunde in einen gemeinsamen, attribuierten Report eingehen.
 
 Der Inhalt stammt aus einer Anforderungserhebung vom 2026-11-17 (`project/requirements/frontend-audit-rework.md`, Anforderungen R1–R15) und aus einer Untersuchung der vier Skills am selben Tag. Wo ein Fakt lokal beobachtet wurde, ist die Beobachtung genannt; wo er nur auf einem Upstream-README beruht, sagt die Referenz das.
 
@@ -75,7 +75,8 @@ Das Audit nutzt genau diese Drittanbieter-Skills. Jede Zeile ist für Auslöser 
 - **MUSS** einen fehlenden anwendbaren Skill als **Coverage-Lücke** melden, mit dem Skill, dem Strang, den er abgedeckt hätte, und dem Installationsbefehl aus §B
 - **MUSS** das Audit weiterlaufen lassen, wenn ein Skill fehlt: Die eigenen Regeln, die §F an diesen Skill delegiert, werden für diesen Lauf wieder aktiv, und der Report nennt sie als aktive Fallbacks
 - **MUSS** jede eigene Regel, deren abdeckender Skill in diesem Audit nicht vollständig gelaufen ist — fehlend, nicht anwendbar, fehlgeschlagener Abruf oder abgebrochen —, als aktiven Fallback behandeln, nicht nur die Regeln eines fehlenden Skills
-- **MUSS** einen aktiven Fallback, den kein dispatchter Reviewer anwenden kann (zum Beispiel F-Regeln auf einem Framework ohne Profil in `spec/frontend/source-code-review/`), als **nicht abgedeckt** melden, nie als gelaufenen aktiven Fallback
+- **MUSS** jede eigene Regel, die kein dispatchter Reviewer angewandt hat — einen aktiven Fallback oder eine Regel, die in jedem Audit läuft —, als **nicht abgedeckt** melden, nie als gelaufene Regel; ein Framework ohne Profil in `spec/frontend/source-code-review/` lässt das gesamte F-Regel-Overlay unabgedeckt, und der Report sagt das
+- **MUSS** aus den Reports der Reviewer entscheiden, was nicht abgedeckt ist, nachdem sie zurückkommen, nicht aus den Dispatch-Listen
 - **MUSS** einen nicht zutreffenden Skill als `not applicable` mit Begründung melden (zum Beispiel mit der Begründung „keine React- oder Next.js-Abhängigkeit“), nie als Coverage-Lücke
 - **MUSS**, wenn keine Anwendungs-URL übergeben wurde, den gerenderten Strang überspringen und als Coverage-Lücke melden, deren Begründung festhält, dass keine Anwendungs-URL übergeben wurde, und **DARF NICHT** die Anwendung starten, bauen oder ausliefern, um eine zu erhalten
 - **MUSS**, wenn eine URL übergeben wurde, aber nicht erreichbar ist oder der Browser nicht startet, den gerenderten Strang als Coverage-Lücke mit dem beobachteten Fehler melden
@@ -125,14 +126,14 @@ Drittanbieter-Befunde behalten ihren Text und ihre Regelreferenz; das Audit ordn
 
 - **DARF NICHT** einem Drittanbieter-Befund Critical zuweisen; Critical bleibt den eigenen Severity-Floors vorbehalten (ein unbehandelter Fehlerpfad, eine aktive Injection-Senke)
 - **MUSS** die Tooling-first-Regel aus `spec/project/source-code-review/` auf Drittanbieter-Befunde anwenden: Ein Defekt, den der konfigurierte Linter oder Type-Checker des Projekts bereits meldet, ist kein Befund. Das Audit entscheidet das aus der konfigurierten Regelmenge (Linter-Konfiguration und ihre aktivierten Plugins), ohne den Linter auszuführen; klärt die Konfiguration nicht, ob eine Regel den Defekt abdeckt, bleibt der Befund bestehen
-- **MUSS** `frontend-design` nur als Kritik-Kriterien nutzen: Seine Anleitung, UI zu gestalten, zu bauen oder umzuschreiben, führt nie zu einem Schreibvorgang
+- **MUSS** jeden geladenen Drittanbieter-Skill nur als Audit-Kriterium nutzen: Anleitungen in `frontend-design`, `vercel-react-best-practices` oder `web-design-guidelines`, Code zu gestalten, zu schreiben, zu refaktorieren oder zu korrigieren, führen nie zu einem Schreibvorgang im geprüften Repository
 - **MUSS** die Grenze zwischen Code und Geschmack aus `spec/frontend/source-code-review/` §„Abgrenzung zum UX-Review“ einhalten: Als Info geroutete Copy- und Design-Befunde gelangen nie in ein Work-Package
 - **MUSS** `playwright-cli` nur zum Sammeln von Evidenz nutzen — Accessibility-Snapshots, Screenshots, Konsolenfehler und das Ergebnis reiner Tastaturbedienung — und sie einem Befund anhängen; ein Befund, dessen einzige Evidenz ein gerenderter Eindruck ist, bleibt Info
-- **MUSS** jede `playwright-cli`-Ausgabe — Snapshots, Screenshots, Traces — nach `.audits/frontend-audit/evidence/` lenken, über eine dort liegende CLI-Konfigurationsdatei, deren `outputDir` `.` ist (übergeben mit `--config`), oder über ein explizites `--filename`; das Standard-Ausgabeverzeichnis des CLI ist `.playwright-cli/` im Arbeitsverzeichnis, ein Schreibvorgang außerhalb des Reports (belegt: `@playwright/cli` 0.1.24 setzt `cliOutputDir = ".playwright-cli"` in `playwright-core/lib/coreBundle.js`; ein Testlauf am 2026-11-17 mit `open --config=<dir>/cli.config.json` schrieb Snapshot und Screenshot nur unterhalb von `<dir>`, wobei `outputDir` relativ zur Konfigurationsdatei aufgelöst wird)
+- **MUSS** jede `playwright-cli`-Ausgabe — Snapshots, Screenshots, Traces — nach `.audits/frontend-audit/evidence/<target-slug>/` lenken, über eine dort liegende CLI-Konfigurationsdatei, deren `outputDir` `.` ist (übergeben mit `--config`), oder über ein explizites `--filename`; das Standard-Ausgabeverzeichnis des CLI ist `.playwright-cli/` im Arbeitsverzeichnis, ein Schreibvorgang außerhalb des Reports (belegt: `@playwright/cli` 0.1.24 setzt `cliOutputDir = ".playwright-cli"` in `playwright-core/lib/coreBundle.js`; ein Testlauf am 2026-11-17 mit `open --config=<dir>/cli.config.json` schrieb Snapshot und Screenshot nur unterhalb von `<dir>`, wobei `outputDir` relativ zur Konfigurationsdatei aufgelöst wird)
 
 ### H. Gemeinsamer Report
 
-- **MUSS** je Audit einen Report nach `.audits/frontend-audit/<target-slug>.md` schreiben; ein erneuter Lauf überschreibt ihn
+- **MUSS** je Audit einen Report nach `.audits/frontend-audit/<target-slug>.md` und seine Evidenz nach `.audits/frontend-audit/evidence/<target-slug>/` schreiben; ein erneuter Lauf überschreibt beides und leert dafür zuerst das Evidenzverzeichnis
 - **MUSS** den Report mit einem Header eröffnen, der festhält: den Audit-Scope; das erkannte Framework; je Drittanbieter-Skill Verfügbarkeitsstatus, Installationsort, Commit oder Version und ob er lief; Abrufzeit und SHA-256 der live geladenen Regeln (§E); jede Coverage-Lücke; jede aktive Fallback-Regel; und jede nicht abgedeckte Regel
 - **MUSS** jeden Befund mit `source` taggen — dem Drittanbieter-Skill (zum Beispiel `vercel/web-design-guidelines`) oder dem eigenen Agent mit Regel-ID (zum Beispiel `nolte/frontend-code-reviewer F2`)
 - **MUSS** Befunde, die zwei Quellen für denselben Defekt an derselben `file:line` melden, zu einem Befund zusammenführen, der beide Quellen und die höhere Severity trägt
@@ -144,7 +145,7 @@ Drittanbieter-Befunde behalten ihren Text und ihre Regelreferenz; das Audit ordn
 - **MUSS** von einem Skill orchestriert werden, `frontend-audit`, im Plugin `nolte-engineering`; der Skill läuft in der Hauptsession, weil Drittanbieter-Skills und die URL-Entscheidung des Operators dort liegen
 - **MUSS** die Drittanbieter-Skills über den Skill-Mechanismus der Session aufrufen und `playwright-cli` über sein CLI
 - **MUSS** `frontend-code-reviewer` für die eigenen Regeln des Code-Strangs und `webview-ui-expert` für die eigenen Regeln des statischen UI-Strangs dispatchen und dabei übergeben, welche Regeln in diesem Lauf delegiert und welche aktive Fallbacks sind
-- **MUSS** gegenüber dem geprüften Repository read-only bleiben, abgesehen von der Report-Datei, ihrer Evidenz unter `.audits/frontend-audit/evidence/` und dem Resume-Zustand des Laufs unter `.resume/frontend-audit/`
+- **MUSS** gegenüber dem geprüften Repository read-only bleiben, abgesehen von der Report-Datei, ihrer Evidenz unter `.audits/frontend-audit/evidence/<target-slug>/` und dem Resume-Zustand des Laufs unter `.resume/frontend-audit/`
 - `source-code-review` und `webview-ui-optimize` bleiben bestehen; beide **SOLLTEN** Operatoren für das ausführliche, durch Drittanbieter gestützte Audit auf `frontend-audit` verweisen
 
 ## Akzeptanzkriterien
@@ -159,7 +160,7 @@ Drittanbieter-Befunde behalten ihren Text und ihre Regelreferenz; das Audit ordn
 - [ ] Jeder Befund trägt eine `source`; ein von zwei Quellen gefundener Defekt erscheint einmal mit beiden
 - [ ] Kein Drittanbieter-Befund trägt Critical; Copy- und Design-Befunde sind Info und liegen außerhalb der Work-Packages
 - [ ] `spec/frontend/source-code-review/` und `spec/frontend/webview-ui-optimization/` markieren jede delegierte Regel mit ihrem abdeckenden Skill
-- [ ] Der Skill `frontend-audit` führt keinen Installationsbefehl aus, und jede `playwright-cli`-Ausgabe landet unter `.audits/frontend-audit/evidence/`
+- [ ] Der Skill `frontend-audit` führt keinen Installationsbefehl aus, und jede `playwright-cli`-Ausgabe landet unter `.audits/frontend-audit/evidence/<target-slug>/`
 
 ## Referenzen
 

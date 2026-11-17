@@ -6,7 +6,7 @@ Status: draft
 
 The plugin's own frontend reviews (`spec/frontend/source-code-review/` with its F1–F11 overlay, and `spec/frontend/webview-ui-optimization/` with its five domains) are written and maintained in this repository. For a thorough audit that isn't enough on its own: maintained third-party skill collections already encode large, curated rule sets for the same surface. Vercel's Web Interface Guidelines cover more than a hundred UI rules, Vercel's React best practices rank about seventy performance rules by impact, Anthropic's `frontend-design` skill names the visual tells of template-like, generated design, and Microsoft's `playwright-cli` drives a real browser so an audit can look at the rendered page instead of inferring it from source.
 
-This spec makes those third-party skills the **core** of a thorough frontend audit and turns the plugin's own reviewers into the orchestrator and the complement: an own rule runs where no third-party rule covers the same defect, or as a fallback when the covering skill is missing. It states, per skill, **when** it runs and **what must hold** before it can run, and it fixes how its findings enter one merged, attributed report.
+This spec makes those third-party skills the **core** of a thorough frontend audit and turns the plugin's own reviewers into the orchestrator and the complement: an own rule runs where no third-party rule covers the same defect, or as a fallback when the covering skill didn't run to completion. It states, per skill, **when** it runs and **what must hold** before it can run, and it fixes how its findings enter one merged, attributed report.
 
 The content comes from a requirements elicitation on 2026-11-17 (`project/requirements/frontend-audit-rework.md`, requirements R1–R15) and from an inspection of the four skills on the same day. Where a fact was observed locally, the observation is named; where it rests on an upstream README only, the reference says so.
 
@@ -75,7 +75,8 @@ The audit uses exactly these third-party skills. Each row is normative for its t
 - **MUST** report a missing applicable skill as a **coverage gap** naming the skill, the strand it would have covered, and the install command from §B
 - **MUST** keep the audit running when a skill is missing: the own rules that §F delegates to that skill become active again for this run, and the report names them as active fallbacks
 - **MUST** treat every own rule whose covering skill didn't run to completion in this audit—missing, not applicable, failed fetch, or aborted—as an active fallback, not only the rules of a missing skill
-- **MUST** report an active fallback that no dispatched reviewer can apply (for example, F rules on a framework without a profile in `spec/frontend/source-code-review/`) as **uncovered**, never as an active fallback that ran
+- **MUST** report every own rule that no dispatched reviewer applied—an active fallback or a rule that runs on every audit—as **uncovered**, never as a rule that ran; a framework without a profile in `spec/frontend/source-code-review/` leaves the whole F-rule overlay uncovered, and the report says so
+- **MUST** decide what's uncovered from the reviewers' reports, after they return, not from the dispatch lists
 - **MUST** report a skill that doesn't apply as `not applicable` with its reason (for example, the reason "no React or Next.js dependency"), never as a coverage gap
 - **MUST** when no application URL is supplied, skip the rendered strand, report it as a coverage gap whose reason states that no application URL was supplied, and **MUST NOT** start, build, or serve the application to obtain one
 - **MUST** when a URL is supplied but unreachable, or the browser fails to start, report the rendered strand as a coverage gap with the observed error
@@ -125,14 +126,14 @@ Third-party findings keep their text and their rule reference; the audit maps th
 
 - **MUST NOT** assign Critical to a third-party finding; Critical stays reserved for the own severity floors (an unhandled error path, an active injection sink)
 - **MUST** apply the tooling-first rule of `spec/project/source-code-review/` to third-party findings: a defect the project's configured linter or type checker already reports isn't a finding. The audit decides this from the configured rule set (linter configuration and its enabled plugins) without running the linter; when the configuration doesn't settle whether a rule covers the defect, the finding stays
-- **MUST** use `frontend-design` only as critique criteria: its guidance to design, build, or rewrite UI never leads to a write
+- **MUST** use every loaded third-party skill only as audit criteria: guidance in `frontend-design`, `vercel-react-best-practices`, or `web-design-guidelines` to design, write, refactor, or fix code never leads to a write in the audited repository
 - **MUST** keep the code-versus-taste boundary of `spec/frontend/source-code-review/` §"Delimitation from the UX review": Info-routed copy and design findings never enter a work package
 - **MUST** use `playwright-cli` only to collect evidence—accessibility snapshots, screenshots, console errors, and the result of keyboard-only interaction—and attach it to a finding; a finding whose only evidence is a rendered impression stays Info
-- **MUST** direct every `playwright-cli` output—snapshots, screenshots, traces—into `.audits/frontend-audit/evidence/`, through a CLI configuration file there whose `outputDir` is `.` (passed with `--config`) or an explicit `--filename`; the CLI's default output directory is `.playwright-cli/` in the working directory, a write outside the report (established: `@playwright/cli` 0.1.24 sets `cliOutputDir = ".playwright-cli"` in `playwright-core/lib/coreBundle.js`; a test run on 2026-11-17 with `open --config=<dir>/cli.config.json` wrote snapshot and screenshot only below `<dir>`, `outputDir` resolving relative to the configuration file)
+- **MUST** direct every `playwright-cli` output—snapshots, screenshots, traces—into `.audits/frontend-audit/evidence/<target-slug>/`, through a CLI configuration file there whose `outputDir` is `.` (passed with `--config`) or an explicit `--filename`; the CLI's default output directory is `.playwright-cli/` in the working directory, a write outside the report (established: `@playwright/cli` 0.1.24 sets `cliOutputDir = ".playwright-cli"` in `playwright-core/lib/coreBundle.js`; a test run on 2026-11-17 with `open --config=<dir>/cli.config.json` wrote snapshot and screenshot only below `<dir>`, `outputDir` resolving relative to the configuration file)
 
 ### H. Merged report
 
-- **MUST** write one report per audit to `.audits/frontend-audit/<target-slug>.md`; a re-run overwrites it
+- **MUST** write one report per audit to `.audits/frontend-audit/<target-slug>.md` and its evidence to `.audits/frontend-audit/evidence/<target-slug>/`; a re-run overwrites both, clearing the evidence directory first
 - **MUST** open the report with a header that records: the audit scope; the detected framework; per third-party skill its availability state, install location, commit or version, and whether it ran; the live-rule fetch time and SHA-256 (§E); every coverage gap; every active fallback rule; and every uncovered rule
 - **MUST** tag every finding with `source`—the third-party skill (for example `vercel/web-design-guidelines`) or the own agent with its rule ID (for example `nolte/frontend-code-reviewer F2`)
 - **MUST** merge findings that two sources report for the same defect at the same `file:line` into one finding carrying both sources and the higher severity
@@ -144,7 +145,7 @@ Third-party findings keep their text and their rule reference; the audit maps th
 - **MUST** be orchestrated by one skill, `frontend-audit`, in the `nolte-engineering` plugin; the skill runs in the main session because third-party skills and the operator's URL decision live there
 - **MUST** invoke the third-party skills through the session's skill mechanism, and `playwright-cli` through its CLI
 - **MUST** dispatch `frontend-code-reviewer` for the own rules of the code strand and `webview-ui-expert` for the own rules of the static UI strand, passing which rules are delegated for this run and which are active fallbacks
-- **MUST** stay read-only toward the audited repository apart from the report file, its evidence under `.audits/frontend-audit/evidence/`, and the run's resume state under `.resume/frontend-audit/`
+- **MUST** stay read-only toward the audited repository apart from the report file, its evidence under `.audits/frontend-audit/evidence/<target-slug>/`, and the run's resume state under `.resume/frontend-audit/`
 - `source-code-review` and `webview-ui-optimize` remain; each **SHOULD** point operators to `frontend-audit` for the thorough, third-party-backed audit
 
 ## Acceptance Criteria
@@ -159,7 +160,7 @@ Third-party findings keep their text and their rule reference; the audit maps th
 - [ ] Every finding carries a `source`; a defect found by two sources appears once with both
 - [ ] No third-party finding carries Critical; copy and design findings are Info and outside the work packages
 - [ ] `spec/frontend/source-code-review/` and `spec/frontend/webview-ui-optimization/` mark each delegated rule with its covering skill
-- [ ] The `frontend-audit` skill runs no install command, and every `playwright-cli` output lands under `.audits/frontend-audit/evidence/`
+- [ ] The `frontend-audit` skill runs no install command, and every `playwright-cli` output lands under `.audits/frontend-audit/evidence/<target-slug>/`
 
 ## References
 
