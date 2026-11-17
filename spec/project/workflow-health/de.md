@@ -38,6 +38,8 @@ GitHub-Actions-Workflows kontrollieren jeden Weg durch das Portfolio: Pull-Reque
   5. **secret / credential drift** — ein Token, Deploy-Key oder OIDC-Trust ist abgelaufen oder wurde rotiert
   6. **other** — explizit gekennzeichnet, mit einer kurzen Notiz im Fix-PR, die erklärt, warum es nicht in die fünf Kategorien passt
 - **DARF NICHT [MUST NOT]** einen fehlgeschlagenen Workflow mehr als einmal ohne protokollierte Triage-Klassifikation neu starten; wiederholte blinde Re-Runs sind Drift
+- **MUSS [MUST]**, bevor die Änderung unter Review verdächtigt wird, den ersten roten Lauf mit dem letzten grünen vergleichen und benennen, was sich dazwischen geändert hat (ein Base-Image-Digest, eine gepinnte Action oder ein Reusable Workflow, ein Dependency-Bump); sonst wird eine Ursache, die außerhalb der Änderung unter Review gelandet ist, ihr zugeschrieben
+- **MUSS [MUST]** jede zur Ursachensuche hinzugefügte Diagnose frei von Seiteneffekten auf das getestete Verhalten halten (Zustand lesen statt ihn auszulösen: `/proc/*/mountinfo` statt einen Pfad anzufassen, der beim Zugriff eingehängt wird, keine zusätzlichen Service-Neustarts) und diese Anforderung in den Brief an den behebenden Spezialisten aufnehmen; eine Diagnose, die das Ergebnis verändert, beweist nichts
 - **MUSS [MUST]** die Klassifikation im Abschnitt **Risk / rollout notes** des späteren Fix-PRs festhalten (gemäß `pull-request-workflow`-Spezifikation), sodass Fehlermuster über die PR-Historie hinweg sichtbar werden
 - **KANN [MAY]** statt eines sofortigen Fix-PRs ein Tracking-Issue für eine nicht-dringende Nachverfolgung (Dokumentation eines bekannten Flakes, ein geplanter Upstream-Bump) anlegen, sofern das Issue eine verantwortliche Person benennt
 
@@ -95,6 +97,7 @@ Die eigentliche Implementierungsarbeit einer Workflow-Behebung — das Bearbeite
 
 ### Umgang mit Flakes
 - **MUSS [MUST]** einen Lauf nur dann als Flake einstufen, wenn der Nachweis reproduzierbar ist — ein Re-Run desselben Commit-SHAs ohne Code-Änderung wird grün, und kein Upstream-Infrastruktursignal erklärt den ersten Fehlschlag
+- **DARF NICHT [MUST NOT]** einen Fehlschlag als Flake einstufen, wenn dieselbe Fehlermeldung in zwei oder mehr Läufen oder auf `develop` und in einem Pull Request gleichermaßen wiederkehrt; er ist ein `defect`, bis eine Messung anderes zeigt, denn ein wiederkehrender Fehlschlag ist die Signatur einer Ursache, nicht des Zufalls
 - **MUSS [MUST]** bekannte Flakes in einem im Repository sichtbaren Artefakt führen, sodass Muster sichtbar sind und nicht stillschweigend in die Re-Run-Schleife absorbiert werden; der portfolio-weite Default ist eine `FLAKES.md` im Repository-Root, und eine dedizierte Menge von GitHub-Issues mit Label `flake` ist als Äquivalent zulässig, wenn das Repository Tracking ohnehin in Issues zentralisiert
 - **DARF NICHT [MUST NOT]** beide Formen (`FLAKES.md` und eine Issue-Menge mit Label `flake`) für dasselbe Repository gleichzeitig pflegen — eine der beiden ist autoritativ, wird bewusst gewählt und aus `CLAUDE.md` oder `README.md` heraus verlinkt
 - **SOLLTE [SHOULD]** einen Flake, der einen Required-Check in mehr als rund einem von zehn Läufen stolpern lässt, als Defect und nicht als Transient behandeln — bei dieser Rate blockiert der Flake Merges material und verdient einen echten Fix statt eines Tracking-Eintrags
@@ -146,6 +149,8 @@ Required-Status-Checks auf `develop` können auch Anbieter umfassen, die keine G
 - [ ] `.github/settings.yml` deklariert weiterhin die vollständige Required-Checks-Menge für `develop` als Code; kein Required-Check wurde stillschweigend entfernt, um einen dauerhaften Fehler zu umgehen
 - [ ] Für eine Lane über der Abbruchschwelle sagt allein die Lauf-Historie dem Leser, welche Ursache vorliegt: eine Laufzeit länger als die Trigger-Kadenz oder eine Laufzeit weit kürzer als sie mit Abbrüchen durch Aktualisierungen des Basis-Branches; die Spec benennt die Beobachtung, die beide trennt
 - [ ] Die Wartezeit-Beobachtung ist auf Jobs ohne `needs:` beschränkt, sodass die Metrik die Wartezeit auf einen Runner misst und nicht Abhängigkeitswarten, und eine Lane, deren Wartezeit ihre Laufzeit dominiert, wird an `github-actions-best-practices` §„Runner-Slot-Ökonomie" verwiesen statt in der Lane behoben
+- [ ] Kein Fehlschlag, der in den **Risk / rollout notes** eines Fix-PRs oder im Register bekannter Flakes als `flake` eingestuft ist, trägt eine Fehlermeldung, die in einem anderen Lauf desselben Workflows, auf `develop` oder in einem Pull Request wiederkehrt, ohne protokollierte Messung, die eine gemeinsame Ursache widerlegt
+- [ ] Jede Triage, die bei `defect` landet, benennt den ersten roten und den letzten grünen Lauf, die sie verglichen hat, und was sich dazwischen geändert hat, und jede Diagnose, die sie hinzugefügt hat, ist gegenüber dem getesteten Verhalten rein lesend
 
 ## Offene Fragen
 - _Derzeit keine; alle Entwurfsfragen sind geklärt._

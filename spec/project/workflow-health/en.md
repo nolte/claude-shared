@@ -38,6 +38,8 @@ GitHub Actions workflows gate every path through the portfolio: pull-request mer
   5. **secret / credential drift**: a token, deploy key, or OIDC trust expired or was rotated
   6. **other**: explicitly labelled, with a short note in the fix PR explaining why it doesn't fit the five categories
 - **MUST NOT** re-run a failed workflow more than once without a recorded triage classification; repeated blind re-runs are drift
+- **MUST**, before suspecting the change under review, compare the first red run with the last green one and name what changed between them (a base-image digest, a pinned action or reusable workflow, a dependency bump); a cause that landed outside the change under review is otherwise blamed on it
+- **MUST** keep every diagnostic added to find a cause free of side effects on the behaviour under test (read state instead of provoking it: `/proc/*/mountinfo` instead of touching a path that mounts on access, no extra service restarts) and carry that requirement in the brief handed to the remediating specialist; a diagnostic that changes the outcome proves nothing
 - **MUST** capture the classification in the eventual fix PR's **Risk / rollout notes** section (per the `pull-request-workflow` spec) so failure patterns are visible across PR history
 - **MAY** open a tracking GitHub Issue for non-urgent follow-up (documentation of a known flake, a planned upstream bump) instead of an immediate fix PR, provided the Issue names an owner
 
@@ -95,6 +97,7 @@ The hands-on implementation work of a workflow fix—editing the broken artifact
 
 ### Flake handling
 - **MUST** identify a run as a flake only on reproducible evidence—a re-run of the same commit SHA with no code change returns green and no upstream infra signal explains the first failure
+- **MUST NOT** classify a failure as a flake when the same failure message recurs on two or more runs, or on `develop` and a pull request alike; it's a `defect` until a measurement shows otherwise, because a recurring failure is the signature of a cause, not of chance
 - **MUST** track known flakes in a repository-visible artifact so patterns are visible rather than absorbed silently into the re-run loop; the portfolio-wide default is a `FLAKES.md` at the repository root, and a dedicated set of GitHub Issues labelled `flake` is accepted as an equivalent when the repository already centralizes tracking in Issues
 - **MUST NOT** maintain both forms (`FLAKES.md` and a `flake`-labelled Issue set) for the same repository—one or the other is authoritative, chosen consciously and linked from `CLAUDE.md` or `README.md`
 - **SHOULD** treat a flake that trips a required check in more than roughly one in ten runs as a defect rather than a transient—at that rate the flake blocks merges materially and deserves a real fix, not a tracking entry
@@ -146,6 +149,8 @@ Required status checks on `develop` may include providers that aren't GitHub Act
 - [ ] `.github/settings.yml` still declares the full required-checks set for `develop` as code; no required check has been silently dropped to work around a persistent failure
 - [ ] For a lane above the cancellation threshold, the run history alone tells the reader which cause applies: a runtime longer than the trigger cadence, or a runtime far shorter than it with cancellations caused by base-branch updates; the spec names the observation that separates them
 - [ ] The queue-time observation is restricted to jobs with no `needs:`, so the metric measures the wait for a runner and not dependency waiting, and a lane whose wait dominates its runtime is routed to `github-actions-best-practices` §"Runner-slot economy" rather than remediated inside the lane
+- [ ] No failure classified `flake` in a fix PR's **Risk / rollout notes** or in the known-flake register carries a failure message that recurs on another run of the same workflow, on `develop` or on a pull request, without a recorded measurement refuting a common cause
+- [ ] Every triage that settles on `defect` names the first red and the last green run it compared and what changed between them, and every diagnostic it added is read-only against the behaviour under test
 
 ## Open Questions
 - _None at this time; all drafting questions have been resolved._
