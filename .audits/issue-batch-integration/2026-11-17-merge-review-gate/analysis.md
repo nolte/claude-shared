@@ -29,7 +29,13 @@ Symptom cluster (overturns the partition's provisional "class"): the delivery sk
 
 Process finding (recurring): `security-review` cwd scoping is already in memory, and three merges in this run (#759, #763, #779) replaced the missing `review` skill by a hand-dispatched read-only agent. This group is the preventive change.
 
-Class sweep (develop): `git grep -nE 'Skill\(skill="review"\)|the `review` skill|`review` skill delegation' -- '*.md'` → 5 hits: `skills/pull-request-merge/SKILL.md:3,67,182`, `skills/pull-request-merge/examples/01-clean-merge-via-automerge-label.md:102`, `spec/project/api-error-handling/en.md:26`.
+Class sweep (develop), predicate:
+
+```sh
+git grep -nE 'Skill\(skill="review"\)|the `review` skill|`review` skill delegation' -- '*.md'
+```
+
+5 hits: `skills/pull-request-merge/SKILL.md:3,67,182`, `skills/pull-request-merge/examples/01-clean-merge-via-automerge-label.md:102`, `spec/project/api-error-handling/en.md:26`.
 
 ## Plan approval
 
