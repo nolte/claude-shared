@@ -171,6 +171,39 @@ def test_750_flip_with_german_subsequent_sprint_evidence_passes():
     assert v.check_stabilisation_evidence(_ACHIEVED, _flip(entry), "m") == []
 
 
+@pytest.mark.parametrize("sentence", [
+    "the one-full-subsequent-sprint condition is met by sprint `0002`.",
+    "Sprint `0002` (MVP-closing + 1) is `closed`.",
+    "der volle Folge-Sprint (Sprint `0002`) ist `closed`.",
+    "the full subsequent Sprint `0002` (number `0001 + 1`) is `closed`.",
+    "the full subsequent sprint\n  `0002` is `closed`.",  # hard-wrapped inside one sentence
+])
+def test_750_flip_with_subsequent_sprint_phrasings_passes(sentence):
+    entry = f"- 2026-05-29 — `mvp_status: achieved → stabilised`. Evidence: {sentence}\n"
+    assert v.check_stabilisation_evidence(_ACHIEVED, _flip(entry), "m") == []
+
+
+@pytest.mark.parametrize("sentence", [
+    # marker and number in different sentences: not one statement about the subsequent sprint
+    "the subsequent sprint is `closed`. Sprint 1 closed the MVP.",
+    # a sprint number without any subsequent-sprint marker
+    "the MVP-closing sprint 1 is `closed`.",
+    # marker and number in different list items
+    "the subsequent sprint is `closed`\n- Sprint 1 closed the MVP",
+])
+def test_750_flip_with_unanchored_sprint_mention_is_critical(sentence):
+    entry = f"- 2026-05-29 — `mvp_status: achieved → stabilised`. Evidence: {sentence}\n"
+    assert _rules(v.check_stabilisation_evidence(_ACHIEVED, _flip(entry), "m")) == {
+        "mission.stabilisation-evidence-missing"}
+
+
+def test_750_exemption_without_retroactive_names_both_paths():
+    entry = "- 2026-11-17 — `achieved → stabilised` under the exemption.\n"
+    findings = v.check_stabilisation_evidence(_ACHIEVED, _flip(entry), "m")
+    assert _rules(findings) == {"mission.stabilisation-evidence-missing"}
+    assert "subsequent sprint" in findings[0].message and "retroactive-MVP exemption" in findings[0].message
+
+
 def test_750_flip_with_full_exemption_rationale_passes():
     assert v.check_stabilisation_evidence(_ACHIEVED, _flip(_EXEMPTION_ENTRY), "m") == []
 
