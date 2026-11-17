@@ -4,6 +4,17 @@ Behavioural tests (marked ``behavioural``) drive a real skill/agent via the Anth
 API and are skipped unless ``RUN_EVALS=1``. When they do run, each test appends its
 `ScenarioResult` via the `record_scorecard` fixture; the session writes a single
 `scorecard.json` at teardown, which `evals.harness.compare` then diffs across runs.
+
+Strict-skip mode: with ``STRICT_SKIPS=1``, which ``task test`` sets so that local runs
+and CI agree, a test that ends up skipped and is
+*not* marked ``behavioural`` is reported as failed instead (as an ERROR when the skip
+happens during setup, i.e. ``skipif``/``skip`` markers and fixture skips; as a FAILURE
+when ``pytest.skip()`` runs inside the test body). The message names the original
+skip reason, so a capability missing from CI (a binary, git history, a platform
+feature) cannot turn a test green by silently skipping. Behavioural evals keep
+skipping, and xfail/xpass results are untouched (they are not skips). Without the
+variable nothing changes. Collection-time skips (``pytest.skip(allow_module_level=True)``,
+``importorskip``) are not covered; the suite has none.
 """
 from __future__ import annotations
 
@@ -39,6 +50,27 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "behavioural" in item.keywords:
             item.add_marker(skip)
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Under ``STRICT_SKIPS=1``, turn a non-behavioural skip into a failure."""
+    outcome = yield
+    rep = outcome.get_result()
+    if (
+        os.environ.get("STRICT_SKIPS") == "1"
+        and rep.skipped
+        and not hasattr(rep, "wasxfail")
+        and "behavioural" not in item.keywords
+    ):
+        reason = rep.longrepr[2] if isinstance(rep.longrepr, tuple) else str(rep.longrepr)
+        reason = reason.removeprefix("Skipped: ")
+        rep.outcome = "failed"
+        rep.longrepr = (
+            f"STRICT_SKIPS=1: test skipped -- {reason}\n"
+            "Provide the missing capability in CI, or mark the test `behavioural` "
+            "if it is an opt-in eval."
+        )
 
 
 @pytest.fixture

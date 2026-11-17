@@ -44,6 +44,10 @@ env:
   # Taskfile.yml includes remote taskfiles from nolte/taskfiles;
   # Task gates that experimental feature behind this flag.
   TASK_X_REMOTE_TASKFILES: "1"
+  # Pinned to match the asdf-managed local version; the prose-style spec
+  # requires local and CI to produce identical alerts. Bump in lock-step.
+  # Shared by `lint` (prose hook) and `test` (real-Vale tests, #766).
+  VALE_VERSION: "3.15.2"
 
 # spec/project/quality-gate/ §Invocation contract ("MUST run the gate
 # identically from a local workstation and from CI") and §Acceptance Criteria
@@ -77,10 +81,6 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-26.04
-    env:
-      # Pinned to match the asdf-managed local version; the prose-style spec
-      # requires local and CI to produce identical alerts. Bump in lock-step.
-      VALE_VERSION: "3.15.2"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -113,6 +113,10 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Full history: tests/test_validate_mission.py replays a historical
+          # revision and skipped on the default shallow clone (#766).
+          fetch-depth: 0
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.14"
@@ -125,6 +129,13 @@ jobs:
           # (spec/project/continuous-integration/ §C: no floating toolchain refs).
           version: 3.52.0
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      # `task test` syncs the Vale styles and runs the real-Vale tests under
+      # STRICT_SKIPS=1, so without the binary they'd fail the job (#751, #766).
+      - name: Install Vale
+        run: |
+          curl -fsSL --retry 3 --retry-all-errors "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin vale
+          vale --version
       - run: task --yes test
 
   docs:
