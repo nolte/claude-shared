@@ -173,6 +173,14 @@ via `pull-request-create`, whose precondition checks the slot. An outcome ordere
 another is handed on only once the predecessor's pull request has merged; until then it
 is recorded as `waiting-on <id>`, and a re-invocation resumes the dispatch.
 
+Before each group or single is handed on, run the develop-health pre-flight in
+`${CLAUDE_PLUGIN_ROOT}/skills/pull-request-merge/references/develop-health.md`: the latest
+`develop` run of every workflow, required or not. A red one stops the dispatch and goes to
+`workflow-health-triage`; the remaining outcomes are recorded as `waiting-on develop`, and
+only an operator override recorded in the checkpoint with the run id and reason hands the
+next lane on. The partition approval never counts as that override. A pipeline issue isn't
+a lane and needs no check.
+
 The partition doesn't grow during delivery. A lane triages its own findings per
 `spec/project/issue-orchestration/` §"Verification and traceability": it fixes a small,
 reproduced in-scope finding in the lane, and files anything else as a new issue that a
@@ -211,6 +219,8 @@ start-new / discard]`.
 - **Never** put an unbounded issue in a group; it goes to the pipeline outcome.
 - **Never** hand an outcome on before the operator approved the whole partition, and
   never treat that approval as a downstream write or dispatch gate.
+- **Never** hand a lane on while `develop`'s latest run of any workflow is red, unless the
+  checkpoint records an operator override naming that run.
 - **Never** implement, create a branch, or open a pull request from this skill.
 - **Never** commit the partition artifact to any branch or hide it behind `.gitignore`;
   it is consumed by the hand-offs and left untracked.

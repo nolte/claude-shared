@@ -58,6 +58,8 @@ Repository state assumed by the harness when this prompt fires:
    PR shape and the initial check rollup (3 green, 2 pending, 0
    failed). It also reports that wait mode is active and prints
    the resolved budget: `interval=90s, timeout=10min, retries≤10`.
+   The develop-health pre-flight finds the latest `develop` run of
+   every workflow green; wait mode never waits out a red `develop`.
 3. **Step 2 reviews the real diff** (`code-review` on the PR
    number plus a read-only agent over the worktree range).
    Touched paths include `mkdocs.yml` and

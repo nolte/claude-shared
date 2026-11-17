@@ -70,6 +70,9 @@ open question, not a change to the partition.
 
 ## dispatch
 
+Before each lane hand-off, the develop-health pre-flight reads the latest `develop` run of
+every workflow; all are green, so nothing is held back.
+
 - `issue-batch-orchestrate` receives `2026-10-03-settings-drift` with its three member
   records and `lane: true`; its operation 1 re-checks the predicates against the records
   instead of re-fetching the issues, and it returns `committed-locally`, not a pull request.

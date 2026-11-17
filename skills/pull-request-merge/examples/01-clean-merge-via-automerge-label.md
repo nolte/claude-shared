@@ -47,6 +47,9 @@ Repository state assumed by the harness when this prompt fires:
 2. **Step 1 inspection runs in parallel** (`gh pr view`, `gh pr checks`,
    `gh pr diff --name-only`, `gh label list`). The skill reports
    the PR number, title, base, head, and the green check rollup.
+   The develop-health pre-flight (`references/develop-health.md`)
+   finds the latest `develop` run of every workflow green, so the
+   skill continues.
 3. **Step 2 reviews the real diff.** `code-review` runs on the PR
    number, and a read-only review agent covers
    `git -C <worktree> diff origin/develop...HEAD`; its file list
