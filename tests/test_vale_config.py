@@ -15,21 +15,23 @@ The model below follows Vale 3.15.2's parsing, checked against the real binary (
 * A section *opts out* of a package when it sets `BasedOnStyles` and that list
   omits the package: an empty list drops all of them, a partial one such as
   `BasedOnStyles = Vale` drops `Microsoft`.
-* A section *enables* rules by name when it drops none of the packages any section
-  bases on (it sets no `BasedOnStyles`, or lists them all). Every such rule whose
-  level isn't `NO` must be `NO` in each opt-out that drops the rule's package
-  (the package is the rule-name prefix before the first `.`).
-
-* A section that is itself an opt-out can still enable a rule by name (for
-  example `BasedOnStyles = Vale` plus `Microsoft.BiasFree = error`); that rule must
-  then be `NO` in every *other* opt-out that drops its package.
+* Any section can enable a rule by name, an opt-out included (for example
+  `BasedOnStyles = Vale` plus `Microsoft.BiasFree = error`). Every rule switched on
+  that way must be switched off in each *other* opt-out that drops the rule's
+  package (the package is the rule-name prefix before the first `.`).
 * A package counts as known when any section bases on it or names one of its
   rules, so a rule from a package no `BasedOnStyles` lists is still checked.
-* Vale strips a `#` or `;` comment after a value even without a space before it.
+* Vale strips a `#` or `;` comment only after whitespace (`NO # reason`). Without
+  the space the text stays part of the value: an unknown level such as `NO#reason`
+  or `error#x` switches the rule off, and `BasedOnStyles = Microsoft#x` makes Vale
+  abort (E100). A rule is on only at `YES`, `suggestion`, `warning`, or `error`.
 
 Limitation: section globs aren't intersected, so the check assumes every enabling
 section can apply to every opted-out path. That over-approximates (it may demand a
-`NO` that Vale wouldn't need), which errs on the safe side for a guard.
+`NO` that Vale wouldn't need), which errs on the safe side for a guard. One such
+case: once any section names a rule from a package no `BasedOnStyles` lists, every
+section that lists packages without it counts as dropping it, base sections such
+as `[*.md]` included, and is asked for a `NO` that changes nothing in Vale.
 """
 from __future__ import annotations
 
@@ -55,9 +57,12 @@ def load(path: Path = VALE_INI) -> configparser.ConfigParser:
     return parser
 
 
+LEVELS_ON = {"YES", "SUGGESTION", "WARNING", "ERROR"}
+
+
 def _value(raw: str) -> str:
-    """A value with a trailing `#`/`;` comment removed, as Vale reads it."""
-    return re.split(r"[#;]", raw, maxsplit=1)[0].strip()
+    """A value with a trailing ` #`/` ;` comment removed, as Vale reads it."""
+    return re.split(r"\s[#;]", raw, maxsplit=1)[0].strip()
 
 
 def _styles(section) -> list[str] | None:
@@ -68,7 +73,8 @@ def _styles(section) -> list[str] | None:
 
 
 def _is_off(level: str) -> bool:
-    return _value(level).upper() == "NO"
+    """Vale switches a rule off at `NO` and at any level it doesn't know."""
+    return _value(level).upper() not in LEVELS_ON
 
 
 def _package(rule: str) -> str:
@@ -109,7 +115,7 @@ def leaks(parser: configparser.ConfigParser) -> dict[str, list[str]]:
         name: sorted(rule for rule, sources in enabled.items()
                      if sources - {name}
                      and (ALL_PACKAGES in packages or _package(rule) in packages)
-                     and not _is_off(sections[name].get(rule, "")))
+                     and not (rule in sections[name] and _is_off(sections[name][rule])))
         for name, packages in opt_outs.items()
     }
     return {name: rules for name, rules in missing.items() if rules}
@@ -157,7 +163,13 @@ BasedOnStyles =
     pytest.param("Microsoft.BiasFree = NO",
                  "\n[{docs,spec}/**.md]\nMicrosoft.Passive = error\n",
                  {"docs/de/**": ["Microsoft.Passive"]}, id="section-without-BasedOnStyles"),
-    pytest.param("Microsoft.BiasFree = NO#reason", "", {}, id="comment-without-space"),
+    pytest.param("Microsoft.BiasFree = NO#reason", "", {}, id="unknown-level-without-space-is-off"),
+    pytest.param("Microsoft.BiasFree = garbage", "", {}, id="unknown-level-is-off"),
+    pytest.param("Microsoft.BiasFree = NO",
+                 "\n[docs/**]\nMicrosoft.Passive = error#x\n", {}, id="enabling-level-with-comment-glued-is-off"),
+    pytest.param("Microsoft.BiasFree = NO",
+                 "\n[docs/**]\nMicrosoft.Passive = warning ; reason\n",
+                 {"docs/de/**": ["Microsoft.Passive"]}, id="enabling-level-with-spaced-comment"),
     pytest.param("Microsoft.BiasFree = NO",
                  "\n[docs/**]\nBasedOnStyles = Vale\nMicrosoft.Passive = error\n",
                  {"docs/de/**": ["Microsoft.Passive"], "docs/**": ["Microsoft.BiasFree"]},
