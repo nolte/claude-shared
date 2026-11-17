@@ -329,6 +329,13 @@ readership once the capability it describes is implemented, verified, and merged
   (`security-review` is the Claude Code harness built-in, not a `nolte-shared`
   plugin agent; it's invoked as the `security-review` skill, not via
   `Agent(subagent_type="nolte-shared:security-review")`.)
+- **MUST** run an independent review of the produced diff (`git -C <worktree> diff
+  origin/develop...HEAD`) by a read-only reviewer that didn't produce the change,
+  before the pull request opens or, when the run is a lane, before it returns
+  `committed-locally`; triage its findings and record them, with the head commit they
+  cover, in the pre-analysis artifact. `pull-request-merge` then confirms that review
+  over the same head instead of giving the change its first look, which a review
+  deferred to the merge would otherwise be
 - **MUST** satisfy that diff verification from a working copy that actually holds the
   change, and **MUST NOT** rely on passing the worktree path to the built-in. The
   built-in composes its own change set from four fixed shell substitutions (`git
@@ -515,6 +522,9 @@ These criteria apply to runs started after the transient pre-analysis rule becam
 - [ ] No pull request produced by this orchestration was merged by the orchestration
   itself, and none shows a branch-protection override, an `enforce_admins: false`
   exception, or a required-check bypass
+- [ ] For every run, an independent read-only review of the produced diff ran before the
+  PR opened or, for a lane, before it returned `committed-locally`, and the artifact
+  records its findings with the head commit they cover
 - [ ] For every `security`-class issue, the read-only `code-security-reviewer` agent
   and the built-in `security-review` skill both ran before the PR opened (audit, then
   diff verification), recorded in the artifact and the PR notes, or the artifact and

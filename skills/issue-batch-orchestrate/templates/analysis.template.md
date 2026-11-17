@@ -103,4 +103,4 @@ One row per finding a reviewer, verification pass, or check raised against a mem
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
-| {{file:line and claim}} | {{pre-merge review / member verification pass / check}} | {{fixed directly / filed}} | {{command and actual output}} | {{#n, or —}} |
+| {{file:line and claim}} | {{diff review @ <head-sha> / member verification pass / check}} | {{fixed directly / filed}} | {{command and actual output}} | {{#n, or —}} |

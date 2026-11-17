@@ -78,8 +78,10 @@ created: ""
 
 ## Findings
 
-<!-- One row per finding raised beside the work packages (reviewer, verification pass,
-     class sweep, specialist result), triaged per references/finding-triage.md.
+<!-- One row per finding raised beside the work packages (operation 6 diff review as
+     "diff review @ <head-sha>", with a "no findings" row when it raised none;
+     verification pass, class sweep, specialist result), triaged per
+     references/finding-triage.md.
      Outcome: fixed directly (listed under the PR's Changes) | filed (referenced in
      Risk / rollout notes) | dismissed (unreproduced, with the settling observation).
 | Finding | Source | Outcome | Reproduction | Issue |

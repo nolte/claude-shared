@@ -40,13 +40,13 @@ The `code-security-reviewer` agent (plugin `nolte-engineering`) is a whole-codeb
 
 ## Confirming a review that already ran
 
-A lane run (for example `issue-orchestrate` before it returns `committed-locally`) may already have reviewed the branch. Step 2 then confirms that review instead of starting from zero:
+`issue-orchestrate` and `issue-batch-orchestrate` review the branch before the PR opens or, as a lane, before they return `committed-locally`, and record the reviewed head SHA, its `--stat` file list, the lanes, and the findings in the PR's **Risk / rollout notes** (as a lane: in the returned payload). Step 2 then confirms that review instead of starting from zero:
 
-1. The recorded head SHA equals the PR's head commit, and the recorded file list equals the current `--stat` output.
+1. The recorded head SHA equals the PR's head commit, or every commit after it only removes transient `.audits/` artifacts (`git -C <worktree> diff --stat <reviewed-sha> HEAD` lists nothing but `.audits/` deletions); and the recorded file list, minus those artifacts, equals the current `--stat` output.
 2. Every blocking finding it raised is resolved in the diff or explicitly overridden by the user.
 3. If the PR's head commit is still the reviewed one but the security-sensitive condition applies and no security lane ran, run that lane now.
 
-Any mismatch (a new commit, a rebase, a different file list) means the prior review doesn't cover the diff: run the lanes again over the current range.
+Any other mismatch (a new content commit, a rebase, a different file list) means the prior review doesn't cover the diff: run the lanes again over the current range.
 
 ## Failed gate
 

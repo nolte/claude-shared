@@ -210,6 +210,14 @@ members).
 Before the bundle opens, run `quality-gate` against the **integration branch tip**. A
 green gate on a member sub-branch is not evidence for the bundle.
 
+Then, before the bundle opens or a lane returns `committed-locally`, have a read-only
+agent that didn't produce the change review the tip's diff,
+`git -C <worktree> diff origin/develop...HEAD`, briefed for security when it touches a
+security-sensitive path. Reuse the lanes, brief, and failed-gate rule of
+`pull-request-merge`'s `references/pre-merge-review.md`. Triage each finding per
+`references/finding-triage.md` §"The integration-branch diff review" and record it, with
+the reviewed head SHA, in `## Findings`; `pull-request-merge` then only confirms it.
+
 ### 6. bundle
 
 Remove every transient artifact with a fix-forward `git rm` on the integration branch —
@@ -219,7 +227,8 @@ Never `.gitignore` them instead.
 Open exactly one pull request via `pull-request-create`. List every member under
 `## Linked issues` with the repository's closing keyword, and record in **Risk / rollout
 notes** the group id, the admitting predicate per member, the mode with its reason, and
-per member the dispatched specialist or the explicit no-matching-specialist note. On a
+per member the dispatched specialist or the explicit no-matching-specialist note, and
+the diff review (reviewed head SHA, `--stat` file list, lanes, findings). On a
 `fix`-typed bundle, carry exactly **one** `## Class sweep` for the group's defect class.
 
 **As a lane** — the caller's brief or hand-off payload carries `lane: true`
@@ -227,11 +236,11 @@ per member the dispatched specialist or the explicit no-matching-specialist note
 and don't open the pull request: per `spec/project/pull-request-workflow/` §"Serial
 pull-request flow" the orchestrating run opens it at the head of its merge train.
 Commit the integration branch tip after the `git rm` above and return `committed-locally`
-with the branch, worktree, commit SHA, this run's id, the drafted title and body, and
-anything blocked. **Standalone**, `pull-request-create`'s precondition checks the slot:
-while another pull request against `develop` is open, report it and wait, or hand the
-branch to a running train; never open a second one without the operator's explicit
-override.
+with the branch, worktree, commit SHA, this run's id, the drafted title and body, the
+diff review record, and anything blocked. **Standalone**, `pull-request-create`'s
+precondition checks the slot: while another pull request against `develop` is open,
+report it and wait, or hand the branch to a running train; never open a second one
+without the operator's explicit override.
 
 The skill stops at an open, audit-trailed pull request (as a lane: at the unpushed
 integration branch); `pull-request-merge` owns the merge.

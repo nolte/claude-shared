@@ -350,6 +350,13 @@ verifiziert und gemergt ist.
   der PR geöffnet wird. (`security-review` ist das Claude-Code-Harness-Built-in, kein
   `nolte-shared`-Plugin-Agent; es wird als `security-review`-Skill aufgerufen, nicht
   über `Agent(subagent_type="nolte-shared:security-review")`.)
+- **MUSS [MUST]** ein unabhängiges Review des erzeugten Diffs (`git -C <worktree> diff
+  origin/develop...HEAD`) durch einen read-only Reviewer laufen lassen, der die Änderung
+  nicht erzeugt hat, bevor der Pull Request geöffnet wird oder, wenn der Lauf eine Lane
+  ist, bevor er `committed-locally` zurückgibt; seine Befunde triagieren und mit dem
+  Head-Commit, den sie abdecken, im Pre-Analysis-Artefakt festhalten. `pull-request-merge`
+  bestätigt dieses Review dann über denselben Head, statt der Änderung den ersten Blick
+  zu geben, der ein auf den Merge verschobenes Review sonst wäre
 - **MUSS [MUST]** diese Diff-Verifikation aus einer Arbeitskopie erfüllen, die die
   Änderung tatsächlich enthält, und **DARF NICHT [MUST NOT]** darauf bauen, dem
   Built-in den Worktree-Pfad zu übergeben. Das Built-in setzt seine Änderungsmenge
@@ -559,6 +566,9 @@ Diese Kriterien gelten für Läufe, die begonnen haben, nachdem die Transient-Re
 - [ ] Kein von dieser Orchestrierung produzierter Pull Request wurde von der
   Orchestrierung selbst gemergt, und keiner zeigt einen Branch-Protection-Override,
   eine `enforce_admins: false`-Ausnahme oder einen Required-Check-Bypass
+- [ ] Für jeden Lauf lief ein unabhängiges read-only Review des erzeugten Diffs, bevor der
+  PR geöffnet wurde oder, bei einer Lane, bevor sie `committed-locally` zurückgab, und das
+  Artefakt hält seine Befunde mit dem Head-Commit fest, den sie abdecken
 - [ ] Für jedes `security`-Issue liefen sowohl der read-only
   `code-security-reviewer`-Agent als auch das eingebaute `security-review`-Skill,
   bevor der PR geöffnet wurde (Audit, dann Diff-Verifikation), festgehalten im

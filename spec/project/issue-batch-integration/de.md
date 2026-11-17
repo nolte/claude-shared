@@ -128,7 +128,7 @@ Leserschaft: Operatoren, die einen gruppierten Backlog-Durchlauf fahren, Skill- 
 - **MUSS [MUST]** jedes transiente Artefakt (§D) vor dem Merge des Bündels entfernen, sodass die dauerhafte Spur der Pull-Request-Body plus die Kommentare an den Issues sind
 - **MUSS [MUST]**, wenn ein Mitglied nach Eröffnung des Bündel-Pull-Requests herausgelöst werden muss, dessen Änderungen vom Integrationsbranch entfernen — in Modus B durch Fallenlassen seines Merges — und sowohl Artefakt als auch Pull-Request-Body aktualisieren, oder das Bündel schließen und neu gruppieren; ein Bündel **MUSS NICHT [MUST NOT]** mergen, solange es ein Mitglied behauptet, das es nicht mehr trägt
 - **MUSS NICHT [MUST NOT]** das Bündel selbst mergen; der Gruppenprozess endet bei einem offenen, auditierbaren Pull Request und übergibt den Merge an `pull-request-merge`
-- **MUSS [MUST]**, wenn die Gruppe als Lane eines orchestrierten Laufs läuft (§J), bei der verifizierten Integrations-Branch enden, committet und nicht gepusht (`committed-locally`), statt den Bündel-Pull-Request zu öffnen; der orchestrierende Lauf öffnet ihn, wenn die Branch die Spitze des Trains erreicht, gemäß `pull-request-workflow` §"Serieller Pull-Request-Fluss"
+- **MUSS [MUST]**, wenn die Gruppe als Lane eines orchestrierten Laufs läuft (§J), bei der verifizierten Integrations-Branch enden, committet und nicht gepusht (`committed-locally`), nachdem ein unabhängiges read-only Review des Diffs der Integrations-Branch gelaufen ist, dessen Befunde triagiert und im Gruppen-Artefakt festgehalten sind, statt den Bündel-Pull-Request zu öffnen; der orchestrierende Lauf öffnet ihn, wenn die Branch die Spitze des Trains erreicht, gemäß `pull-request-workflow` §"Serieller Pull-Request-Fluss"
 
 ### H. Abschluss
 
