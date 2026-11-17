@@ -2,8 +2,9 @@
 # Serial merge train per spec/project/pull-request-workflow/ §"Serial pull-request flow".
 #
 # Usage: merge-train.sh <pr> [<pr> ...]
-#   Run from the repository's working copy. The PRs are the slot holders in train order:
-#   open dependency-bot PRs first, then the run's own head PR. Pass only PRs the run's
+#   Run from the repository's working copy. The PRs are the slot holders in train order
+#   (dependency-bot PRs first, then the run's own head PR); backlog-delivery-orchestrate
+#   passes one PR per invocation so its develop-health check runs before each merge. Pass only PRs the run's
 #   standing authorisation covers; a PR that is not a verified dependency-bot PR is
 #   treated as the run's own.
 #

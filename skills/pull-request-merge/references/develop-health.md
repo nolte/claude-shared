@@ -54,7 +54,7 @@ A lane or merge continues past a red `develop` only on an explicit operator over
 ```
 
 - An override covers that run id only. A newer red run of the same or another workflow needs its own.
-- The pull request that fixes the red run is the expected override case: the gate stops it too, and the operator overrides it naming the red run it repairs, which its **Risk / rollout notes** already carry per `workflow-health-triage`.
+- The pull request that fixes the red run is the expected override case: the gate stops it too, and the operator overrides it naming the red run it repairs, and the override records that run id.
 - A standing authorisation, a partition approval, or a plan approval never covers it.
 - A skill invoked by an orchestrated run (`pull-request-merge` under `backlog-delivery-orchestrate`) honours an override the caller recorded for the same run id; the caller names it in its brief.
 - Under an override, `pull-request-merge` step 4 still classifies a red check on the head; the same check red in the overridden `develop` run is the evidence that it isn't the pull request's own.
