@@ -12,15 +12,15 @@ foreign target. Pin the file explicitly:
 
 ```bash
 root="$(git rev-parse --show-toplevel)"
-tf=""; for f in Taskfile.yml Taskfile.yaml taskfile.yml taskfile.yaml; do
+tf=""; for f in Taskfile.yml taskfile.yml Taskfile.yaml taskfile.yaml Taskfile.dist.yml taskfile.dist.yml Taskfile.dist.yaml taskfile.dist.yaml; do
   [ -f "$root/$f" ] && { tf="$root/$f"; break; }; done
 if [ -n "$tf" ]; then task --taskfile "$tf" --summary worktree:add >/dev/null 2>&1; echo "detect=$?"; else echo "detect=no-taskfile"; fi
 ```
 
 - `detect=0`: the target exists. Run `task --taskfile "$tf" worktree:add -- <branch> <slug>`,
   which fetches, branches off `origin/develop`, and seeds `.resume/<slug>/plan.md`.
-- Anything else (`no-taskfile`, `200` no such target, `104` a Taskfile the shell
-  refuses to load, any other code): use the fallback below.
+- Anything else (`no-taskfile`, `200` no such target, `104` an untrusted remote include, `109` a Taskfile that
+  doesn't parse, any other code): use the fallback below.
 
 **The fallback** is the form `spec/project/parallel-working-copies/` §Lifecycle: Create
 mandates, at the location §Path layout names:
