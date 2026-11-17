@@ -196,7 +196,7 @@ The R-9 follow-on: the two strands deferred out of sprint 0005 (which delivered 
 
 ```yaml
 id: R-12
-title: Delivery skills — standing authorisation, visible waiting, per-repository verification policy
+title: "Delivery skills: standing authorisation, visible waiting, per-repository verification policy"
 detail: coarse
 outcomes: [O-1]
 target_sprint: null
@@ -204,4 +204,4 @@ mvp: false
 status: proposed
 ```
 
-The delivery skills (`backlog-delivery-orchestrate`, `issue-orchestrate`, the pull-request skills, `quality-gate`) cost the operator round-trips and give no feedback during long waits: three outcomes from issue #777 (retrospective on nolte/kamerplanter-appliance, 2026-11-12…17). (1) A standing authorisation and default path that cover the routine gates, including member-issue closure, which `spec/project/pull-request-workflow/` §"Serial pull-request flow" (en.md:64) doesn't name yet (`backlog-delivery-orchestrate` SKILL.md:3 and `references/merge-train.md:18` already carry the train's authorisation). (2) A visible waiting/status pattern for long-running checks and merges (the merge train already runs in the background). (3) A per-repository verification policy, a new configuration key that doesn't exist yet in `skills/`, `spec/` or `project/portfolio.yml` (measured 2026-11-17). Split into one feature per outcome via `feature-decompose`. Requirements aren't elicited yet: operator override for queuing; `requirements-elicit` runs before decomposition.
+The delivery skills (`backlog-delivery-orchestrate`, `issue-orchestrate`, the pull-request skills, `quality-gate`) cost the operator round-trips and give no feedback during long waits: three changes from issue #777 (retrospective on nolte/kamerplanter-appliance, 2026-11-12…17). (1) A standing authorisation and default path that cover the routine gates, including member-issue closure, which `spec/project/pull-request-workflow/` §"Serial pull-request flow" (en.md:64) doesn't name yet (`backlog-delivery-orchestrate` SKILL.md:3 and `references/merge-train.md:18` already carry the train's authorisation). (2) A visible waiting/status pattern for long-running checks and merges (the merge train already runs in the background). (3) A per-repository verification policy, a new configuration key that doesn't exist yet in `skills/`, `spec/` or `project/portfolio.yml` (measured 2026-11-17). Split into one feature per change via `feature-decompose`. Requirements aren't elicited yet: operator override for queuing; `requirements-elicit` runs before decomposition.
