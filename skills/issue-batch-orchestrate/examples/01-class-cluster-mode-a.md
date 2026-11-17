@@ -36,9 +36,11 @@ change named: a schema validation step in the lint job.
 Artifact written to `.audits/issue-batch-integration/2026-09-14-settings-drift/analysis.md`.
 Tier 2. The completeness matrix carries Config, Spec, Docs and Generated-index columns;
 Source and Tests are `not applicable — no code path touches the settings file`, with the
-reason stated rather than left blank. The repository is documentation-only, so instead of
-an Existing installations / upgrade / rollback column the matrix carries one line:
-`not applicable — the repository ships no deployable artefact (documentation-only)`.
+reason stated rather than left blank. The repository is a Claude plugin, a deployable
+artefact without an update health gate, so the matrix carries the Existing installations /
+upgrade / rollback column. Every member changes only repository-hosting settings, which no
+installed plugin reads, so each cell is
+`not applicable — touches no persisted state, consumer configuration key, invocation name or artifact path`.
 
 Operator approves. **This is the write gate.**
 

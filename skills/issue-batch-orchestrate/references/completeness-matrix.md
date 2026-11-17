@@ -12,8 +12,8 @@ change actually ships**.
 
 | Member | Source | Spec | Tests | Docs | Config / workflows | Generated index | Existing installations / upgrade / rollback |
 |---|---|---|---|---|---|---|---|
-| #623 | `settings.py:41` — coerce topics to string; check: `task test` | not applicable — no spec governs the field | `test_settings.py::test_topics_string` | not applicable — internal | `.github/settings.yml` topics block; check: settings app sync | not applicable | not applicable — the field is read at settings sync, never by an installed artefact |
-| #624 | not applicable — config only | `spec/project/project-structure/` §Probot; check: `pre-commit run check-section-refs` | not applicable | `docs/en/setup.md` §Apps; check: `task docs` | `.github/settings.yml` `_extends`; check: app loads the file | `spec/README.md` row; check: `task test` | not applicable — config only, ships in no artefact |
+| #701 | `settings.py:41` — coerce topics to string; check: `task test` | not applicable — no spec governs the field | `test_settings.py::test_topics_string` | not applicable — internal | `.github/settings.yml` topics block; check: settings app sync | not applicable | consumer config key `topics` now parses as list or string; health gate: none (Python library); rollback restores string-only parsing, so a list written after the update fails on the previous release; check: `test_settings.py::test_previous_release_config_parses` |
+| #702 | not applicable — config only | `spec/project/project-structure/` §Probot; check: `pre-commit run check-section-refs` | not applicable | `docs/en/setup.md` §Apps; check: `task docs` | `.github/settings.yml` `_extends`; check: app loads the file | `spec/README.md` row; check: `task test` | not applicable — touches no persisted state, consumer configuration key, invocation name or artifact path |
 
 ## Deriving the column set
 
@@ -70,17 +70,37 @@ A change cell in this column names four things, each as a short clause:
    or stopped.
 2. **Health gate:** whether the update tool's health gate still passes on that upgraded
    installation, naming the gate (the appliance's post-update health check, the Helm
-   `--wait` readiness, the package manager's post-install script).
+   `--wait` readiness, the package manager's post-install script). Where the artefact's
+   update path has no health gate (a Claude plugin, a library or package consumed by
+   version), state `health gate: none (<artefact kind>)` and name instead the state
+   surfaces the installed version reads: persisted state (such as checkpoint schemas
+   under `.resume/<skill>/`), consumer configuration keys or files, invocation names
+   (skill and agent names, CLI flags), and artifact paths.
 3. **Rollback:** what a rollback restores, and what it can't — a schema migration that
    ran forward, a secret that was rotated.
 4. **Proving check:** the executable check that shows all three, such as an update boot
    test from the previous image or a migration test against a snapshot of the previous
-   schema.
+   schema. Without a health gate, the check proves compatibility of the named surfaces:
+   resuming a checkpoint the previous release wrote, `python3 scripts/validate_skills.py`
+   for invocation names, a parse test of the previous release's configuration.
 
-Example cell: "previous image boots, migrates the settings file, services start; health
-gate passes; rollback restores the previous image and the unmigrated file; check:
-`task test:update-boot`". A member that cannot reach an installation records
-`not applicable` with the reason, as in any other column.
+Example cell for an appliance image: "previous image boots, migrates the settings file,
+services start; health gate passes; rollback restores the previous image and the
+unmigrated file; check: `task test:update-boot`".
+
+Example cell for a Claude plugin whose skill renames a checkpoint field: "a checkpoint
+the previous release wrote under `.resume/<skill>/` resumes, the old field read as an
+alias; health gate: none (Claude plugin); rollback restores the previous skill, which
+ignores the new field, so a checkpoint written after the update resumes without it;
+check: resume test from a previous-release checkpoint fixture".
+
+`not applicable` needs a reason, as in any other column. Where the update path has no
+health gate, a change still reaches every installation on update, so "cannot reach an
+installation" is not a reason. Such a member is `not applicable` only when it touches
+none of the four surfaces, and the cell says exactly that:
+`not applicable — touches no persisted state, consumer configuration key, invocation name or artifact path`.
+The fixed wording is a checklist the reviewer can verify against the diff, not a
+boilerplate pass.
 
 ## Failure modes
 

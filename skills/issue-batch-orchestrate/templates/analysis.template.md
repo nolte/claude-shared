@@ -69,7 +69,7 @@ table.
 
 | Member | {{class}} | {{class}} | {{class}} | Existing installations / upgrade / rollback |
 |---|---|---|---|---|
-| #{{n}} | {{change; check: `{{command}}`}} | {{not applicable — reason}} | {{change; check: `{{command}}`}} | {{upgraded state; health gate passes or fails; what a rollback restores; check: `{{update boot or migration test}}` — or not applicable — reason}} |
+| #{{n}} | {{change; check: `{{command}}`}} | {{not applicable — reason}} | {{change; check: `{{command}}`}} | {{upgraded state; health gate passes or fails, or `health gate: none (<artefact kind>)` plus the state surfaces read; what a rollback restores and what it can't; check: `{{update boot, migration, or compatibility test}}` — or not applicable — reason}} |
 
 {{Only without a deployable artefact: "Existing installations / upgrade / rollback: not
 applicable — the repository ships no deployable artefact ({{project type}})."}}
