@@ -58,12 +58,13 @@ Repository state assumed by the harness when this prompt fires:
    PR shape and the initial check rollup (3 green, 2 pending, 0
    failed). It also reports that wait mode is active and prints
    the resolved budget: `interval=90s, timeout=10min, retries≤10`.
-3. **Step 2 delegates to `review`.** Touched paths include
-   `mkdocs.yml` and `docs/en/portfolio/index.md` — neither is
-   security-sensitive (not under `.github/workflows/`,
-   `.github/settings.yml`, `**/*.sh`, and not auth/signing
-   code), so `security-review` is **not** invoked. The `review`
-   skill returns no blocking findings.
+3. **Step 2 reviews the real diff** (`code-review` on the PR
+   number plus a read-only agent over the worktree range).
+   Touched paths include `mkdocs.yml` and
+   `docs/en/portfolio/index.md` — neither is security-sensitive
+   (not under `.github/workflows/`, `.github/settings.yml`,
+   `**/*.sh`, and not auth/signing code), so no security lane
+   runs. Neither review returns a blocking finding.
 4. **Step 3 derives and applies labels.** Candidates: `type:feat`
    (exists → win), `area:skill` (touched `skills/`, exists),
    `area:docs` (touched `docs/` and `mkdocs.yml`, exists). The

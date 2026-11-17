@@ -62,10 +62,11 @@ none
 
 | Member | Result | Verification (actual output) |
 |---|---|---|
+| #772 | done (specialist `nolte-claude-dev:claude-plugin-developer`; spec part by the orchestrator via the `nolte-shared:spec` contract) — step 2 reviews the real worktree diff via `code-review <PR#>` + read-only agent, security lane = security-briefed read-only agent (`security-review` only when cwd is the worktree), step 4 classifies red non-required checks; new `references/pre-merge-review.md`; `pull-request-workflow` gains the non-required-check MUST + AC (EN+DE); `api-error-handling` stale owner fixed | sweep predicate over `skills/` → 0 hits (rc=1); `validate_skills.py` rc=0, 0 findings for pull-request-merge, body ~4450 tokens (develop ~4460), description 899 chars; pre-commit (6 files) rc=0; markdownlint rc=0; spec EN/DE parity 134/29 both; Vale on spec en.md rc=0 |
 
 ## Deviations
 
-none yet
+- Local adaptation (#772): the security lane uses a security-briefed read-only agent instead of `code-security-reviewer`, which is a whole-codebase audit whose description excludes diff-scoped review; #772 offers "or a read-only agent".
 
 ## Requirement coverage
 

@@ -47,11 +47,14 @@ Repository state assumed by the harness when this prompt fires:
 2. **Step 1 inspection runs in parallel** (`gh pr view`, `gh pr checks`,
    `gh pr diff --name-only`, `gh label list`). The skill reports
    the PR number, title, base, head, and the green check rollup.
-3. **Step 2 delegates to `review`.** No security-sensitive paths
+3. **Step 2 reviews the real diff.** `code-review` runs on the PR
+   number, and a read-only review agent covers
+   `git -C <worktree> diff origin/develop...HEAD`; its file list
+   matches `--stat`. No security-sensitive paths
    (`.github/workflows/`, `.github/settings.yml`, `**/*.sh`, auth /
-   signing code) are touched, so `security-review` is **not**
-   invoked. The `review` skill returns no blocking findings; the
-   skill records that and continues.
+   signing code) are touched, so no security lane runs. Neither
+   review returns a blocking finding; the skill records that and
+   continues.
 4. **Step 3 derives labels.** From the Conventional-Commits prefix
    `feat`, the candidates are `type:feat`, `kind:feat`, `feat`; the
    first that exists in the repo (`type:feat`) wins. Touched paths
@@ -99,7 +102,7 @@ Hard-rule compliance to verify in this scenario:
   reusable automerge workflow's `MERGE_METHOD: squash` is the
   active path; `--squash --auto` was never invoked).
 - No GitHub label was created from the skill.
-- The `review` skill delegation was not skipped.
+- The step 2 review of the real worktree diff was not skipped.
 - No silent rebase / merge of `develop` into the feature branch.
 - No polling occurred outside wait mode.
 - The merge was confirmed via `state: MERGED` on the PR itself,

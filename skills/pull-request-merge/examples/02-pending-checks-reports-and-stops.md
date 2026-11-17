@@ -48,9 +48,10 @@ Repository state assumed by the harness when this prompt fires:
 2. **Step 1 inspection runs in parallel.** The skill notes the
    mixed check-bucket result up front: 3 green, 2 pending, 0
    failed.
-3. **Step 2 delegates to `review`.** No security-sensitive paths
-   are touched, so `security-review` is **not** invoked. The
-   `review` skill returns no blocking findings — but this still
+3. **Step 2 reviews the real diff** (`code-review` on the PR
+   number plus a read-only agent over the worktree range). No
+   security-sensitive paths are touched, so no security lane runs.
+   Neither review returns a blocking finding — but this still
    doesn't unlock anything downstream because step 4 will gate.
 4. **Step 3 is deferred (not executed).** The skill does **not**
    apply labels yet, because step 4 is going to stop the run and
