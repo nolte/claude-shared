@@ -65,6 +65,12 @@ none
 | #772 | done (specialist `nolte-claude-dev:claude-plugin-developer`; spec part by the orchestrator via the `nolte-shared:spec` contract) — step 2 reviews the real worktree diff via `code-review <PR#>` + read-only agent, security lane = security-briefed read-only agent (`security-review` only when cwd is the worktree), step 4 classifies red non-required checks; new `references/pre-merge-review.md`; `pull-request-workflow` gains the non-required-check MUST + AC (EN+DE); `api-error-handling` stale owner fixed | sweep predicate over `skills/` → 0 hits (rc=1); `validate_skills.py` rc=0, 0 findings for pull-request-merge, body ~4450 tokens (develop ~4460), description 899 chars; pre-commit (6 files) rc=0; markdownlint rc=0; spec EN/DE parity 134/29 both; Vale on spec en.md rc=0 |
 | #778 | done (specialist `nolte-claude-dev:claude-plugin-developer`; spec part by the orchestrator via the `nolte-shared:spec` contract) — issue-orchestrate op 6 and issue-batch-orchestrate op 5 review the worktree diff before the PR or `committed-locally`, record findings with the head SHA; pull-request-merge step 2 confirms (later commits may only remove `.audits/`); spec issue-orchestration gains the MUST + AC, security verification aligned to the security-briefed reviewer; issue-batch-integration lane rule extended | `validate_skills.py` rc=0, no finding for the three skills; tokens issue-orchestrate 4494→4490, issue-batch-orchestrate 4004→4170, pull-request-merge 4450→4471; pre-commit (9 + 2 files) rc=0; markdownlint rc=0; spec EN/DE parity 102 bullets / 27 AC and 149 bullets; Vale rc=0 |
 
+## Verification
+
+- Independent diff review: @ 0a4fefc6 (3 blocking, 6 non-blocking — all fixed), re-review @ ca03457c (no blocking finding).
+- Integration tip d832d5c9: `task lint` green; `task check` exit 0 — links 0 critical; 1627 passed, 21 skipped.
+- Wide sweep `git grep -nE '`review` skill|`review`-Skill|Skill\\(skill="review"\\)|`review` and `security-review`' -- skills plugins agents spec` → 1 intended hit (`pre-merge-review.md:14`, "a `review` skill no longer exists"); develop had 8.
+
 ## Deviations
 
 - Local adaptation (#778): `pull-request-merge` confirms a recorded review when later commits only remove `.audits/` artifacts (the fix-forward `git rm` always follows the review).
@@ -78,3 +84,9 @@ not applicable — symptom cluster
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| B1 merge-train.md:19 still named the `review`/`security-review` delegation | diff review @ 0a4fefc6 | fixed (ca03457c) | `git grep` on merge-train.md | — |
+| B2 spec §Specialist dispatch still required the built-in security-review | diff review @ 0a4fefc6 | fixed (ca03457c) | spec en.md:291-293 | — |
+| B3 issue-orchestrate example 03 prescribed the built-in | diff review @ 0a4fefc6 | fixed (ca03457c) | examples/03 :5-68 | — |
+| N1–N6 confirmation rule, two plugin descriptions + continuous-improvement still naming `review` skill (sweep predicate too narrow), lane (a) gotcha, lane choice, ancestor/name-status check, durable record in PR notes | diff review @ 0a4fefc6 | fixed (ca03457c, d832d5c9) | per finding | — |
+| Re-review of the fix delta | diff review @ ca03457c | no blocking finding; two wording nits, one fixed (d832d5c9), lane-(a) wording difference kept (compatible) | — | — |
+| Class guard (references to skills that don't exist) | class sweep | too large for this group (needs a maintained list of harness built-ins) → own issue, proposed to the operator | — | pending |
