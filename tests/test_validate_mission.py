@@ -256,3 +256,13 @@ def test_750_historical_flip_a30d346_passes():
         pytest.skip("history not available in this checkout")
     assert "stabilised" not in before.stdout.split("---")[1]
     assert v.check_stabilisation_evidence(before.stdout, after.stdout, "m") == []
+
+
+@pytest.mark.parametrize("sentence,expected", [
+    ("The subsequent sprint, e.g. Sprint 2, is `closed`.", True),
+    ("Sprint `0002` (MVP-closing + 1) is `closed`.", True),
+    ("Sprint 1 got a +1 from review.", False),
+    ("Sprint 1 closed; one + 1 reviewers approved.", False),
+])
+def test_750_marker_and_sentence_edge_cases(sentence, expected):
+    assert v._names_subsequent_sprint(sentence) is expected

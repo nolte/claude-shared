@@ -348,9 +348,9 @@ _ISO_DATE_IN_TEXT_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 # A sentence names the subsequent sprint when it carries a subsequent-sprint marker
 # (`subsequent sprint`, `subsequent-sprint`, `Folgesprint`, `Folge-Sprint`, or the
 # `+ 1` of "MVP-closing + 1") and a sprint number (`sprint <n>`, `Sprint `0002``).
-_SUBSEQUENT_MARKER_RE = re.compile(r"subsequent[- ]sprint|folge-?\s*sprint|\+\s*1\b", re.IGNORECASE)
+_SUBSEQUENT_MARKER_RE = re.compile(r"subsequent[- ]sprint|folge-?\s*sprint|(?:closing|\d)\W{0,3}\+\s*1\b", re.IGNORECASE)
 _SUBSEQUENT_NUMBER_RE = re.compile(r"sprint\W{0,3}\d+", re.IGNORECASE)  # no \b: `Folgesprint 2`
-_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z`*(\-])|\n")
+_SENTENCE_SPLIT_RE = re.compile(r"(?<!\be\.g\.)(?<!\bi\.e\.)(?<!\bz\.B\.)(?<=[.!?])\s+(?=[A-Z`*(\-])|\n")
 _EXEMPTION_NAMED_RE = re.compile(r"(?=.*\b(?:retroactive|rückwirkend))(?=.*(?:exemption|ausnahme))",
                                  re.IGNORECASE | re.DOTALL)
 _SPRINT_NUMBER_RE = re.compile(r"\bsprint\W{0,3}\d+", re.IGNORECASE)
