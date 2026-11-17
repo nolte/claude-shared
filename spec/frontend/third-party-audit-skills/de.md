@@ -75,8 +75,8 @@ Das Audit nutzt genau diese Drittanbieter-Skills. Jede Zeile ist für Auslöser 
 - **MUSS** einen fehlenden anwendbaren Skill als **Coverage-Lücke** melden, mit dem Skill, dem Strang, den er abgedeckt hätte, und dem Installationsbefehl aus §B
 - **MUSS** das Audit weiterlaufen lassen, wenn ein Skill fehlt: Die eigenen Regeln, die §F an diesen Skill delegiert, werden für diesen Lauf wieder aktiv, und der Report nennt sie als aktive Fallbacks
 - **MUSS** jede eigene Regel, deren abdeckender Skill in diesem Audit nicht vollständig gelaufen ist — fehlend, nicht anwendbar, fehlgeschlagener Abruf oder abgebrochen —, als aktiven Fallback behandeln, nicht nur die Regeln eines fehlenden Skills
-- **MUSS** jede eigene Regel, die kein dispatchter Reviewer angewandt hat — einen aktiven Fallback oder eine Regel, die in jedem Audit läuft —, als **nicht abgedeckt** melden, nie als gelaufene Regel; ein Framework ohne Profil in `spec/frontend/source-code-review/` lässt das gesamte F-Regel-Overlay unabgedeckt, und der Report sagt das
-- **MUSS** aus den Reports der Reviewer entscheiden, was nicht abgedeckt ist, nachdem sie zurückkommen, nicht aus den Dispatch-Listen
+- **MUSS** jede eigene Regel, die kein dispatchter Reviewer angewandt hat — einen aktiven Fallback oder eine Regel, die in jedem Audit läuft —, als **nicht abgedeckt** melden, nie als gelaufene Regel; ein Framework ohne Profil in `spec/frontend/source-code-review/` lässt mindestens das gesamte F-Regel-Overlay unabgedeckt, und der Report sagt das
+- **MUSS** von jedem dispatchten Reviewer die IDs der angewandten Regeln verlangen und aus diesen Listen entscheiden, was nicht abgedeckt ist, nachdem die Reviewer zurückkommen, nicht aus den Dispatch-Listen: Jede Fallback- oder Jedes-Audit-Regel, die in der Liste ihres Reviewers fehlt, ist nicht abgedeckt
 - **MUSS** einen nicht zutreffenden Skill als `not applicable` mit Begründung melden (zum Beispiel mit der Begründung „keine React- oder Next.js-Abhängigkeit“), nie als Coverage-Lücke
 - **MUSS**, wenn keine Anwendungs-URL übergeben wurde, den gerenderten Strang überspringen und als Coverage-Lücke melden, deren Begründung festhält, dass keine Anwendungs-URL übergeben wurde, und **DARF NICHT** die Anwendung starten, bauen oder ausliefern, um eine zu erhalten
 - **MUSS**, wenn eine URL übergeben wurde, aber nicht erreichbar ist oder der Browser nicht startet, den gerenderten Strang als Coverage-Lücke mit dem beobachteten Fehler melden
@@ -96,7 +96,7 @@ Das Audit nutzt genau diese Drittanbieter-Skills. Jede Zeile ist für Auslöser 
 
 Eine eigene Regel ist **delegiert**, wenn eine Drittanbieter-Regel denselben Defekt im selben Artefakt erkennt. Eine delegierte Regel wird nur übersprungen, wenn ihr abdeckender Skill im selben Audit vollständig gelaufen ist; in jedem anderen Fall läuft sie als Fallback (§D).
 
-- **MUSS** die Drittanbieter-Skills vor dem Dispatch der eigenen Reviewer ausführen, damit die Listen delegierter und Fallback-Regeln, die jeder Reviewer erhält, abbilden, was tatsächlich gelaufen ist
+- **MUSS** die Drittanbieter-Skills — in der Reihenfolge `vercel-react-best-practices`, `web-design-guidelines`, `frontend-design` — vor dem Dispatch der eigenen Reviewer ausführen, damit die Listen delegierter und Fallback-Regeln, die jeder Reviewer erhält, abbilden, was tatsächlich gelaufen ist
 - **MUSS** nur bei Gleichwertigkeit delegieren: Eine eigene Regel, die strenger oder stack-spezifisch ist oder eine Bedingung trägt, die der Drittanbieter-Regel fehlt, bleibt primär
 - **MUSS** die Delegationszuordnung in den beiden besitzenden Specs neben den betroffenen Regeln führen und diese Tabelle als Zusammenfassung halten:
 
@@ -106,7 +106,9 @@ Eine eigene Regel ist **delegiert**, wenn eine Drittanbieter-Regel denselben Def
 | `source-code-review` F10: manuelle Datums-, Zahlen- und Währungsformatierung | `web-design-guidelines` (Locale & i18n) | hartkodierte Strings, zusammengesetzte Sätze, Plural-Behandlung, dynamische Keys |
 | `source-code-review` F6: Request-Wasserfälle, Barrel-Imports und fehlende Route-Splits | `react-best-practices` (async-, bundle-) | das bedingte Memoization-Urteil, teure Ableitungen |
 | `source-code-review` F6: vollständiges Rendern großer Collections | `web-design-guidelines` (Performance) | wie oben |
-| `webview-ui-optimization` §Barrierefreiheit und §UX: generische HTML- und CSS-Regeln (Namen für Icon-Buttons, `div`-Click-Handler, `outline: none`, `prefers-reduced-motion`, Safe-Area-Insets, `transition: all`) | `web-design-guidelines` | jede Regel zu MUI, React Router, react-hook-form, notistack und Recharts; WCAG-Schwellen; die Domänen Security und i18n |
+| `webview-ui-optimization` §Performance › Charts und lange Listen: Virtualisierung langer Listen | `web-design-guidelines` (Performance) | Lazy-Loading von Recharts-Charts |
+| `webview-ui-optimization` §Barrierefreiheit: generische HTML- und CSS-Regeln (Namen für Icon-Buttons, `div`-Click-Handler, `outline: none` ohne Ersatz) | `web-design-guidelines` | jede Regel zu MUI, react-hook-form, notistack und Recharts; jede WCAG-Schwelle |
+| `webview-ui-optimization` §UX: generische CSS-Regeln (`prefers-reduced-motion`, Safe-Area-Insets, `transition: all`) | `web-design-guidelines` | jede Regel zu MUI, React Router, react-hook-form und notistack |
 
 - Alle anderen eigenen Regeln — F1–F5, F7, F9, F11, der Kern D1–D11 sowie die webview-ui-Domänen Security und Internationalisierung — haben keine Drittanbieter-Entsprechung und laufen bei jedem Audit
 
@@ -137,7 +139,7 @@ Drittanbieter-Befunde behalten ihren Text und ihre Regelreferenz; das Audit ordn
 - **MUSS** den Report mit einem Header eröffnen, der festhält: den Audit-Scope; das erkannte Framework; je Drittanbieter-Skill Verfügbarkeitsstatus, Installationsort, Commit oder Version und ob er lief; Abrufzeit und SHA-256 der live geladenen Regeln (§E); jede Coverage-Lücke; jede aktive Fallback-Regel; und jede nicht abgedeckte Regel
 - **MUSS** jeden Befund mit `source` taggen — dem Drittanbieter-Skill (zum Beispiel `vercel/web-design-guidelines`) oder dem eigenen Agent mit Regel-ID (zum Beispiel `nolte/frontend-code-reviewer F2`)
 - **MUSS** Befunde, die zwei Quellen für denselben Defekt an derselben `file:line` melden, zu einem Befund zusammenführen, der beide Quellen und die höhere Severity trägt
-- **MUSS** für Warning und höher den Work-Package-Vertrag aus `spec/project/source-code-review/` einhalten (disjunkte Dateimengen, Routing-Ziele)
+- **MUSS** für Warning und höher den Work-Package-Vertrag aus `spec/project/source-code-review/` einhalten (disjunkte Dateimengen, Routing-Ziele): Eine Drittanbieter-Warning in einer Datei, die ein bestehendes Reviewer-Package besitzt, tritt diesem Package bei, jede andere eröffnet ein Package für ihren Component-Slice, und der Behebungstext der Drittanbieter-Regel dient als ihr Umsetzungsvorschlag
 - **DARF NICHT** Drittanbieter-Befunde in die `pass`-/`fail`-Regeltabelle von `webview-ui-optimize` einfließen lassen; diese Tabelle beurteilt nur die Regeln aus `spec/frontend/webview-ui-optimization/`
 
 ### I. Orchestrierung

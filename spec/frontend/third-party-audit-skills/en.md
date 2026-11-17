@@ -75,8 +75,8 @@ The audit uses exactly these third-party skills. Each row is normative for its t
 - **MUST** report a missing applicable skill as a **coverage gap** naming the skill, the strand it would have covered, and the install command from §B
 - **MUST** keep the audit running when a skill is missing: the own rules that §F delegates to that skill become active again for this run, and the report names them as active fallbacks
 - **MUST** treat every own rule whose covering skill didn't run to completion in this audit—missing, not applicable, failed fetch, or aborted—as an active fallback, not only the rules of a missing skill
-- **MUST** report every own rule that no dispatched reviewer applied—an active fallback or a rule that runs on every audit—as **uncovered**, never as a rule that ran; a framework without a profile in `spec/frontend/source-code-review/` leaves the whole F-rule overlay uncovered, and the report says so
-- **MUST** decide what's uncovered from the reviewers' reports, after they return, not from the dispatch lists
+- **MUST** report every own rule that no dispatched reviewer applied—an active fallback or a rule that runs on every audit—as **uncovered**, never as a rule that ran; a framework without a profile in `spec/frontend/source-code-review/` leaves at least the whole F-rule overlay uncovered, and the report says so
+- **MUST** require each dispatched reviewer to return the IDs of the rules it applied, and decide what's uncovered from those lists after the reviewers return, not from the dispatch lists: every fallback or every-audit rule absent from its reviewer's list is uncovered
 - **MUST** report a skill that doesn't apply as `not applicable` with its reason (for example, the reason "no React or Next.js dependency"), never as a coverage gap
 - **MUST** when no application URL is supplied, skip the rendered strand, report it as a coverage gap whose reason states that no application URL was supplied, and **MUST NOT** start, build, or serve the application to obtain one
 - **MUST** when a URL is supplied but unreachable, or the browser fails to start, report the rendered strand as a coverage gap with the observed error
@@ -96,7 +96,7 @@ The audit uses exactly these third-party skills. Each row is normative for its t
 
 An own rule is **delegated** when a third-party rule detects the same defect in the same artefact. A delegated rule is skipped only when its covering skill ran to completion in the same audit; in every other case it runs as a fallback (§D).
 
-- **MUST** run the third-party skills before dispatching the own reviewers, so the delegated and fallback lists handed to each reviewer reflect what actually ran
+- **MUST** run the third-party skills—in the order `vercel-react-best-practices`, `web-design-guidelines`, `frontend-design`—before dispatching the own reviewers, so the delegated and fallback lists handed to each reviewer reflect what actually ran
 - **MUST** delegate only on equivalence: an own rule that's stricter, stack-specific, or carries a conditional the third-party rule lacks stays primary
 - **MUST** keep the delegation mapping in the two owning specs, next to the rules it affects, and keep this table as the summary:
 
@@ -106,7 +106,9 @@ An own rule is **delegated** when a third-party rule detects the same defect in 
 | `source-code-review` F10: manual date, number, and currency formatting | `web-design-guidelines` (Locale & i18n) | hardcoded strings, assembled sentences, plural handling, dynamic keys |
 | `source-code-review` F6: request waterfalls, barrel imports, and missing route splits | `react-best-practices` (async-, bundle-) | the conditional memoization judgment, expensive derivation |
 | `source-code-review` F6: full renders of large collections | `web-design-guidelines` (Performance) | as above |
-| `webview-ui-optimization` §Accessibility and §UX: generic HTML and CSS rules (icon-button names, `div` click handlers, `outline: none`, `prefers-reduced-motion`, safe-area insets, `transition: all`) | `web-design-guidelines` | every MUI, React Router, react-hook-form, notistack, and Recharts rule; WCAG thresholds; the Security and i18n domains |
+| `webview-ui-optimization` §Performance › Charts and long lists: list virtualisation | `web-design-guidelines` (Performance) | lazy-loading Recharts charts |
+| `webview-ui-optimization` §Accessibility: generic HTML and CSS rules (icon-button names, `div` click handlers, `outline: none` without replacement) | `web-design-guidelines` | every MUI, react-hook-form, notistack, and Recharts rule; every WCAG threshold |
+| `webview-ui-optimization` §UX: generic CSS rules (`prefers-reduced-motion`, safe-area insets, `transition: all`) | `web-design-guidelines` | every MUI, React Router, react-hook-form, and notistack rule |
 
 - All other own rules—F1–F5, F7, F9, F11, the core D1–D11, and the webview-ui Security and Internationalisation domains—have no third-party equivalent and run on every audit
 
@@ -137,7 +139,7 @@ Third-party findings keep their text and their rule reference; the audit maps th
 - **MUST** open the report with a header that records: the audit scope; the detected framework; per third-party skill its availability state, install location, commit or version, and whether it ran; the live-rule fetch time and SHA-256 (§E); every coverage gap; every active fallback rule; and every uncovered rule
 - **MUST** tag every finding with `source`—the third-party skill (for example `vercel/web-design-guidelines`) or the own agent with its rule ID (for example `nolte/frontend-code-reviewer F2`)
 - **MUST** merge findings that two sources report for the same defect at the same `file:line` into one finding carrying both sources and the higher severity
-- **MUST** keep the work-package contract of `spec/project/source-code-review/` (disjoint file sets, routing targets) for Warning and above
+- **MUST** keep the work-package contract of `spec/project/source-code-review/` (disjoint file sets, routing targets) for Warning and above: a third-party Warning in a file an existing reviewer package owns joins that package, any other one opens a package for its component slice, and the third-party rule's own remediation text serves as its implementation proposal
 - **MUST NOT** fold third-party findings into the `pass` / `fail` rule table of `webview-ui-optimize`; that table judges only the rules of `spec/frontend/webview-ui-optimization/`
 
 ### I. Orchestration

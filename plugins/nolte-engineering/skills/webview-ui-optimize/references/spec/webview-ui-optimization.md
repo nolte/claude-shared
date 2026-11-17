@@ -78,6 +78,8 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 #### Charts and long lists
 
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `web-design-guidelines` to completion in the same audit, the list-virtualisation rule below is delegated to that skill; Recharts lazy-loading stays primary here. The `webview-ui-optimize` rule table still judges every rule below; delegation only affects the `frontend-audit` run.
+
 - **SHOULD** virtualise lists/grids that can mount more than ≈100 simultaneously rendered rows (`react-window` `FixedSizeList`/`VariableSizeList` or MUI X virtualised modes) with a small `overscanCount` (≈ 5).
 - **SHOULD** lazy-load Recharts charts via `React.lazy` + Suspense; **SHOULD** gate them on `IntersectionObserver` for off-screen widgets.
 

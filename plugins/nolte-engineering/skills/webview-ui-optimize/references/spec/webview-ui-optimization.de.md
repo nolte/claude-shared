@@ -78,6 +78,8 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 #### Charts und lange Listen
 
+Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `web-design-guidelines` vollständig ausgeführt, ist die Virtualisierungsregel unten an diesen Skill delegiert; Lazy-Loading von Recharts bleibt hier primär. Die Regeltabelle von `webview-ui-optimize` beurteilt weiterhin jede Regel unten; die Delegation betrifft nur den Lauf von `frontend-audit`.
+
 - **SOLLTE** Listen/Grids, die mehr als ≈ 100 simultan gerenderte Zeilen mounten können, virtualisieren (`react-window` `FixedSizeList`/`VariableSizeList` oder MUI-X-Virtualised-Modi) mit einem kleinen `overscanCount` (≈ 5).
 - **SOLLTE** Recharts-Charts via `React.lazy` + Suspense lazy laden; **SOLLTE** sie für off-screen-Widgets über `IntersectionObserver` gaten.
 

@@ -25,8 +25,9 @@ is unreachable from the audit host.
    rules as active fallbacks.
 5. `frontend-code-reviewer` reports Vue as unsupported per
    `spec/frontend/source-code-review/` §Framework profiles, so the F6,
-   F8, and F10 fallbacks and every other F rule (F1–F11) have no reviewer
-   that can apply them: the header lists the whole F overlay as
-   **uncovered**, not as rules that ran.
+   F8, and F10 fallbacks and every other F rule are missing from its
+   applied-rules list: the header lists every rule absent from that
+   list, at least the whole F1–F11 overlay, as **uncovered**, not as
+   rules that ran.
 6. `frontend-design` still runs as an advisory lens; its findings are
    Info and routed to `frontend-usability-optimizer`.
