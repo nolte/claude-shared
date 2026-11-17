@@ -207,6 +207,70 @@ def test_bash_justification_write_capable_warning_and_headings_pass():
     assert v.check_bash_justification("Read, Grep", "Read-only scanner.", "# A\n", "x.md") == []
 
 
+# --- tool-enforced read-only claims (#758) ------------------------------------
+# The pre-#758 wording: a `Bash`-holding agent said its missing Edit/Write tools
+# enforce read-only "at the harness level". A shell can write any file, so only
+# the instruction holds it.
+
+_HARNESS_CLAIM = (
+    "# A\n\n- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Bash`). "
+    "The absence of `Edit` and `Write` enforces the read-only requirement at the harness level.\n")
+
+
+@pytest.mark.parametrize("tools", [
+    "Read, Bash",
+    ["Read", "Edit"],
+    "Read, Write",
+    "Read, NotebookEdit",
+    ["Read", "mcp__github__create_issue"],
+])
+def test_tool_enforcement_claim_with_write_capable_tool_is_critical(tools):
+    findings = v.check_tool_enforcement_claim(tools, _HARNESS_CLAIM, "x.md")
+    assert _rules(findings) == {"agent-management.tool-enforcement-claim"}
+    assert findings[0].severity == "Critical"
+
+
+@pytest.mark.parametrize("claim", [
+    "the absence of `Edit` enforces it at the harness level.",
+    "the read-only contract is also enforced at the harness level.",
+    "so the harness enforces that it cannot mutate the tree.",
+    "Declaring `Read`, `Bash` only is read-only by tool-set construction.",
+    "a strict read-only surface (`Read, Bash`) enforces that run review never mutates anything.",
+    "a harness-level guarantee.",
+])
+def test_tool_enforcement_claim_vocabulary_each_phrase_fires(claim):
+    findings = v.check_tool_enforcement_claim("Read, Bash", f"# A\n\n{claim}\n", "x.md")
+    assert _rules(findings) == {"agent-management.tool-enforcement-claim"}
+
+
+def test_tool_enforcement_claim_holds_without_write_capable_tool():
+    tools = ["Read", "Grep", "Glob", "mcp__github__get_file_contents",
+             "mcp__github__list_issues", "mcp__github__issue_read"]
+    assert v.check_tool_enforcement_claim(tools, _HARNESS_CLAIM, "x.md") == []
+
+
+def test_tool_enforcement_reworded_instruction_level_claim_passes():
+    body = ("# A\n\n- **Tool restriction is load-bearing:** `Read`, `Bash`, with no `Edit` or "
+            "`Write`. `Bash` can still write, so read-only holds by instruction "
+            "(§Read-only Bash justification), not by the tool set. Neither bound is a "
+            "harness guarantee.\n")
+    assert v.check_tool_enforcement_claim("Read, Bash", body, "x.md") == []
+
+
+def test_tool_enforcement_claim_inside_fence_is_ignored():
+    body = "# A\n\n```text\nenforced at the harness level\n```\n"
+    assert v.check_tool_enforcement_claim("Read, Bash", body, "x.md") == []
+
+
+def test_tool_enforcement_claim_absent_from_every_shipped_agent():
+    """Selector-level guard: every agent the validator discovers, no opt-in list."""
+    paths = sorted((v.REPO / "agents").glob("*.md")) + sorted(v.REPO.glob("plugins/*/agents/*.md"))
+    assert paths
+    offenders = [f.target for p in paths for f in v.check_agent(p)
+                 if f.rule == "agent-management.tool-enforcement-claim"]
+    assert offenders == []
+
+
 # --- checks added by the 2026-08-22 skills-agents sweep, wave W1 -------------
 # Both guard a defect class that shipped to `develop` with CI green, so the tests
 # pin the exact boundary each check turned out to need rather than only the happy

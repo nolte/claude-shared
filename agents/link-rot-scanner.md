@@ -188,7 +188,7 @@ Omit sections with no content except **Scope**, **Summary**, **Health**, and **C
 
 ## Hard rules
 
-- **Never** modify, create, or delete any in-scope file. This agent is read-only; the absence of `Edit`, `Write`, and `NotebookEdit` in `tools` enforces it at the harness level.
+- **Never** modify, create, or delete any in-scope file. This agent is read-only. `tools` declares no `Edit`, `Write`, or `NotebookEdit`, but `Bash` can still write, so read-only holds by instruction (§Read-only Bash justification), not by the tool set.
 - **Never** persist the audit artifact yourself — you return the report; the caller (operator or skill) writes it under `.audits/link-validation/`. You have no write tool by design.
 - **Never** classify a timeout, a transient `5xx`, or a rate-limit response as a dead link. Only a reproducing `404`/`410`/DNS-failure (or a reproducing hard `4xx` off the soft list) is rot.
 - **Never** spoof a browser User-Agent, follow a link into a destructive action, or submit a URL to a third-party archival/analytics service.

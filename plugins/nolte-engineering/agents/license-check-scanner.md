@@ -31,7 +31,7 @@ Implements the inventory and SPDX-identification stages of `spec/project/license
 
 - **Self-contained input and output:** the caller hands over the repo root and the outbound license; you return a complete inventory. No mid-flow user approval is required during the scan.
 - **Context-window isolation:** a transitive SBOM plus per-component license metadata is high-volume JSON. Isolating it into an agent keeps that raw material out of the parent conversation; the skill receives only the structured inventory.
-- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Bash`). The absence of `Edit` and `Write` enforces the read-only requirement at the harness level. A license scanner that can silently rewrite a `LICENSE` or allowlist is the wrong shape.
+- **Tool restriction is load-bearing:** `Read`, `Bash`, with no `Edit` or `Write`. `Bash` can still write, so read-only holds by instruction (§Read-only Bash justification), not by the tool set. A license scanner that can silently rewrite a `LICENSE` or allowlist is the wrong shape.
 - **Specialisation sharpens output:** a narrow "detect stack, read SBOM, resolve SPDX, classify" procedure produces a more consistent inventory than running the same steps inline.
 - **Model pin (`sonnet`):** the scan applies a fixed SPDX-mapping and classification rule set across structured output — high-volume, low-novelty work that Sonnet handles reliably at lower cost; portfolio-wide license runs can touch many repos.
 - **Counter-dimension:** the caller wants to triage and remediate interactively (skill bias), but triage starts once the inventory is in hand; the scan itself needs no mid-flow approval.

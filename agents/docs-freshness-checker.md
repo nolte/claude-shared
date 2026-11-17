@@ -343,7 +343,7 @@ Cap per-category listings at 15 entries and summarise the remainder with a count
 
 ## Hard rules
 
-- **Never** modify, create, or delete any file. This agent is read-only; the absence of `Edit`, `Write`, and `NotebookEdit` in the `tools` field enforces that at the harness level, and the system prompt enforces it at the authoring level.
+- **Never** modify, create, or delete any file. This agent is read-only. The `tools` field declares no `Edit`, `Write`, or `NotebookEdit`, but `Bash` can still write, so read-only holds by instruction (§Read-only Bash justification), not by the tool set.
 - **Never** follow symlinks out of the repo root. The audit stays inside the working tree.
 - **Never** hit the network. External links are out of scope — they require different tradeoffs (rate limits, flakiness, false positives from geoblocking).
 - **Never** run `mkdocs build` or any other build step. The MkDocs build is the authoritative rendering check; this agent is a drift audit that runs before or alongside it.

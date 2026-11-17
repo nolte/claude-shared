@@ -796,6 +796,62 @@ def check_bash_justification(tools, desc: str | None, body: str, target: str) ->
         "section naming its command envelope (agent-management §Tool access)")]
 
 
+# Tool-enforced read-only claims (#758, defect-class-guards G1/G3/G6).
+#
+# Predicate: an agent whose body claims that its tool set or the harness
+# *enforces* read-only behaviour, while its `tools` frontmatter grants a
+# write-capable tool. Write-capable = `Edit`, `Write`, `NotebookEdit`, `Bash`
+# (a shell can write any file), or an MCP tool whose final name segment isn't
+# a read verb (`get_*`, `list_*`, `search_*`, `*_read`). Claim vocabulary is a
+# fixed phrase list, not a negation-aware regex: "harness level"/"harness-level",
+# "the harness enforces", "enforced by/at the harness", "tool-set
+# construction", "read-only surface ... enforces", and "absence of ...
+# enforces". Selector: every agent `check_agent` sees, plugin and consumer
+# trees alike — no per-file opt-in. Fenced code blocks are ignored.
+WRITE_CAPABLE_TOOLS = frozenset({"Edit", "Write", "NotebookEdit", "Bash"})
+_MCP_READ_SEGMENT = re.compile(r"^(?:get|list|search)_|_read$|^read$")
+_TOOL_ENFORCEMENT_CLAIM = re.compile(
+    r"\bharness[- ]level\b"
+    r"|\bthe harness enforces\b"
+    r"|\benforced (?:by|at) the harness\b"
+    r"|\btool-set construction\b"
+    r"|\bread-only surface\b[^.\n]{0,120}\benforces?\b"
+    r"|\babsence of\b[^.\n]{0,120}\benforces?\b",
+    re.IGNORECASE,
+)
+
+
+def _write_capable(tool: str) -> bool:
+    if tool in WRITE_CAPABLE_TOOLS:
+        return True
+    if tool.startswith("mcp__"):
+        return not _MCP_READ_SEGMENT.search(tool.rsplit("__", 1)[-1])
+    return False
+
+
+def check_tool_enforcement_claim(tools, body: str, target: str, line_offset: int = 0) -> list[Finding]:
+    """Flag a tool-enforced read-only claim the declared tool set can't keep.
+
+    See the predicate in the comment block above. One finding per agent,
+    citing the first claiming line (`line_offset` maps a body line to its
+    file line); Critical, because the claim misstates the agent's safety
+    boundary (agent-management §Tool access).
+    """
+    writers = [t for t in _tools_list(tools) if _write_capable(t)]
+    if not writers:
+        return []
+    for lineno, line in enumerate(_CODE_FENCE.sub(lambda m: "\n" * m.group(0).count("\n"), body).splitlines(), 1):
+        m = _TOOL_ENFORCEMENT_CLAIM.search(line)
+        if m:
+            return [Finding(
+                "Critical", target, "agent-management.tool-enforcement-claim",
+                f"line {lineno + line_offset} claims tool-enforced read-only (\"{m.group(0)}\") "
+                f"but `tools` grants write-capable {', '.join(writers)}; say what the "
+                "tool set enforces and that the rest holds by instruction "
+                "(agent-management §Tool access)")]
+    return []
+
+
 def check_skill(path: Path) -> list[Finding]:
     rel = _display(path)
     text = path.read_text(encoding="utf-8")
@@ -1023,6 +1079,8 @@ def check_agent(path: Path) -> list[Finding]:
     findings += check_description_lead_voice(fm.get("description"), rel, "agent")
     findings += check_description_headroom(fm.get("description"), rel, "agent")
     findings += check_bash_justification(fm.get("tools"), fm.get("description"), body, rel)
+    findings += check_tool_enforcement_claim(
+        fm.get("tools"), body, rel, line_offset=text[: len(text) - len(body)].count("\n"))
     return findings
 
 
