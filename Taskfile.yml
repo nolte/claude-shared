@@ -74,6 +74,10 @@ tasks:
       fast with that explanation instead of drowning the caller in noise.
     cmds:
       - |
+        if ! command -v vale >/dev/null 2>&1; then
+          echo "vale is not on PATH; install the version pinned in .github/workflows/ci.yml (VALE_VERSION)" >&2
+          exit 127
+        fi
         installed="$(vale --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
         required="3.14.0"
         if [ "$(printf '%s\n%s\n' "$required" "$installed" | sort -V | head -1)" != "$required" ]; then
