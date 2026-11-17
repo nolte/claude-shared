@@ -336,7 +336,8 @@ readership once the capability it describes is implemented, verified, and merged
   before the pull request opens or, when the run is a lane, before it returns
   `committed-locally`; triage its findings and record them, with the head commit they
   cover, in the pre-analysis artifact and in the pull request's **Risk / rollout
-  notes**, the durable record that survives the artifact's removal. `pull-request-merge` then confirms that review
+  notes** (as a lane, in the drafted body it returns), the durable record that survives
+  the artifact's removal. `pull-request-merge` then confirms that review
   over the same head, where a later commit may only remove the run's `.audits/`
   artifacts, instead of giving the change its first look, which a review deferred to
   the merge would otherwise be

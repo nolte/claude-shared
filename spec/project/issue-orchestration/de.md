@@ -358,7 +358,8 @@ verifiziert und gemergt ist.
   nicht erzeugt hat, bevor der Pull Request geöffnet wird oder, wenn der Lauf eine Lane
   ist, bevor er `committed-locally` zurückgibt; seine Befunde triagieren und mit dem
   Head-Commit, den sie abdecken, im Pre-Analysis-Artefakt und in den **Risk / rollout
-  notes** des Pull Requests festhalten, dem dauerhaften Nachweis, der die Entfernung des
+  notes** des Pull Requests (als Lane im zurückgegebenen Body-Entwurf) festhalten, dem
+  dauerhaften Nachweis, der die Entfernung des
   Artefakts überdauert. `pull-request-merge`
   bestätigt dieses Review dann über denselben Head, nach dem ein späterer Commit nur die
   `.audits/`-Artefakte des Laufs entfernen darf, statt der Änderung den ersten Blick
