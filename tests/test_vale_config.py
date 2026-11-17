@@ -20,6 +20,13 @@ The model below follows Vale 3.15.2's parsing, checked against the real binary (
   level isn't `NO` must be `NO` in each opt-out that drops the rule's package
   (the package is the rule-name prefix before the first `.`).
 
+* A section that is itself an opt-out can still enable a rule by name (for
+  example `BasedOnStyles = Vale` plus `Microsoft.BiasFree = error`); that rule must
+  then be `NO` in every *other* opt-out that drops its package.
+* A package counts as known when any section bases on it or names one of its
+  rules, so a rule from a package no `BasedOnStyles` lists is still checked.
+* Vale strips a `#` or `;` comment after a value even without a space before it.
+
 Limitation: section globs aren't intersected, so the check assumes every enabling
 section can apply to every opted-out path. That over-approximates (it may demand a
 `NO` that Vale wouldn't need), which errs on the safe side for a guard.
@@ -27,6 +34,7 @@ section can apply to every opted-out path. That over-approximates (it may demand
 from __future__ import annotations
 
 import configparser
+import re
 from pathlib import Path
 
 import pytest
@@ -47,15 +55,20 @@ def load(path: Path = VALE_INI) -> configparser.ConfigParser:
     return parser
 
 
+def _value(raw: str) -> str:
+    """A value with a trailing `#`/`;` comment removed, as Vale reads it."""
+    return re.split(r"[#;]", raw, maxsplit=1)[0].strip()
+
+
 def _styles(section) -> list[str] | None:
     """The packages a section bases on, or None when it doesn't set `BasedOnStyles`."""
     if "BasedOnStyles" not in section:
         return None
-    return [style.strip() for style in section["BasedOnStyles"].split(",") if style.strip()]
+    return [style.strip() for style in _value(section["BasedOnStyles"]).split(",") if style.strip()]
 
 
 def _is_off(level: str) -> bool:
-    return level.strip().upper() == "NO"
+    return _value(level).upper() == "NO"
 
 
 def _package(rule: str) -> str:
@@ -69,7 +82,10 @@ def leaks(parser: configparser.ConfigParser) -> dict[str, list[str]]:
     drops the named rule or the opt-outs can't make this guard pass vacuously.
     """
     sections = {name: parser[name] for name in parser.sections() if name != GLOBAL}
-    based_on = set().union(*(_styles(section) or [] for section in sections.values()))
+    named = {name: {rule: level for rule, level in section.items() if "." in rule}
+             for name, section in sections.items()}
+    based_on = set().union(*(_styles(section) or [] for section in sections.values()),
+                           *({_package(rule) for rule in rules} for rules in named.values()))
 
     def dropped(section) -> set[str] | None:
         """Packages the section opts out of, or None if it isn't an opt-out."""
@@ -80,14 +96,19 @@ def leaks(parser: configparser.ConfigParser) -> dict[str, list[str]]:
 
     opt_outs = {name: packages for name, section in sections.items()
                 if (packages := dropped(section)) is not None}
-    enabled = {rule for name, section in sections.items() if name not in opt_outs
-               for rule, level in section.items() if "." in rule and not _is_off(level)}
+    # rule -> the sections that enable it by name (an opt-out may enable one too)
+    enabled: dict[str, set[str]] = {}
+    for name, rules in named.items():
+        for rule, level in rules.items():
+            if not _is_off(level):
+                enabled.setdefault(rule, set()).add(name)
     assert enabled, "no section enables a rule by name; this guard has nothing to check"
     assert opt_outs, "no opt-out section found"
 
     missing = {
-        name: sorted(rule for rule in enabled
-                     if (ALL_PACKAGES in packages or _package(rule) in packages)
+        name: sorted(rule for rule, sources in enabled.items()
+                     if sources - {name}
+                     and (ALL_PACKAGES in packages or _package(rule) in packages)
                      and not _is_off(sections[name].get(rule, "")))
         for name, packages in opt_outs.items()
     }
@@ -136,6 +157,16 @@ BasedOnStyles =
     pytest.param("Microsoft.BiasFree = NO",
                  "\n[{docs,spec}/**.md]\nMicrosoft.Passive = error\n",
                  {"docs/de/**": ["Microsoft.Passive"]}, id="section-without-BasedOnStyles"),
+    pytest.param("Microsoft.BiasFree = NO#reason", "", {}, id="comment-without-space"),
+    pytest.param("Microsoft.BiasFree = NO",
+                 "\n[docs/**]\nBasedOnStyles = Vale\nMicrosoft.Passive = error\n",
+                 {"docs/de/**": ["Microsoft.Passive"], "docs/**": ["Microsoft.BiasFree"]},
+                 id="opt-out-that-enables-a-rule"),
+    pytest.param("Microsoft.BiasFree = NO",
+                 "\n[*.md]\nwrite-good.Weasel = error\n\n[CLAUDE.md]\nBasedOnStyles = Vale\n",
+                 {"CLAUDE.md": ["Microsoft.BiasFree", "write-good.Weasel"],
+                  "docs/de/**": ["write-good.Weasel"]},
+                 id="rule-from-a-package-no-section-bases-on"),
 ])
 def test_guard_models_vale_parsing(tmp_path, opt_out, extra, expected):
     config = tmp_path / ".vale.ini"

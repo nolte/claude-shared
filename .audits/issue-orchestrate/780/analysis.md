@@ -42,3 +42,4 @@ P1, P3 independent; P2 after P1 (guard must pass on the new sections)
 
 ## Dispatch log
 - 2026-11-17 P1–P3 generalist — 4 plugin opt-out sections (4237→0 alerts on 160 plugin files, positive control flags), guard models inline comments/partial opt-outs/all sections (11+2 fixture cases, mutation table all as expected), preflight exits 127 on missing vale; task check green (1621 passed)
+- 2026-11-17 review (fresh read-only): 0 blocking; a) opt-out enabling a rule wasn't counted (mutation survived), b) comment without space, c) rule from a package no BasedOnStyles lists — all fixed with fixture cases, each killed by its mutation
