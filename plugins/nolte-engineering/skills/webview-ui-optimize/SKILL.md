@@ -18,6 +18,7 @@ dont_use_when:
     alternative: prose-vale-curator
 see_also:
   - webview-ui-expert
+  - frontend-audit
   - dependency-audit
   - prose-vale-curator
 resumable: true
@@ -28,6 +29,8 @@ resumable: true
 Operationalises `spec/frontend/webview-ui-optimization/<canonical_language>.md` inside the current repository. The skill audits a target frontend against the five-domain rule set (Performance, Security, Accessibility, Internationalisation, UX) and — with explicit per-item user consent — patches one finding at a time. For cross-file reasoning that goes beyond a single rule (a CSP rewrite plus its Vite + Emotion + nginx pipeline; an a11y review of a complex feature), the skill dispatches the `webview-ui-expert` agent for a read-only deep review whose output the skill then feeds back into the per-item approval loop.
 
 This skill ships in the `nolte-engineering` plugin, which does **not** carry a `spec/` tree — so the fallback is a copy of the spec bundled with the skill itself. When the spec isn't present in the target repository, read the bundled copy at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/spec/webview-ui-optimization.md` (canonical English) or `…/webview-ui-optimization.de.md` (German). Never invent rules that don't appear in the spec.
+
+For a thorough audit that adds third-party skills (Vercel web-design-guidelines and react-best-practices, Anthropic frontend-design, playwright-cli) on top of this rule set, use `frontend-audit`; this skill stays the place to patch findings.
 
 ## German trigger phrases
 

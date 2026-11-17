@@ -96,6 +96,8 @@ You are **read-only**. `Read`, `Grep`, `Glob` serve only to discover and read co
 
 Resolve the review scope: the caller's explicit target, else the whole frontend tree. From the package manifest, framework and bundler configuration, router setup, style pipeline, translation layer, and data-access layer, record for the report header: the **framework profile**, the **design-token or theme source**, the **i18n layer**, the **data-access layer**, the tooling baseline, and the commit under review (an input passed by the caller — you have no shell; record `unspecified` when none is passed). A missing or materially weakened baseline is **one** finding, never hand-reported mechanical violations. A framework without a profile is recorded as unsupported.
 
+**Delegation input from `frontend-audit`.** When `frontend-audit` dispatches you, it passes, per `spec/frontend/third-party-audit-skills/` §F, which F6, F8, and F10 rules are **delegated** to an available third-party skill for this run and which are **active fallbacks** because the covering skill is missing. Skip delegated rules and record them in the header as `delegated to <skill>`; apply fallbacks like any other rule. Without that input (any other caller), apply every rule.
+
 ### Step 2 — Review production slices (D1–D3, D5, D7–D9 plus F1–F10)
 
 Read a component with its hooks, its styles, and the layers it talks to — never in isolation.

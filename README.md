@@ -76,7 +76,7 @@ A separate plugin because it needs external image-generation credentials and bin
 
 ### `nolte-engineering` (implementation, test & code audits)
 
-A separate plugin for code-bearing projects, split on a different consumer audience per `spec/claude/plugin-scoping/`: code repos adopt it on top of `nolte-shared`, while non-code repos (docs, content, config) take `nolte-shared` alone. Ships `fullstack-developer`; the full unit / component / integration / contract / E2E test-tier generator + reviewer suite plus the test-cycle agents (`test-result-analyzer`, `test-code-adapter`, `test-case-extractor`); the `quality-gate`, `test-cycle-orchestrate`, and `test-pyramid-check` skills; frontend optimization (`webview-ui-optimize`, `webview-ui-expert`, `frontend-usability-optimizer`, `i18n-completeness-checker`); and code-supply-chain audits (`code-security-reviewer`, `dependency-audit`, `license-check`).
+A separate plugin for code-bearing projects, split on a different consumer audience per `spec/claude/plugin-scoping/`: code repos adopt it on top of `nolte-shared`, while non-code repos (docs, content, config) take `nolte-shared` alone. Ships `fullstack-developer`; the full unit / component / integration / contract / E2E test-tier generator + reviewer suite plus the test-cycle agents (`test-result-analyzer`, `test-code-adapter`, `test-case-extractor`); the `quality-gate`, `test-cycle-orchestrate`, and `test-pyramid-check` skills; frontend optimization (`frontend-audit`, `webview-ui-optimize`, `webview-ui-expert`, `frontend-usability-optimizer`, `i18n-completeness-checker`); and code-supply-chain audits (`code-security-reviewer`, `dependency-audit`, `license-check`).
 
 ### `nolte-claude-dev` (skill & agent authoring)
 
