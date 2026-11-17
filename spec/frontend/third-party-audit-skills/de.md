@@ -136,7 +136,7 @@ Drittanbieter-Befunde behalten ihren Text und ihre Regelreferenz; das Audit ordn
 - **MUSS** von einem Skill orchestriert werden, `frontend-audit`, im Plugin `nolte-engineering`; der Skill läuft in der Hauptsession, weil Drittanbieter-Skills und die URL-Entscheidung des Operators dort liegen
 - **MUSS** die Drittanbieter-Skills über den Skill-Mechanismus der Session aufrufen und `playwright-cli` über sein CLI
 - **MUSS** `frontend-code-reviewer` für die eigenen Regeln des Code-Strangs und `webview-ui-expert` für die eigenen Regeln des statischen UI-Strangs dispatchen und dabei übergeben, welche Regeln in diesem Lauf delegiert und welche aktive Fallbacks sind
-- **MUSS** gegenüber dem geprüften Repository read-only bleiben, abgesehen von der Report-Datei
+- **MUSS** gegenüber dem geprüften Repository read-only bleiben, abgesehen von der Report-Datei und dem Resume-Zustand des Laufs unter `.resume/frontend-audit/`
 - `source-code-review` und `webview-ui-optimize` bleiben bestehen; beide **SOLLTEN** Operatoren für das ausführliche, durch Drittanbieter gestützte Audit auf `frontend-audit` verweisen
 
 ## Akzeptanzkriterien
@@ -171,3 +171,4 @@ Drittanbieter-Befunde behalten ihren Text und ihre Regelreferenz; das Audit ordn
 - Soll das Audit optional anbieten, die Web Interface Guidelines von einem gepinnten Commit statt von `main` zu laden? Die Erhebung hat Live-Laden mit festgehaltenem Hash gewählt; ein gepinnter Modus würde zwei Audits reproduzierbar machen, bräuchte aber einen Weg, die Abruf-URL eines Drittanbieter-Skills zu steuern, den der Skill nicht anbietet
 - Welcher Drittanbieter-Skill für Code-Performance deckt Vue, Svelte oder Angular ab, falls überhaupt einer? Bis einer benannt ist, laufen diese Stacks F6 ohne Delegation
 - Rechtfertigt `playwright-cli`-Evidenz, die Konfidenz eines statischen Befunds von suspected auf confirmed anzuheben? Die aktuelle Regel hängt Evidenz nur an; eine Bestätigungsregel braucht eine definierte Zuordnung von Evidenz zu Befund
+- Wie ermittelt das Audit den SHA-256 des Regeltexts, den `web-design-guidelines` geladen hat, wenn der Skill diesen Text nicht offenlegt? Der Skill `frontend-audit` lädt die URL ein zweites Mal, um sie zu hashen; das kann vom Abruf des Skills abweichen, wenn sich Upstream dazwischen ändert. Ein exakter Hash setzt voraus, dass der Skill den verwendeten Text offenlegt

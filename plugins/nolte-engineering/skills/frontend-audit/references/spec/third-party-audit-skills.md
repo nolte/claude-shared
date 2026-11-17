@@ -136,7 +136,7 @@ Third-party findings keep their text and their rule reference; the audit maps th
 - **MUST** be orchestrated by one skill, `frontend-audit`, in the `nolte-engineering` plugin; the skill runs in the main session because third-party skills and the operator's URL decision live there
 - **MUST** invoke the third-party skills through the session's skill mechanism, and `playwright-cli` through its CLI
 - **MUST** dispatch `frontend-code-reviewer` for the own rules of the code strand and `webview-ui-expert` for the own rules of the static UI strand, passing which rules are delegated for this run and which are active fallbacks
-- **MUST** stay read-only toward the audited repository apart from the report file
+- **MUST** stay read-only toward the audited repository apart from the report file and the run's resume state under `.resume/frontend-audit/`
 - `source-code-review` and `webview-ui-optimize` remain; each **SHOULD** point operators to `frontend-audit` for the thorough, third-party-backed audit
 
 ## Acceptance Criteria
@@ -171,3 +171,4 @@ Third-party findings keep their text and their rule reference; the audit maps th
 - Should the audit offer an opt-in to load the Web Interface Guidelines from a pinned commit instead of `main`? The elicitation chose live loading with a recorded hash; a pinned mode would make two audits reproducible but needs a way to steer a third-party skill's fetch URL, which the skill doesn't expose
 - Which third-party code-performance skill, if any, covers Vue, Svelte, or Angular? Until one is named, those stacks run F6 without delegation
 - Does `playwright-cli` evidence justify raising a static finding's confidence from suspected to confirmed? The current rule only attaches evidence; a confirmation rule needs a defined evidence-to-finding match
+- How does the audit obtain the SHA-256 of the rule text `web-design-guidelines` fetched, when the skill doesn't expose that text? The `frontend-audit` skill fetches the URL a second time to hash it, which can differ from the skill's fetch if upstream changes in between; an exact hash needs the skill to surface the text it used

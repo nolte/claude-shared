@@ -65,6 +65,12 @@ Detect the user's language from their message and respond in it. The report uses
 - **Installed browser ≠ installed skill.** `playwright-cli install --skills` installs no browser; a failing `open` with a missing-browser error is a gap that names `playwright-cli install-browser`.
 - **Two tables, two judges.** Third-party findings never enter the `webview-ui-optimize` pass/fail table.
 
+## Examples
+
+- Read `examples/01-full-coverage-react.md` when every skill applies and is installed and a URL is supplied.
+- Read `examples/02-missing-react-skill.md` when an applicable skill is missing and its delegated rules must run as fallbacks.
+- Read `examples/03-vue-app-offline.md` when a skill doesn't apply to the stack or the guidelines fetch fails.
+
 ## Resumability
 
 Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/frontend-audit/<run-id>.yml` after each phase (detection, availability, plan-confirm, code-strand, static-ui-strand, rendered-strand, merge, report), recording which strands finished so a resumed run doesn't re-run a completed skill or reviewer. On re-invocation, scan that directory for `status: in_progress` files whose `inputs:` (target, URL) match; if one matches, prompt `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`.
