@@ -77,7 +77,7 @@ created: ""
      version reads — persisted state (checkpoint schemas under .resume/<skill>/), consumer
      configuration keys or files, invocation names (skill/agent names, CLI flags),
      artifact paths — with a check proving compatibility (resume a previous-release
-     checkpoint, validate_skills, a config-parse test).
+     checkpoint, a `name:` diff against the previous release tag, a config-parse test).
 | Package | Upgraded state | Update health gate | What a rollback restores and what it can't | Proving check |
 |---|---|---|---|---|
 | P<k> | <state of an installation updated from the previous release> | <gate name: passes / fails, or none (<artefact kind>) + surfaces read> | <restored state; what it can't restore> | <update boot / migration / compatibility test command> |

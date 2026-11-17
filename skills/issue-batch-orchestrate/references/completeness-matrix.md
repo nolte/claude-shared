@@ -81,8 +81,9 @@ A change cell in this column names four things, each as a short clause:
 4. **Proving check:** the executable check that shows all three, such as an update boot
    test from the previous image or a migration test against a snapshot of the previous
    schema. Without a health gate, the check proves compatibility of the named surfaces:
-   resuming a checkpoint the previous release wrote, `python3 scripts/validate_skills.py`
-   for invocation names, a parse test of the previous release's configuration.
+   resuming a checkpoint the previous release wrote, a diff of the skill and agent `name:`
+   fields against the previous release tag for invocation names, a parse test of the
+   previous release's configuration.
 
 Example cell for an appliance image: "previous image boots, migrates the settings file,
 services start; health gate passes; rollback restores the previous image and the
