@@ -1,0 +1,10 @@
+# The one committed source for the Vale binary (#768): .github/workflows/ci.yml,
+# .github/workflows/pr-lint.yml, and `task vale:install` read it through
+# scripts/install_vale.sh, and `task lint:prose` compares the local binary to it.
+# Renovate bumps VALE_VERSION (custom manager in renovate.json5) but can't
+# recompute the checksum, so a bump PR stays red until VALE_SHA256 is replaced
+# with the Linux_64-bit line of the release's vale_<version>_checksums.txt:
+# tests/test_vale_version.py fails while the file name in that line names
+# another version, and the install fails closed on a checksum mismatch.
+VALE_VERSION=3.15.2
+VALE_SHA256=fc72e64454d6bd7af91905d4faebbf411bae3eec17bb572f4101311212bc0d9e  vale_3.15.2_Linux_64-bit.tar.gz

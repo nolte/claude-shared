@@ -58,6 +58,16 @@ tasks:
       - .venv/bin/python -m pip install -r requirements-dev.txt
       - 'echo "Virtual environment ready: source .venv/bin/activate"'
 
+  install:vale:
+    desc: |
+      Install the Vale binary pinned in .vale-version, the same pin and script
+      (scripts/install_vale.sh) the CI workflows use: the release asset is
+      checked against the committed SHA-256 before it is unpacked (#768).
+      Installs into $VALE_INSTALL_DIR, default ~/.local/bin; that directory has
+      to come before any other Vale on PATH (an asdf shim, for example).
+    cmds:
+      - scripts/install_vale.sh "${VALE_INSTALL_DIR:-$HOME/.local/bin}"
+
   lint:
     desc: Run pre-commit across all files
     cmds:
@@ -66,6 +76,9 @@ tasks:
   lint:prose:
     desc: |
       Run the Vale prose linter across English-language Markdown.
+      CI runs the Vale version pinned in .vale-version (`task install:vale`
+      installs it); a different local version prints a warning, because only the
+      pinned one is guaranteed to raise the same alerts as CI.
       Requires Vale >= 3.14: the per-path `BasedOnStyles =` opt-outs in .vale.ini
       (the generated docs/*/skills|agents|portfolio trees, the German trees, the
       LLM-instruction artefacts) rely on section-glob matching that older Vale
@@ -75,7 +88,7 @@ tasks:
     cmds:
       - |
         if ! command -v vale >/dev/null 2>&1; then
-          echo "vale is not on PATH; install the version pinned in .github/workflows/ci.yml (VALE_VERSION)" >&2
+          echo "vale is not on PATH; run \`task install:vale\` to install the version pinned in .vale-version" >&2
           exit 127
         fi
         installed="$(vale --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
@@ -85,6 +98,11 @@ tasks:
           echo "Older builds ignore the per-path BasedOnStyles opt-outs and report false errors" >&2
           echo "against the generated catalog, the German trees, and SKILL.md/agent files." >&2
           exit 1
+        fi
+        pinned="$(sed -n 's/^VALE_VERSION=//p' .vale-version)"
+        if [ "$installed" != "$pinned" ]; then
+          echo "warning: vale $installed differs from the version CI runs ($pinned, .vale-version);" >&2
+          echo "alerts may differ from CI. \`task install:vale\` installs the pinned one." >&2
         fi
       # Locked: `task check` runs this and `test` in parallel, both syncing (#770).
       - python3 scripts/vale_sync.py
