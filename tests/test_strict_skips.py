@@ -64,6 +64,11 @@ def test_passes():
 @pytest.fixture
 def run(pytester, monkeypatch):
     monkeypatch.delenv("RUN_EVALS", raising=False)
+    # pytest stops truncating the short summary when CI or BUILD_NUMBER is set, which
+    # changes how often a reason appears in the output; keep the inner run identical
+    # on a workstation and in CI.
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("BUILD_NUMBER", raising=False)
     pytester.makeconftest(INNER_CONFTEST)
     pytester.makepyfile(test_cases=CASES)
 
