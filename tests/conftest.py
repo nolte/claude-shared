@@ -5,7 +5,8 @@ API and are skipped unless ``RUN_EVALS=1``. When they do run, each test appends 
 `ScenarioResult` via the `record_scorecard` fixture; the session writes a single
 `scorecard.json` at teardown, which `evals.harness.compare` then diffs across runs.
 
-Strict-skip mode (CI): with ``CI_FAIL_ON_SKIP=1`` a test that ends up skipped and is
+Strict-skip mode: with ``STRICT_SKIPS=1``, which ``task test`` sets so that local runs
+and CI agree, a test that ends up skipped and is
 *not* marked ``behavioural`` is reported as failed instead (as an ERROR when the skip
 happens during setup, i.e. ``skipif``/``skip`` markers and fixture skips; as a FAILURE
 when ``pytest.skip()`` runs inside the test body). The message names the original
@@ -53,11 +54,11 @@ def pytest_collection_modifyitems(config, items):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Under ``CI_FAIL_ON_SKIP=1``, turn a non-behavioural skip into a failure."""
+    """Under ``STRICT_SKIPS=1``, turn a non-behavioural skip into a failure."""
     outcome = yield
     rep = outcome.get_result()
     if (
-        os.environ.get("CI_FAIL_ON_SKIP") == "1"
+        os.environ.get("STRICT_SKIPS") == "1"
         and rep.skipped
         and not hasattr(rep, "wasxfail")
         and "behavioural" not in item.keywords
@@ -66,7 +67,7 @@ def pytest_runtest_makereport(item, call):
         reason = reason.removeprefix("Skipped: ")
         rep.outcome = "failed"
         rep.longrepr = (
-            f"CI_FAIL_ON_SKIP=1: test skipped -- {reason}\n"
+            f"STRICT_SKIPS=1: test skipped -- {reason}\n"
             "Provide the missing capability in CI, or mark the test `behavioural` "
             "if it is an opt-in eval."
         )

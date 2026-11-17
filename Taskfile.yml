@@ -90,9 +90,16 @@ tasks:
       Run the test suite: skill/agent frontmatter validation (static Layer 0) plus the
       eval-harness unit tests. Behavioural evals that drive a skill/agent are skipped
       unless RUN_EVALS=1. Requires pytest: `pip install -r evals/requirements-dev.txt`.
+      Requires Vale like `lint:prose`: the real-Vale tests run against the synced
+      styles. STRICT_SKIPS=1 turns any other skipped test into a failure, so the
+      gate can't pass while a test silently didn't run (#766); CI runs this same
+      target.
+    env:
+      STRICT_SKIPS: "1"
     cmds:
       - task: validate:skills
       - task: validate:mission
+      - vale sync
       - python3 -m pytest tests -q
 
   check:

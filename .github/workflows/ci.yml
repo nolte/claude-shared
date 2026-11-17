@@ -129,19 +129,14 @@ jobs:
           # (spec/project/continuous-integration/ §C: no floating toolchain refs).
           version: 3.52.0
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      # The real-Vale tests need the binary and the synced styles; without them
-      # they skipped silently and hid a broken assertion (#751, #766).
+      # `task test` syncs the Vale styles and runs the real-Vale tests under
+      # STRICT_SKIPS=1, so without the binary they'd fail the job (#751, #766).
       - name: Install Vale
         run: |
-          curl -fsSL "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+          curl -fsSL --retry 3 --retry-all-errors "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
             | sudo tar -xz -C /usr/local/bin vale
           vale --version
-          vale sync
       - run: task --yes test
-        env:
-          # tests/conftest.py fails any skip outside the opt-in behavioural evals,
-          # so this job can't pass while a test silently didn't run.
-          CI_FAIL_ON_SKIP: "1"
 
   docs:
     runs-on: ubuntu-26.04

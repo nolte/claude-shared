@@ -87,3 +87,7 @@ none
 | `test_validate_mission.py:83` skips in CI on the shallow checkout | class measurement | fixed by P2 (full-history checkout) | `ci.yml:115` + skip condition | — |
 
 ## Dispatch log
+- 2026-11-17 P1 generalist — conftest hookwrapper + tests/test_strict_skips.py (7 tests, mutation-probed); suite (a) 1603 passed/21 skipped, (b) strict with vale 0 failed, (c) strict without vale: real-Vale test ERROR with reason
+- 2026-11-17 P2 via `nolte-shared:cicd-pipeline-design` (scaffold, inline) — VALE_VERSION hoisted, test job: fetch-depth 0, Vale + sync, CI_FAIL_ON_SKIP=1; diff approved by operator
+- 2026-11-17 review `nolte-shared:cicd-pipeline-reviewer` — 0 Critical; W1 (local↔CI parity) fixed: `task test` runs `vale sync` and sets STRICT_SKIPS=1 (operator chose strict everywhere; variable renamed); S1/S2/S3/S4-comment/S5 fixed; W2/W3 pre-existing → filed #768
+- 2026-11-17 verify — `task lint` green; `task test` 1603 passed / 21 skipped (all behavioural), 0 failed

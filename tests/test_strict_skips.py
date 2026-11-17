@@ -1,4 +1,4 @@
-"""Strict-skip mode of tests/conftest.py: ``CI_FAIL_ON_SKIP=1`` fails non-behavioural skips.
+"""Strict-skip mode of tests/conftest.py: ``STRICT_SKIPS=1`` fails non-behavioural skips.
 
 Each case runs an inner pytest session (``pytester``) whose conftest re-exports the
 real hooks from tests/conftest.py, so the assertions exercise the shipped code.
@@ -69,9 +69,9 @@ def run(pytester, monkeypatch):
 
     def _run(strict: bool):
         if strict:
-            monkeypatch.setenv("CI_FAIL_ON_SKIP", "1")
+            monkeypatch.setenv("STRICT_SKIPS", "1")
         else:
-            monkeypatch.delenv("CI_FAIL_ON_SKIP", raising=False)
+            monkeypatch.delenv("STRICT_SKIPS", raising=False)
         return pytester.runpytest("-v", "-rA", "-p", "no:cacheprovider")
 
     return _run
@@ -123,6 +123,6 @@ def test_xfail_unaffected_under_strict_mode(run):
 def test_failure_message_names_original_reason_and_fix(run):
     result = run(strict=True)
     out = result.stdout.str()
-    assert out.count(f"CI_FAIL_ON_SKIP=1: test skipped -- {REASON}") == 3, out
+    assert out.count(f"STRICT_SKIPS=1: test skipped -- {REASON}") == 3, out
     assert "mark the test `behavioural`" in out
     assert result.ret != 0

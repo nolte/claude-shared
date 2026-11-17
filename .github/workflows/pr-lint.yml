@@ -25,8 +25,8 @@ jobs:
     permissions:
       contents: read
     env:
-      # Lock-step with the lint job in ci.yml; the prose-style spec requires local
-      # and CI Vale runs to produce identical alerts.
+      # Lock-step with the workflow-level VALE_VERSION in ci.yml; the prose-style
+      # spec requires local and CI Vale runs to produce identical alerts.
       VALE_VERSION: "3.15.2"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

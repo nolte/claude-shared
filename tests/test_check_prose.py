@@ -156,7 +156,7 @@ def test_unparseable_vale_output_is_an_error_not_a_pass(monkeypatch, vale_on_pat
     assert check_prose.main(["--title"], runner=runner) == 2
 
 
-@pytest.mark.skipif(shutil.which("vale") is None, reason="needs the vale binary; the pr-lint job is the enforced lane")
+@pytest.mark.skipif(shutil.which("vale") is None, reason="needs the vale binary; `task test` sets STRICT_SKIPS=1, so this skip fails the gate")
 def test_real_vale_ignores_a_masked_prefix_but_still_checks_the_summary():
     try:
         masked = check_prose.run_vale(check_prose.mask_title("fix(ci): update the lint job") + "\n")
