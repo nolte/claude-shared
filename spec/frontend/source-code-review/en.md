@@ -120,6 +120,8 @@ The core D4 rule holds: this is **semantic** duplication, not textual similarity
 
 ### F6—Frontend performance visible in the source (extends D7)
 
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` runs with `react-best-practices` or `web-design-guidelines` available, request waterfalls, barrel imports and missing route splits, and full renders of large collections are delegated to those skills; the conditional memoization judgment and expensive derivation stay primary here. A run without the covering skill applies every rule below as a fallback.
+
 This dimension is capped at what the source shows. Measured budgets route to `spec/frontend/webview-ui-optimization/`.
 
 - **MUST** report request waterfalls and per-item request fan-out that the data layer should batch or the endpoint should serve
@@ -140,6 +142,8 @@ This dimension is capped at what the source shows. Measured budgets route to `sp
 - **MUST NOT** judge whether a chosen value is the *right* value: that's design. This dimension owns only whether the code bypasses the system the project already has
 
 ### F8—Accessibility defects visible in code
+
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` runs with `web-design-guidelines` available, non-semantic controls, missing labels and accessible names, missing alternative text, removed focus indicators without replacement, and missing live regions are delegated to that skill; role promises without interaction behaviour, focus handling across dialogs and routes, and label association across component boundaries stay primary here. A run without the covering skill applies every rule below as a fallback.
 
 Capped at what a reviewer decides from the source; the conformance question routes out.
 
@@ -165,6 +169,8 @@ The core D10 rule holds: these are **flagged and routed**, never investigated in
 - **MUST NOT** audit Content Security Policy, HTTP security headers, or the authentication design here: those route to `spec/frontend/webview-ui-optimization/` §"Security and sandboxing" and `spec/project/code-security-audit/`
 
 ### F10—User-facing text and locale handling in code
+
+Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` runs with `web-design-guidelines` available, manual date, number, and currency formatting is delegated to that skill; hardcoded strings, assembled sentences, plural handling, and dynamic keys stay primary here. A run without the covering skill applies every rule below as a fallback.
 
 - **MUST** report user-facing strings hardcoded in components where the project ships an internationalisation layer, including the surfaces a naive scan misses: accessible names, alternative text, tooltips, and document titles
 - **MUST** report sentences assembled from concatenated or interpolated fragments, which can't be reordered or inflected by a translator, and quantity-dependent text without plural handling
@@ -282,6 +288,7 @@ This is a load-bearing boundary, not a courtesy note. The two reviews look at th
 - [R11] Research methodology and source thresholds behind this spec's rules: `spec/claude/research-triangulate/`
 - [R12] Evidence notes with the sources behind each dimension: `spec/frontend/source-code-review/research/`
 - [R13] Falsifiability taxonomy and detection criteria for F11 findings about tests that can't fail: `spec/project/test-falsifiability/`
+- [R14] Third-party skills in the thorough frontend audit and the delegation of F6, F8, and F10 rules: `spec/frontend/third-party-audit-skills/`
 
 ## Open Questions
 
