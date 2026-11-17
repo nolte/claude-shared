@@ -48,7 +48,7 @@ def pytest_collection_modifyitems(config, items):
         return
     skip = pytest.mark.skip(reason="behavioural eval; set RUN_EVALS=1 to run (incurs API cost)")
     for item in items:
-        if "behavioural" in item.keywords:
+        if item.get_closest_marker("behavioural") is not None:
             item.add_marker(skip)
 
 
@@ -61,7 +61,7 @@ def pytest_runtest_makereport(item, call):
         os.environ.get("STRICT_SKIPS") == "1"
         and rep.skipped
         and not hasattr(rep, "wasxfail")
-        and "behavioural" not in item.keywords
+        and item.get_closest_marker("behavioural") is None
     ):
         reason = rep.longrepr[2] if isinstance(rep.longrepr, tuple) else str(rep.longrepr)
         reason = reason.removeprefix("Skipped: ")

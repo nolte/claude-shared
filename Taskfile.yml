@@ -82,7 +82,8 @@ tasks:
           echo "against the generated catalog, the German trees, and SKILL.md/agent files." >&2
           exit 1
         fi
-      - vale sync
+      # Locked: `task check` runs this and `test` in parallel, both syncing (#770).
+      - python3 scripts/vale_sync.py
       - vale README.md docs/en/ $(find spec -name 'en.md')
 
   test:
@@ -99,7 +100,7 @@ tasks:
     cmds:
       - task: validate:skills
       - task: validate:mission
-      - vale sync
+      - python3 scripts/vale_sync.py
       - python3 -m pytest tests -q
 
   check:
@@ -230,7 +231,7 @@ tasks:
       error, or no `gh` push access, since a draft is only visible to it.
       Usage: task release:notes-prose -- v1.0.0
     cmds:
-      - vale sync
+      - python3 scripts/vale_sync.py
       - python3 scripts/check_prose.py --release-notes {{.CLI_ARGS}}
 
   release:
