@@ -43,3 +43,13 @@ def test_exit_status_of_vale_sync_is_passed_through(tmp_path):
     fake.chmod(0o755)
     env = {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
     assert subprocess.run([sys.executable, str(WRAPPER)], env=env, check=False).returncode == 3
+
+
+def test_missing_vale_is_a_clear_message_not_a_traceback(tmp_path):
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    proc = subprocess.run([sys.executable, str(WRAPPER)], env={**os.environ, "PATH": str(empty)},
+                          capture_output=True, text=True, check=False)
+    assert proc.returncode == 127
+    assert "vale is not on PATH" in proc.stderr
+    assert "Traceback" not in proc.stderr
