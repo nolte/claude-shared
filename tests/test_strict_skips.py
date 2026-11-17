@@ -131,3 +131,22 @@ def test_failure_message_names_original_reason_and_fix(run):
     assert out.count(f"STRICT_SKIPS=1: test skipped -- {REASON}") == 3, out
     assert "mark the test `behavioural`" in out
     assert result.ret != 0
+
+
+def test_a_directory_named_behavioural_is_not_an_eval(pytester, monkeypatch):
+    # The exemption follows the `behavioural` marker, not node names: pytest's
+    # keywords include directory and module names, so a keyword lookup would let a
+    # `behavioural/` directory hide its skips and skip its tests as evals.
+    monkeypatch.delenv("RUN_EVALS", raising=False)
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("BUILD_NUMBER", raising=False)
+    monkeypatch.setenv("STRICT_SKIPS", "1")
+    pytester.makeconftest(INNER_CONFTEST)
+    pytester.mkpydir("behavioural")
+    pytester.path.joinpath("behavioural", "test_in_dir.py").write_text(
+        "import pytest\n\n"
+        "def test_runs():\n    pass\n\n"
+        f"def test_skips():\n    pytest.skip('{REASON}')\n"
+    )
+    result = pytester.runpytest("-v", "-p", "no:cacheprovider")
+    result.assert_outcomes(passed=1, failed=1)
