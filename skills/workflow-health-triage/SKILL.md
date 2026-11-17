@@ -73,11 +73,11 @@ Walk the table top-down and stop at the first match. The rows are ordered by spe
 |---|---|
 | Push rejected with `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission` | `infra` — **evaluate this row first.** Both the `defect` row (the rejection names a workflow file the diff modified) and the `secret drift` row (it is a 403) would otherwise capture it, and neither is right: it is a deterministic platform constraint, not a repository defect and not an expired credential |
 | Failing step references a file the head commit's diff modified | `defect` |
-| Same failing-step message on two or more runs, or on `develop` and a PR alike (check per `references/recurrence-and-diagnostics.md` §Recurrence check: `gh run list --workflow <wf> --json conclusion,headSha,databaseId`, then each failed run's `--log-failed` message) | `defect` until a measurement shows otherwise — **recurrence overrides the `flake` row** |
 | Re-run of the same `headSha` would produce green (no infra signal, no code change in the failing step's surface, no recurrence) | `flake` |
 | HTTP 5xx, rate-limit, registry-unreachable, GitHub status incident | `infra` |
 | `uses:` pin in the workflow points to a `nolte/gh-plumbing` (or other reusable) tag, and a newer tag exists with the relevant fix | `stale pin` |
 | Token, deploy key, or OIDC trust expired or rotated; failure references `401`, `403`, `expired`, `unauthorized` | `secret drift` |
+| Same failing-step message on two or more runs, or on `develop` and a PR alike (check per `references/recurrence-and-diagnostics.md` §Recurrence check: `gh run list --workflow <wf> --json conclusion,headSha,databaseId`, then each failed run's `--log-failed` message) | `defect` until a measurement shows otherwise; the `flake` row above already excludes recurrence, and the `infra` / `stale pin` / `secret drift` rows win for their own signatures |
 | None of the above | `other` (with a short note explaining why) |
 
 Confirm the chosen class with the user before proceeding—at minimum for `defect`, `flake`, and `secret drift`, where misclassification has the highest cost. Apply the classification by writing it to a scratch note that becomes the seed of the fix PR's Risk / rollout notes.
