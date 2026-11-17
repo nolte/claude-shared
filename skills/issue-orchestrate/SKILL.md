@@ -259,7 +259,7 @@ owns the merge. Report back per that reference.
 - Read `examples/02-feature-request-to-pipeline.md` when a large feature-request
   issue is routed into the formal `feature-decompose` / `roadmap-plan` pipeline.
 - Read `examples/03-security-issue-specialist-dispatch.md` when a `security`-class
-  issue dispatches `code-security-reviewer` and runs `security-review` before the PR.
+  issue gets `code-security-reviewer` and a security-briefed diff review before the PR.
 
 ## Resumability
 

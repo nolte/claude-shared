@@ -290,7 +290,8 @@ readership once the capability it describes is implemented, verified, and merged
   audit→fix→verify chain defined in *Verification* below rather than a single
   dispatch: the read-only `code-security-reviewer` agent scopes the surface, a
   coding-capable specialist (or, absent a match, the generalist under the gap rule)
-  authors the fix, and the built-in `security-review` skill verifies the diff
+  authors the fix, and a security-briefed diff review verifies it (a read-only
+  reviewer, or the built-in `security-review` from a session rooted in the worktree)
 - **MUST** treat a work package for which no specialist matches as a portfolio gap
   governed by `continuous-improvement` §Portfolio gap closure: the orchestrator
   records the no-match, applies the three-recurrence rule, and **MAY** dispatch
@@ -334,7 +335,8 @@ readership once the capability it describes is implemented, verified, and merged
   origin/develop...HEAD`) by a read-only reviewer that didn't produce the change,
   before the pull request opens or, when the run is a lane, before it returns
   `committed-locally`; triage its findings and record them, with the head commit they
-  cover, in the pre-analysis artifact. `pull-request-merge` then confirms that review
+  cover, in the pre-analysis artifact and in the pull request's **Risk / rollout
+  notes**, the durable record that survives the artifact's removal. `pull-request-merge` then confirms that review
   over the same head, where a later commit may only remove the run's `.audits/`
   artifacts, instead of giving the change its first look, which a review deferred to
   the merge would otherwise be

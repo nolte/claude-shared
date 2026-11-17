@@ -213,8 +213,8 @@ green gate on a member sub-branch is not evidence for the bundle.
 Then, before the bundle opens or a lane returns `committed-locally`, have a read-only
 agent that didn't produce the change review the tip's diff,
 `git -C <worktree> diff origin/develop...HEAD`, briefed for security when it touches a
-security-sensitive path. Reuse the lanes, brief, and failed-gate rule of
-`pull-request-merge`'s `references/pre-merge-review.md`. Triage each finding per
+security-sensitive path; with no PR yet, only those read-only lanes apply. Reuse the
+brief and failed-gate rule of `pull-request-merge`'s `references/pre-merge-review.md`. Triage each finding per
 `references/finding-triage.md` §"The integration-branch diff review" and record it, with
 the reviewed head SHA, in `## Findings`; `pull-request-merge` then only confirms it.
 

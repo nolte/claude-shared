@@ -22,7 +22,8 @@ After the per-member passes and the green `quality-gate` on the integration bran
 and before the bundle opens or a lane returns `committed-locally`, review the whole
 group's diff once more: `git -C <worktree> diff origin/develop...HEAD` on the
 integration branch, by a read-only agent that produced none of it, briefed for security
-when the diff touches a security-sensitive path. The lanes, the agent brief, and the
+when the diff touches a security-sensitive path. With no pull request yet, only those
+read-only lanes apply (no PR number for `code-review`). The lanes, the agent brief, and the
 failed-gate rule are `pull-request-merge`'s `references/pre-merge-review.md`; don't
 restate them here. The member passes don't replace this review: they each saw one slice,
 and the bundle is what merges.

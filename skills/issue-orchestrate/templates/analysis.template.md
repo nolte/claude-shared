@@ -70,7 +70,9 @@ created: ""
 ## Risks
 
 <!-- Each risk with a one-line mitigation. Security-sensitive paths MUST note the
-     code-security-reviewer / security-review requirement before PR. -->
+     code-security-reviewer surface scoping and the security-briefed read-only diff
+     review required before the PR (security-review only from a session rooted in
+     the worktree). -->
 
 ## Open questions
 

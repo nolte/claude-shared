@@ -307,7 +307,9 @@ verifiziert und gemergt ist.
   Audit→Fix→Verify-Kette statt einem einzelnen Dispatch: der read-only
   `code-security-reviewer`-Agent fasst die Oberfläche ab, ein coding-fähiger
   Spezialist (oder, mangels Match, der Generalist unter der Gap-Regel) verfasst den
-  Fix, und das eingebaute `security-review`-Skill verifiziert den Diff
+  Fix, und ein Diff-Review mit Security-Briefing verifiziert ihn (ein read-only
+  Reviewer oder das eingebaute `security-review` aus einer im Worktree verwurzelten
+  Session)
 - **MUSS [MUST]** ein Arbeitspaket, für das kein Spezialist passt, als Portfoliolücke
   gemäß `continuous-improvement` §Portfoliolücken-Schließung behandeln: Der Orchestrator
   hält den No-Match fest, wendet die Drei-Wiederholungen-Regel an und **KANN [MAY]**
@@ -355,7 +357,9 @@ verifiziert und gemergt ist.
   origin/develop...HEAD`) durch einen read-only Reviewer laufen lassen, der die Änderung
   nicht erzeugt hat, bevor der Pull Request geöffnet wird oder, wenn der Lauf eine Lane
   ist, bevor er `committed-locally` zurückgibt; seine Befunde triagieren und mit dem
-  Head-Commit, den sie abdecken, im Pre-Analysis-Artefakt festhalten. `pull-request-merge`
+  Head-Commit, den sie abdecken, im Pre-Analysis-Artefakt und in den **Risk / rollout
+  notes** des Pull Requests festhalten, dem dauerhaften Nachweis, der die Entfernung des
+  Artefakts überdauert. `pull-request-merge`
   bestätigt dieses Review dann über denselben Head, nach dem ein späterer Commit nur die
   `.audits/`-Artefakte des Laufs entfernen darf, statt der Änderung den ersten Blick
   zu geben, der ein auf den Merge verschobenes Review sonst wäre
