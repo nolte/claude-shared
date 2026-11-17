@@ -92,7 +92,7 @@ Das Mission Statement **MUSS [MUST]** jede der folgenden fünf Bedingungen erfü
 - **DARF NICHT [MUST NOT]** zulassen, dass ein Post-MVP-Roadmap-Item (`mvp: false`) `proposed → active` übergeht, solange `mvp_status` einer von `defining`, `in_progress` oder `achieved` ist. Der Übergang ist nur zulässig, wenn `mvp_status: stabilised`.
 - **MUSS [MUST]** verlangen, dass der Operator (oder ein zukünftiger Automations-Skill) `mvp_status` explizit auf `stabilised` umlegt; das Umlegen **DARF NICHT [MUST NOT]** still aus der Erfüllung der obigen Bedingungen abgeleitet werden. Der Schalter-Akt protokolliert die Entscheidung; die Bedingungen rechtfertigen sie.
 - **MUSS [MUST]** `mvp_status: stabilised → in_progress` zurücksetzen, sobald ein MVP-Item auf `status: active` zurückgeht (zum Beispiel weil ein Defekt nach der Stabilisierung auftaucht); das Gate greift dann erneut, und Post-MVP-Items, die zum Zeitpunkt der Rücksetzung bereits in `status: active` sind, **KÖNNEN [MAY]** zu Ende geführt werden, aber kein neues Post-MVP-Item **DARF [MUST]** gestartet werden, bevor die Stabilisierung wiederhergestellt ist.
-- **MUSS [MUST]** die Stabilisierungs-Belege (die Sprint-Nummer, die die Bedingung „ein voller Folgesprint" erfüllt hat, das Datum der Operator-Entscheidung) für den Audit-Trail in `## Source` festhalten, wenn der Flip die rückwirkende Ausnahme nicht nutzt; ohne sie lässt sich ein Flip, der die Bedingung übersprungen hat, nicht von einem unterscheiden, der sie erfüllt hat, und `scripts/validate_mission.py` weist den Flip ab.
+- **MUSS [MUST]** die Stabilisierungs-Belege (die Sprint-Nummer, die die Bedingung „ein voller Folgesprint" erfüllt hat, das Datum der Operator-Entscheidung) für den Audit-Trail in `## Source` festhalten, wenn der Flip die rückwirkende Ausnahme nicht nutzt; ohne sie lässt sich ein Flip, der die Bedingung übersprungen hat, nicht von einem unterscheiden, der sie erfüllt hat, und die Missions-Validierung weist den Flip ab.
 
 ### Audience-Tailoring
 
@@ -130,6 +130,7 @@ Das Mission Statement **MUSS [MUST]** jede der folgenden fünf Bedingungen erfü
 - [ ] Wenn `mvp_status: stabilised`, ist jedes Roadmap-Item mit `mvp: true` in `status: done`, und ein voller Folgesprint hat geschlossen, ohne dass ein MVP-Item zurückgegangen ist, oder die Ausnahme für ein rückwirkend erfasstes MVP greift (jede Ausnahme-Bedingung aus §Stabilisierungs-Gate war zum Zeitpunkt des Umlegens erfüllt) und ihre Begründung samt Belegen steht in `## Source`; der konsumierende Skill verifiziert die Bedingungen, bevor er den Operator-Schalter akzeptiert.
 - [ ] `audience-identification` wird vor dem Mission-Authoring auf einem frischen Repo ohne Audience-Artefakt ausgelöst; fehlende Audiences blockieren Mission-Schreibvorgänge genauso, wie sie laut Geschwister-Spec `roadmap` Outcome-Schreibvorgänge blockieren.
 - [ ] Keine Mission-Revision nach `mvp_status: stabilised` ohne einen ein-absätzigen Begründungs-Block in `## Source`; fehlende Begründung schlägt die Validierung.
+- [ ] Jeder Übergang zu `mvp_status: stabilised` fügt `## Source` entweder einen Satz hinzu, der den Folgesprint mit seiner Nummer zusammen mit dem Datum der Operator-Entscheidung nennt, oder die Begründung der rückwirkenden Ausnahme mit allen Belegfeldern; ein Flip, der keines von beiden hinzufügt, fällt durch die Validierung
 
 ## Offene Fragen
 

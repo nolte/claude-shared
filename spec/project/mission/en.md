@@ -92,7 +92,7 @@ The mission statement **MUST** satisfy each of the following five constraints, i
 - **MUST NOT** allow any post-MVP roadmap item (`mvp: false`) to transition `proposed → active` while `mvp_status` is any of `defining`, `in_progress`, or `achieved`. The transition is permitted only when `mvp_status: stabilised`.
 - **MUST** require the operator (or a future automation skill) to flip `mvp_status` to `stabilised` explicitly; the flip **MUST NOT** be inferred silently from satisfying the conditions above. The flip records the decision; the conditions justify it.
 - **MUST** revert `mvp_status: stabilised → in_progress` when an MVP item re-opens to `status: active` (for example because a defect surfaced after stabilisation); the gate then re-applies and post-MVP items already in `status: active` at the time of the revert **MAY** continue to completion but no new post-MVP item **MUST** be allowed to start until stabilisation is restored.
-- **MUST** record the stabilisation evidence (the sprint number that satisfied the one-full-subsequent-sprint condition, the date of the operator decision) in `## Source` for the audit trail when the flip doesn't use the retroactive exemption; without it, a flip that skipped the condition can't be told apart from one that met it, and `scripts/validate_mission.py` refuses the flip.
+- **MUST** record the stabilisation evidence (the sprint number that satisfied the one-full-subsequent-sprint condition, the date of the operator decision) in `## Source` for the audit trail when the flip doesn't use the retroactive exemption; without it, a flip that skipped the condition can't be told apart from one that met it, and mission validation refuses the flip.
 
 ### Audience tailoring
 
@@ -130,6 +130,7 @@ The mission statement **MUST** satisfy each of the following five constraints, i
 - [ ] When `mvp_status: stabilised`, every roadmap item with `mvp: true` is in `status: done` and one full subsequent sprint has closed without re-opening any MVP item, or the retroactive-MVP exemption applies (every exemption condition in §Stabilisation gate held at the time of the flip) and its rationale and evidence are in `## Source`; the consuming skill verifies the conditions before accepting the operator's flip.
 - [ ] `audience-identification` is dispatched before mission authoring on a fresh repo with no audience artefact; missing audiences block mission writes the same way they block outcome writes per the sibling `roadmap` spec.
 - [ ] No mission revision after `mvp_status: stabilised` lacks a one-paragraph rationale in `## Source`; missing rationale fails validation.
+- [ ] Every transition to `mvp_status: stabilised` adds to `## Source` either a sentence naming the subsequent sprint by number together with the operator decision date, or the retroactive-exemption rationale with all its evidence fields; a flip that adds neither fails validation
 
 ## Open Questions
 
