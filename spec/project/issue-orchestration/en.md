@@ -160,7 +160,7 @@ specialist exists.
   dispatched specialist's edits, and the feature branch the pull request is opened
   from—inside a **dedicated worktree created off `origin/develop`**, per
   `spec/project/parallel-working-copies/` §Branch-to-worktree mapping and §Lifecycle:
-  Create; the reference creation path is `task worktree:add -- <branch> [slug]`. The
+  Create; the reference creation path is `task worktree:add -- <branch> [slug]`, and a repository without that target uses the `git worktree add -b` fallback of `spec/project/parallel-working-copies/` §Lifecycle: Create, recorded in the pre-analysis artifact. The
   primary checkout **MUST** stay on `develop` and **MUST NOT** be switched onto the
   feature branch, even for a single-package issue
 - **MUST** establish the worktree before the first tracked-file write, so no
@@ -243,6 +243,7 @@ readership once the capability it describes is implemented, verified, and merged
   tracked-not-ignored territory portfolio-wide. Tracked-then-removed is the same
   lifecycle that spec gives a review plan—create, work off, delete, and let the git
   history be the trail—applied to this artifact
+- **MUST** run `git check-ignore -q .audits/issue-orchestrate/<issue-number>/analysis.md` in the worktree before writing the artifact. When the path is ignored (exit 0), the run **MUST** stop before the write and report the matching entry (the `git check-ignore -v` output) to the operator as `.gitignore` drift for `project-structure-apply`; it **MUST NOT** force-add the artifact (`git add -f`) and **MUST NOT** continue with it untracked. A repository that adopts this process **MUST NOT** ignore `.audits/issue-orchestrate/`; the rule covers that path only and leaves entries for dated audit records (for example `.audits/2026-Q*/`) untouched
 - **MUST** land the durable audit trail outside the file before it goes: the pull
   request's **Risk / rollout notes** section (per §Verification and traceability)
   and the issue comment recording the classification, package count, and route
@@ -505,8 +506,7 @@ These criteria apply to runs started after the transient pre-analysis rule becam
   empty)
 - [ ] For every pull request this orchestration produced, the feature branch carries
   both the artifact's creation commit and its removal commit, the removal commit
-  post-dates the last specialist result recorded in the artifact, and `.gitignore`
-  carries no `.audits/issue-orchestrate/` entry
+  post-dates the last specialist result recorded in the artifact, and `git check-ignore -q .audits/issue-orchestrate/0/analysis.md` exits 1 on the default branch, so no `.gitignore` entry (a broad `/.audits/` included) ignores the artifact path
 - [ ] For every merged orchestration run, the requirement artifact under
   `project/requirements/<slug>.md` that grounded the decomposition is still present
   on the default branch after the merge
