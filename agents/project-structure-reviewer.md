@@ -93,6 +93,7 @@ findings:
 - Route every `extends-drift` finding through `align-extends`: edit `.github/settings.yml` or `renovate.json5` to point at the portfolio preset (`nolte/gh-plumbing:.github/commons-settings.yml`, `github>nolte/gh-plumbing//renovate-configs/common#<tag>`); the agent never edits configs directly.
 - Route every `workflow-gap` finding through `project-structure-apply scaffold` — the four required reusable workflows (`release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`) are scaffolded together so a partial set isn't a sustainable state.
 - Route every `layout-violation` finding (source code at the repo root instead of under a recognised layout) through `relocate`; the spec is unambiguous that primary source files **MUST NOT** live loose at the root.
+- Route a `layout-violation` on `.gitignore` content (an ignored orchestration-artifact path) through `dispatch-skill project-structure-apply:apply`, which proposes the narrowing fix for approval; nothing moves, so `relocate` doesn't fit.
 - A `clean` finding signals the on-disk layout matches the spec; the GitHub-App live check (Renovate, Probot Settings, boring-cyborg) is a separate concern owned by `project-structure-apply`.
 ````
 
@@ -124,6 +125,7 @@ Required MUST files at the repository root:
 
 - `README.md` — `missing-file` (`severity: Critical`) when absent. The internal README structure is governed by `spec/project/readme-structure/`, not this audit; presence is the only check here.
 - `.gitignore` — `missing-file` (`severity: Critical`) when absent.
+- `.gitignore` content — `layout-violation` (`severity: Critical`, resolution `dispatch-skill project-structure-apply:apply`) for each non-comment line that ignores `.audits/issue-orchestrate/` or `.audits/issue-batch-integration/`, the paths the orchestration skills write their transient artifacts to (per `spec/project/issue-orchestration/` §Pre-analysis artifact lifecycle (transient) and `spec/project/issue-batch-integration/` §D). Match this closed set, with or without a leading `/`: `.audits`, `.audits/`, `.audits/*`, `.audits/**`, and any line naming `.audits/issue-orchestrate` or `.audits/issue-batch-integration` (trailing `/` or `*` included). A single-star `.audits/*` followed later by `!` lines re-including both directories is a pass; `.audits/`, `.audits`, and `.audits/**` aren't, since the negation can't re-include the files they still match. Dated entries such as `.audits/2026-Q*/` are legitimate, not findings. Quote the line as `.gitignore:<line>` in `evidence`. This static match is an approximation; the skill's `git check-ignore -v` probe is authoritative.
 - `CLAUDE.md` — `missing-file` (`severity: Critical`) when absent.
 - `renovate.json5` (preferred) **or** `renovate.json` — `missing-file` (`severity: Critical`) when neither is present.
 - `.pre-commit-config.yaml` — `missing-file` (`severity: Critical`) when absent.

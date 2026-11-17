@@ -27,6 +27,8 @@ created: ""
 - **Labels**: <!-- comma-separated -->
 - **Linked items**: <!-- linked issues / PRs, or "none" -->
 - **Prior art checked**: <!-- features / roadmap items / open PRs reviewed, or "none found" -->
+- **Working copy**: <!-- <worktree path> via `task worktree:add` | via fallback `git worktree add -b`, no worktree:add target; ignore check `git check-ignore -q` on this path: not ignored -->
+<!-- See references/working-copy.md. The ignore check runs before this file is written; an ignored path stops the run, so a written artifact always records "not ignored". -->
 
 ## Classification
 

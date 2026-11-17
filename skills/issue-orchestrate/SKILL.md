@@ -36,10 +36,8 @@ Implements `spec/project/issue-orchestration/`. The skill is the generalist
 orchestrator that comprehends a raw GitHub issue, decomposes it into atomic
 specialist-ready work packages, dispatches the hands-on work to the most
 specialised available Claude skill or agent, and verifies the result through the
-standard pull-request gate. It never performs a work package's editing itself when
-a matching specialist exists; the quality-bearing core is the persistent
-pre-analysis artifact that prepares each sub-problem so a specialist can implement
-it completely.
+standard pull-request gate. The quality-bearing core is the persistent pre-analysis
+artifact that prepares each sub-problem so a specialist can implement it completely.
 
 ## Why this is a skill, not an agent
 
@@ -82,14 +80,13 @@ Before any operation:
   pre-analysis artifact; never decompose against weakly-understood requirements.
   `question`-class and already-self-resolved issues are exempt.
 - **Working copy (before the first tracked-file write).** Per
-  `spec/project/issue-orchestration/` §Working-copy isolation and
-  `spec/project/parallel-working-copies/`, every on-disk write the orchestration
-  produces — the pre-analysis artifact, every dispatched specialist's edit, and the
-  feature branch the PR is opened from — **MUST** happen in a dedicated worktree
-  created off `origin/develop` via `task worktree:add -- <branch> [slug]`; the primary
-  checkout stays on `develop`. Create (or confirm) the worktree before operation 3
-  writes the artifact; `references/gotchas.md` covers the worktree-isolated agent
-  alternative.
+  `spec/project/issue-orchestration/` §Working-copy isolation, every write the run
+  produces (artifact, specialist edits, PR branch) **MUST** happen in a dedicated
+  worktree off `origin/develop`; the primary checkout stays on `develop`. Create it via
+  `task worktree:add`, else `git worktree add -b`, recorded in the artifact. An ignored
+  artifact path (`git check-ignore -q`) stops the run before operation 3; never
+  force-add. Read `references/working-copy.md` for both; `references/gotchas.md`
+  covers the worktree-isolated agent alternative.
 
 ## Operations
 
@@ -299,8 +296,8 @@ already recorded.
   outcome, more than one PR strand, or a new/retargeted roadmap item) for direct
   implementation; route it to `feature-decompose` or `roadmap-plan` instead, never
   mix the two routes, and never leave the remainder silently unplanned.
-- **Never** let the pre-analysis artifact reach the default branch or hide it in
-  `.gitignore`; closeout step 1 removes it.
+- **Never** let the pre-analysis artifact reach the default branch, hide it in
+  `.gitignore`, or force-add it past an ignore entry; closeout step 1 removes it.
 - **Never** classify an issue outside the closed set
   `bug / feature-request / spec-change / security / docs / refactor / question /
   infra`.

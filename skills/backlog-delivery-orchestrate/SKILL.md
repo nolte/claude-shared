@@ -47,7 +47,7 @@ Respond in the operator's language. `gh`, `git`, and `Agent(...)` calls stay Eng
 
 ## Preconditions
 
-- Git repository, `gh auth status` authenticated (the token can cancel Actions runs), `jq` installed, primary checkout on `develop`, `task worktree:add` available.
+- Git repository, `gh auth status` authenticated (the token can cancel Actions runs), `jq` installed, primary checkout on `develop`, `task worktree:add` available or its `git worktree add -b` fallback per `issue-orchestrate`'s `references/working-copy.md`.
 - The skills named above are reachable (all ship in `nolte-shared`). Expert skills and agents come from `nolte-engineering` when installed; `issue-orchestrate` resolves them at runtime.
 - Resume detection first: scan `.resume/backlog-delivery-orchestrate/*.yml`. A matching `in_progress` run is offered as `resume / start-new / discard`; `--resume` pre-selects it and skips every gate already in `decisions:`.
 
