@@ -159,8 +159,9 @@ decision, the completeness matrix, the risks, the out-of-scope boundary, and the
 questions. It must read on its own, without the conversation that produced it.
 
 Before writing it, run `git check-ignore -q` on that path. Exit 0 means the repository
-ignores it: stop, and report the entry `git check-ignore -v` prints as `.gitignore`
-drift for `project-structure-apply`. Never force-add the artifact or leave it untracked.
+ignores it: stop, and report the entry `git check-ignore -v` names, routed by its source
+per `issue-orchestrate`'s `references/working-copy.md` §2. Never force-add the artifact
+or leave it untracked.
 
 Read `references/completeness-matrix.md` before filling the matrix — it carries how to
 derive the column set from the repository under change, the cell contract, and why an

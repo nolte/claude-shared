@@ -34,8 +34,8 @@ independent}}
 **Reason:** {{Mode B requires a member likely to need removal: uncertain acceptance, an
 external dependency, or an outstanding review that could reject it}}
 
-**Working copy:** {{worktree path, created via `task worktree:add` / via the
-`git worktree add -b` fallback because the repository has no `worktree:add` target}}
+**Working copy:** {{worktree path; detect={{exit code or no-taskfile}}; created via
+`task worktree:add` / via the `git worktree add -b` fallback}}
 
 ## Structural finding
 
