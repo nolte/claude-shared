@@ -10,10 +10,10 @@ files, name the change, name the check.
 Rows are the member issues. Columns are the artifact classes **the repository under
 change actually ships**.
 
-| Member | Source | Spec | Tests | Docs | Config / workflows | Generated index |
-|---|---|---|---|---|---|---|
-| #623 | `settings.py:41` — coerce topics to string; check: `task test` | not applicable — no spec governs the field | `test_settings.py::test_topics_string` | not applicable — internal | `.github/settings.yml` topics block; check: settings app sync | not applicable |
-| #624 | not applicable — config only | `spec/project/project-structure/` §Probot; check: `pre-commit run check-section-refs` | not applicable | `docs/en/setup.md` §Apps; check: `task docs` | `.github/settings.yml` `_extends`; check: app loads the file | `spec/README.md` row; check: `task test` |
+| Member | Source | Spec | Tests | Docs | Config / workflows | Generated index | Existing installations / upgrade / rollback |
+|---|---|---|---|---|---|---|---|
+| #623 | `settings.py:41` — coerce topics to string; check: `task test` | not applicable — no spec governs the field | `test_settings.py::test_topics_string` | not applicable — internal | `.github/settings.yml` topics block; check: settings app sync | not applicable | not applicable — the field is read at settings sync, never by an installed artefact |
+| #624 | not applicable — config only | `spec/project/project-structure/` §Probot; check: `pre-commit run check-section-refs` | not applicable | `docs/en/setup.md` §Apps; check: `task docs` | `.github/settings.yml` `_extends`; check: app loads the file | `spec/README.md` row; check: `task test` | not applicable — config only, ships in no artefact |
 
 ## Deriving the column set
 
@@ -27,10 +27,26 @@ repository ships and drop what it does not:
 - config / workflows: `.github/workflows/`, `.github/settings.yml`, `Taskfile.yml`
 - generated index: a catalog or index the build regenerates (`spec/README.md`,
   `docs/*/skills/**`)
+- existing installations / upgrade / rollback: the repository ships a deployable
+  artefact. Resolve this against `spec/project/release-artifact/` §"Artefact taxonomy"
+  for the detected project type rather than keeping a list here. Every row except
+  documentation-only names an artefact that an existing installation updates to. A
+  deployable artefact the taxonomy does not name yet, such as an OS or appliance image
+  or a Helm chart, carries the column too; record the missing taxonomy row as a
+  finding rather than dropping the column
 
 A repository with no tests carries no Tests column. A repository with a generated
 catalog must carry that column, because a missing index regeneration is exactly the
 silent omission the matrix exists to catch.
+
+A repository that ships a deployable artefact must carry the Existing installations /
+upgrade / rollback column, for the same reason: what a change does to an installation
+that already runs is where the expensive defects sit. A plan gate approved "a short
+provisioned secret keeps the services stopped"; only the pre-merge review found that
+every automatic update of an existing device then failed its health check and rolled
+back, on every update. A repository that ships no deployable artefact drops the column
+and says so in one line under the matrix:
+`not applicable — the repository ships no deployable artefact (documentation-only)`.
 
 ## The cell contract
 
@@ -45,6 +61,27 @@ Every cell holds one of two things:
 An empty cell is an incomplete plan. It reads identically to "we looked and there was
 nothing", which is the judgement the matrix exists to replace with evidence.
 
+### Existing installations / upgrade / rollback
+
+A change cell in this column names four things, each as a short clause:
+
+1. **Upgraded state:** the state an installation running the previous release is in
+   after it updates to this change — migrated data, kept configuration, services running
+   or stopped.
+2. **Health gate:** whether the update tool's health gate still passes on that upgraded
+   installation, naming the gate (the appliance's post-update health check, the Helm
+   `--wait` readiness, the package manager's post-install script).
+3. **Rollback:** what a rollback restores, and what it can't — a schema migration that
+   ran forward, a secret that was rotated.
+4. **Proving check:** the executable check that shows all three, such as an update boot
+   test from the previous image or a migration test against a snapshot of the previous
+   schema.
+
+Example cell: "previous image boots, migrates the settings file, services start; health
+gate passes; rollback restores the previous image and the unmigrated file; check:
+`task test:update-boot`". A member that cannot reach an installation records
+`not applicable` with the reason, as in any other column.
+
 ## Failure modes
 
 - **The comfortable blank.** Filling source and tests, leaving spec and docs empty
@@ -52,6 +89,9 @@ nothing", which is the judgement the matrix exists to replace with evidence.
   sentence is cheap and it is the whole point.
 - **A check that is not a check.** "verified manually" and "looks right" return no
   signal. Name something executable.
+- **The fresh-install check.** Proving the upgrade column with a test that boots or
+  installs from scratch. A fresh install never carries the previous release's state, so
+  it passes exactly where the upgraded installation fails its health gate.
 - **The estimated count.** When a cell's check produces a number, run it. A number
   nobody measured reads as evidence and is worse than no number.
 - **Matrix drift.** When operation 5 surfaces a change the plan missed, that is a local

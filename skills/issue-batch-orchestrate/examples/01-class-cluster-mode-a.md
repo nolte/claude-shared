@@ -36,7 +36,9 @@ change named: a schema validation step in the lint job.
 Artifact written to `.audits/issue-batch-integration/2026-09-14-settings-drift/analysis.md`.
 Tier 2. The completeness matrix carries Config, Spec, Docs and Generated-index columns;
 Source and Tests are `not applicable — no code path touches the settings file`, with the
-reason stated rather than left blank.
+reason stated rather than left blank. The repository is documentation-only, so instead of
+an Existing installations / upgrade / rollback column the matrix carries one line:
+`not applicable — the repository ships no deployable artefact (documentation-only)`.
 
 Operator approves. **This is the write gate.**
 

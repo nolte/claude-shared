@@ -164,8 +164,9 @@ per `issue-orchestrate`'s `references/working-copy.md` §2. Never force-add the 
 or leave it untracked.
 
 Read `references/completeness-matrix.md` before filling the matrix — it carries how to
-derive the column set from the repository under change, the cell contract, and why an
-empty cell is an incomplete plan rather than a tacit "nothing to do".
+derive the column set from the repository under change (including the existing
+installations / upgrade / rollback column a deployable artefact requires), the cell
+contract, and why an empty cell is an incomplete plan rather than a tacit "nothing to do".
 
 Anchor every load-bearing claim to a `file:line`, a path, or a command with its output.
 Prefer running the Research of operations 1–2 in an isolated context that returns a
