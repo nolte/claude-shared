@@ -63,9 +63,11 @@ none
 | Member | Result | Verification (actual output) |
 |---|---|---|
 | #772 | done (specialist `nolte-claude-dev:claude-plugin-developer`; spec part by the orchestrator via the `nolte-shared:spec` contract) — step 2 reviews the real worktree diff via `code-review <PR#>` + read-only agent, security lane = security-briefed read-only agent (`security-review` only when cwd is the worktree), step 4 classifies red non-required checks; new `references/pre-merge-review.md`; `pull-request-workflow` gains the non-required-check MUST + AC (EN+DE); `api-error-handling` stale owner fixed | sweep predicate over `skills/` → 0 hits (rc=1); `validate_skills.py` rc=0, 0 findings for pull-request-merge, body ~4450 tokens (develop ~4460), description 899 chars; pre-commit (6 files) rc=0; markdownlint rc=0; spec EN/DE parity 134/29 both; Vale on spec en.md rc=0 |
+| #778 | done (specialist `nolte-claude-dev:claude-plugin-developer`; spec part by the orchestrator via the `nolte-shared:spec` contract) — issue-orchestrate op 6 and issue-batch-orchestrate op 5 review the worktree diff before the PR or `committed-locally`, record findings with the head SHA; pull-request-merge step 2 confirms (later commits may only remove `.audits/`); spec issue-orchestration gains the MUST + AC, security verification aligned to the security-briefed reviewer; issue-batch-integration lane rule extended | `validate_skills.py` rc=0, no finding for the three skills; tokens issue-orchestrate 4494→4490, issue-batch-orchestrate 4004→4170, pull-request-merge 4450→4471; pre-commit (9 + 2 files) rc=0; markdownlint rc=0; spec EN/DE parity 102 bullets / 27 AC and 149 bullets; Vale rc=0 |
 
 ## Deviations
 
+- Local adaptation (#778): `pull-request-merge` confirms a recorded review when later commits only remove `.audits/` artifacts (the fix-forward `git rm` always follows the review).
 - Local adaptation (#772): the security lane uses a security-briefed read-only agent instead of `code-security-reviewer`, which is a whole-codebase audit whose description excludes diff-scoped review; #772 offers "or a read-only agent".
 
 ## Requirement coverage
