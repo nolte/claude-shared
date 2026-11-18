@@ -7,4 +7,4 @@
 # tests/test_vale_version.py fails while the file name in that line names
 # another version, and the install fails closed on a checksum mismatch.
 VALE_VERSION=3.27.0
-VALE_SHA256=fc72e64454d6bd7af91905d4faebbf411bae3eec17bb572f4101311212bc0d9e  vale_3.15.2_Linux_64-bit.tar.gz
+VALE_SHA256=c80d62f6bce87b81843ac5b512a26e63213927b957adba0a64fc594570da2000  vale_3.27.0_Linux_64-bit.tar.gz
