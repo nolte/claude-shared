@@ -43,9 +43,11 @@ revised_at: 2026-05-10
 `project/sprints/0006-cross-skill-consistency.md` (`status: closed`,
 `ended: 2026-05-08`, carried the final `mvp: true` item R-9).
 `project/sprints/` **also** contains `0007-post-mvp-polish.md` with
-`status: active` — the planned post-MVP sprint is in flight, not yet
-closed. No defect-fix feature against an MVP item is currently
-`in_progress`. The oldest commit that added `project/mission.md`
+`status: planned`. It lists only `mvp: false` items, all still
+`status: proposed`: the stabilisation gate keeps them from starting
+while `mvp_status` is `achieved`, so the sprint has neither started
+nor closed. No roadmap item with `mvp: false` is `active`, and no
+defect-fix feature against an MVP item is currently `in_progress`. The oldest commit that added `project/mission.md`
 (`git log --full-history --diff-filter=A --format=%H -- project/mission.md | tail -1`,
 full clone) carried `mvp_status: defining`, as `mission-define`
 writes every new mission.
@@ -74,7 +76,7 @@ writes every new mission.
    walks by `number`, **not** by `ended` date, and looks for the
    sprint whose `number` is `6 + 1 = 7`.
    `project/sprints/0007-post-mvp-polish.md` exists but is
-   `status: active`. The sprint is **not** `closed`, so the
+   `status: planned`. The sprint is **not** `closed`, so the
    subsequent-sprint condition is unsatisfied. Skill does **not**
    accept "we're nearly done" or any operator framing as a substitute
    — the spec's "never silently infer satisfaction" rule applies.
@@ -82,21 +84,20 @@ writes every new mission.
    `references/retroactive-exemption.md`. The clone isn't shallow, but
    C1 fails: the first-add version of `project/mission.md` carried
    `mvp_status: defining`, not `achieved`, so the MVP was delivered
-   under this mission rather than recorded retroactively. (C5 would
-   fail too, because sprint 7 is `active`.) The condition stays
-   failed.
+   under this mission rather than recorded retroactively. (C5 passes,
+   because sprint 7 is still `planned`, but every condition has to
+   hold.) The condition stays failed.
 6. **Block the flip with a verbatim error.** Skill emits a
    structured-message in German (operator's language) along the lines
    of:
    > Stabilisierungs-Gate **nicht erfüllt**: Sprint 7
-   > (`0007-post-mvp-polish`) ist `status: active`, nicht `closed`.
+   > (`0007-post-mvp-polish`) ist `status: planned`, nicht `closed`.
    > Die Bedingung "ein vollständiger Folge-Sprint ist ohne
    > Regression geschlossen" verlangt `status: closed` (oder
    > `cancelled` mit `## Review notes`-Begründung "no-fault-of-MVP").
    > Die Retroaktiv-MVP-Ausnahme greift nicht: die erste committete
    > Fassung von `project/mission.md` trug `mvp_status: defining`.
-   > Der Flip nach `stabilised` wird verweigert, bis Sprint 7 in den
-   > Status `closed` übergeht.
+   > Der Flip nach `stabilised` wird verweigert.
    Skill cites the spec rule and does not present a "force-write"
    override.
 7. **Stabilisation gate verification — condition 4 (no defect-fix
@@ -104,12 +105,21 @@ writes every new mission.
    blocks, the skill still notes that condition 4 currently passes
    (no feature against an `mvp: true` item is `status: in_progress`)
    so the operator gets a complete gate readout for the audit trail.
-8. **No write.** `project/mission.md` is left untouched.
+8. **Post-MVP scan.** Per the skill's hard rule, the skill scans
+   `project/roadmap.md` for an `mvp: false` item in `status: active`
+   after reading `mvp_status`. It finds none, so there's no gate
+   violation to surface. Had sprint 7 already been `active` with
+   post-MVP work in flight, the skill would report that as a violation
+   of `spec/project/mission/` §Stabilisation gate, not as progress
+   towards the subsequent-sprint condition.
+9. **No write.** `project/mission.md` is left untouched.
    `mvp_status` stays `achieved`. `revised_at` is **not** bumped (no
    mutation occurred). No entry is appended to `## Source`.
-9. **Closing message** confirms zero file mutations, restates the
-   single failing condition (sprint 7 not `closed`), and tells the
-   operator to re-invoke this skill **after**
-   `0007-post-mvp-polish.md` reaches `status: closed` via
-   `sprint-review`. Skill explicitly does **not** offer to wait,
-   poll, or auto-retry — the next attempt is operator-initiated.
+10. **Closing message** confirms zero file mutations, restates the
+    single failing condition (no sprint numbered 7 is `closed`), and
+    points out that sprint 7 as planned can't satisfy it: its only
+    items are `mvp: false`, which may not start before stabilisation.
+    Re-planning sprint 7 belongs to `sprint-plan`, and changing roadmap
+    items belongs to `roadmap-plan`; this skill changes neither. Skill
+    explicitly does **not** offer to wait, poll, or auto-retry — the
+    next attempt is operator-initiated.

@@ -342,6 +342,87 @@ def check_revision_rationale(old_text: str, new_text: str, target: str) -> list[
     return []
 
 
+_STABILISED_RE = re.compile(r"""^mvp_status:\s*["']?stabilised["']?\s*(?:#.*)?$""", re.MULTILINE)
+_ISO_DATE_IN_TEXT_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+# Fixed evidence vocabulary (EN + DE, since `## Source` follows the file's language).
+# A sentence names the subsequent sprint when it carries a subsequent-sprint marker
+# (`subsequent sprint`, `subsequent-sprint`, `Folgesprint`, `Folge-Sprint`, or the
+# `+ 1` of "MVP-closing + 1") and a sprint number (`sprint <n>`, `Sprint `0002``).
+_SUBSEQUENT_MARKER_RE = re.compile(r"subsequent[- ]sprint|folge-?\s*sprint|(?:closing|\d)\W{0,3}\+\s*1\b", re.IGNORECASE)
+_SUBSEQUENT_NUMBER_RE = re.compile(r"sprint\W{0,3}\d+", re.IGNORECASE)  # no \b: `Folgesprint 2`
+_SENTENCE_SPLIT_RE = re.compile(r"(?<!\be\.g\.)(?<!\bi\.e\.)(?<!\bz\.B\.)(?<=[.!?])\s+(?=[A-Z`*(\-])|\n")
+_EXEMPTION_NAMED_RE = re.compile(r"(?=.*\b(?:retroactive|rückwirkend))(?=.*(?:exemption|ausnahme))",
+                                 re.IGNORECASE | re.DOTALL)
+_SPRINT_NUMBER_RE = re.compile(r"\bsprint\W{0,3}\d+", re.IGNORECASE)
+_ENDED_DATE_RE = re.compile(r"\b(?:ended|endete)\b[^0-9\n]{0,15}\d{4}-\d{2}-\d{2}", re.IGNORECASE)
+_COMMIT_RE = re.compile(r"\b(?=[0-9a-f]{0,39}\d)[0-9a-f]{7,40}\b")  # a SHA, not a hex-only word like "defaced"
+
+
+def _names_subsequent_sprint(text: str) -> bool:
+    """True when one sentence of `text` carries a subsequent-sprint marker and a sprint number."""
+    # Unwrap hard-wrapped lines; a blank line or a new list item still ends the sentence.
+    joined = re.sub(r"[ \t]*(?<!\n)\n(?!\n|\s*[-*+] )[ \t]*", " ", text)
+    return any(_SUBSEQUENT_MARKER_RE.search(sentence) and _SUBSEQUENT_NUMBER_RE.search(sentence)
+               for sentence in _SENTENCE_SPLIT_RE.split(joined))
+
+
+def check_stabilisation_evidence(old_text: str, new_text: str, target: str) -> list[Finding]:
+    """spec/project/mission/ §Stabilisation gate: a flip to `stabilised` records its evidence.
+
+    Guard origin (spec/project/defect-class-guards/ G5): #750. Predicate (G3): every
+    change whose earlier version isn't `mvp_status: stabilised` and whose later
+    version is. The lines that change adds to `## Source` must carry one of:
+
+    - the retroactive-MVP exemption rationale: once the added text names the
+      exemption (`retroactive`/`rückwirkend` plus `exemption`/`Ausnahme`), it must
+      carry every evidence field the spec's MUST lists: the MVP-closing sprint's
+      number (`sprint <n>`) and `ended` date (`ended`/`endete`, then an ISO date),
+      the commit that first added `project/mission.md` (a 7-40 char hex SHA), and
+      the operator decision date (a second ISO date);
+    - otherwise the subsequent-sprint evidence: one sentence carrying a
+      subsequent-sprint marker (`subsequent sprint`, `subsequent-sprint`,
+      `Folgesprint`, `Folge-Sprint`, or `+ 1`) and the sprint's number
+      (`sprint <n>`), plus the operator decision date (an ISO date).
+
+    Like `check_revision_rationale`, it compares two versions, because the file
+    alone can't show that the flip happened in this change.
+    """
+    old, new = _split(old_text), _split(new_text)
+    if old is None or new is None:
+        return []
+    if _STABILISED_RE.search(old[0]) or not _STABILISED_RE.search(new[0]):
+        return []
+    old_lines = set(_source_section(old[1]).splitlines())
+    added = "\n".join(line for line in _source_section(new[1]).splitlines() if line not in old_lines)
+    dates = len(_ISO_DATE_IN_TEXT_RE.findall(added))
+
+    if _EXEMPTION_NAMED_RE.search(added):
+        missing = []
+        if not _SPRINT_NUMBER_RE.search(added):
+            missing.append("the MVP-closing sprint's number")
+        if not _ENDED_DATE_RE.search(added):
+            missing.append("that sprint's `ended` date")
+        if not _COMMIT_RE.search(added):
+            missing.append("the commit that first added project/mission.md")
+        if dates < 2:
+            missing.append("the operator decision date")
+        if missing:
+            return [Finding("Critical", target, "mission.stabilisation-exemption-evidence",
+                            "the flip to `mvp_status: stabilised` names the retroactive-MVP exemption, but its "
+                            "`## Source` rationale lacks " + "; ".join(missing))]
+        return []
+
+    if _names_subsequent_sprint(added) and dates >= 1:
+        return []
+    return [Finding("Critical", target, "mission.stabilisation-evidence-missing",
+                    "the flip to `mvp_status: stabilised` adds to `## Source` neither path's evidence: "
+                    "for the normal path, one sentence naming the subsequent sprint (`subsequent sprint`, "
+                    "`Folgesprint` or `MVP-closing + 1`) with its number (`sprint <n>`), plus the decision "
+                    "date; for the retroactive-MVP exemption, a rationale naming it (`retroactive`/"
+                    "`rückwirkend` and `exemption`/`Ausnahme`) with the MVP-closing sprint's number and "
+                    "`ended` date, the commit that first added project/mission.md, and the decision date")]
+
+
 def _committed_version(path: Path, ref: str) -> str | None:
     try:
         rel = path.resolve().relative_to(REPO).as_posix()
@@ -367,6 +448,7 @@ def check_mission(path: Path) -> list[Finding]:
                                 f"MISSION_BASE_REF={base} names no readable version of {rel}; fetch full history"))
     elif committed is not None:
         findings.extend(check_revision_rationale(committed, text, rel))
+        findings.extend(check_stabilisation_evidence(committed, text, rel))
     return findings
 
 
