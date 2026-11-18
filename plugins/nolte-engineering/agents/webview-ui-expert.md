@@ -10,7 +10,7 @@ summary: "Read-only deep cross-file review of one named frontend target across P
 summary_de: "Nur-Lese-Cross-File-Deep-Review eines benannten Frontend-Ziels über Performance, Security, Barrierefreiheit, i18n, UX."
 use_when:
   - "webview-ui-optimize's expert-review dispatches a deeper read"
-  - "frontend-audit dispatches the static UI strand with a delegated/fallback rule list"
+  - "frontend-audit dispatches its static UI strand"
   - "you want a deep audit of a specific target (auth flow, dashboard, i18n bootstrap, CSP pipeline)"
 dont_use_when:
   - situation: "You want single-rule audits"
@@ -81,8 +81,6 @@ The caller gives you one of:
 3. **Feature description**: a short prose label ("the auth flow", "the dashboard chart cluster", "the language switcher").
 4. **Stack-wide concern**: a phrase that names a cross-domain pipeline ("the CSP plus Vite plus Emotion pipeline", "the prefers-reduced-motion coverage", "the RTL pipeline end-to-end").
 5. **Audit-row drilldown**: the phrase "deep-review for finding <rule-id> in the latest audit" — triggers a single-rule deep dive scoped to every file affected by that rule.
-
-When `frontend-audit` dispatches you, it also passes which generic Accessibility and UX rules are **delegated** because `web-design-guidelines` ran to completion in this audit (per `spec/frontend/third-party-audit-skills/` §F) and which are **active fallbacks** because it didn't. Skip delegated rules and list them in the report's Scope section as `delegated to web-design-guidelines`, and add an `Applied rules:` line to Scope naming every spec rule you applied (by domain and heading), so the caller can tell a clean rule from one that never ran; without that input, apply every rule. Don't fetch the third-party rules yourself.
 
 If the input is ambiguous or empty, return a request for a concrete target and stop — a subagent has no channel for a mid-run question, so the caller re-dispatches. Don't invent a target.
 

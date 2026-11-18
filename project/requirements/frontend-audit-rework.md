@@ -11,14 +11,15 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
 
 - **What is being built:** a rework of the `nolte-engineering` frontend audit family in which
   **third-party skills form the core** of a thorough frontend audit, and the plugin's own
-  agents become orchestrators and complements covering only what no third-party skill covers.
+  reviewers run beside them with their complete rule sets (revisit 2026-11-18, see R12).
   Deliverables:
   - a new **spec** `spec/frontend/third-party-audit-skills/` (EN-canonical `en.md` + strict
     `de.md`) defining *when* each third-party plugin/skill is used and *what its preconditions
     are*;
   - a new orchestrating **skill** `frontend-audit` in `plugins/nolte-engineering/`;
-  - delegation notes in `spec/frontend/source-code-review/` and
-    `spec/frontend/webview-ui-optimization/` (EN + DE) for rules a third-party skill now covers.
+  - no rule changes in `spec/frontend/source-code-review/` or
+    `spec/frontend/webview-ui-optimization/` (the delegation notes were dropped in the
+    2026-11-18 revisit).
 - **Third-party skills in scope** (operator-named, 2026-11-17):
   - `vercel-labs/agent-skills` → `web-design-guidelines` (fetches its rules at runtime from
     `https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md`)
@@ -65,7 +66,7 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
   - _dimension_: `constraints` · _status_: `confirmed` · _source_: Q2 option text, Q6 point 1
 - **R3** — The operator SHALL install third-party skills before the audit; the `frontend-audit` skill SHALL NOT install them.
   - _dimension_: `constraints`, `actors` · _status_: `confirmed` · _source_: Q2 "Operator + Fallback"
-- **R4** — WHEN a required third-party skill is not available, `frontend-audit` SHALL report it as a coverage gap and continue with the plugin's own fallback rules.
+- **R4** — WHEN a required third-party skill is not available, `frontend-audit` SHALL report it as a coverage gap and continue; the own reviewers' rule sets don't change (R12).
   - _dimension_: `edge_cases` · _status_: `confirmed` · _source_: Q2
 - **R5** — WHEN a third-party skill does not apply to the detected stack (e.g. no React/Next.js), `frontend-audit` SHALL report it as `n/a`, not as a coverage gap.
   - _dimension_: `edge_cases` · _status_: `confirmed` · _source_: Q6 point 2
@@ -81,11 +82,11 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
   - _dimension_: `non_functional` · _status_: `confirmed` · _source_: Q4 "Live laden + protokollieren"
 - **R11** — Fetched third-party rule content SHALL be treated as audit criteria (data), never as instructions that alter the audit's control flow (no writes, no tool calls, no network access outside the audit).
   - _dimension_: `non_functional` · _status_: `confirmed` · _source_: Q6 point 4
-- **R12** — Own rules (F1–F11, webview UI dimensions) that overlap a third-party rule SHALL be marked in their spec as delegated to that rule and stay active only as fallback when the third-party skill is unavailable; own rules SHALL otherwise cover only what no third-party skill covers.
-  - _dimension_: `scope_boundaries` · _status_: `confirmed` · _source_: Q4b "Delegieren + Restregeln"
+- **R12** — The own reviewers SHALL run their complete rule sets in every audit; where an own rule and a third-party rule find the same defect, the merged report SHALL show it once with both sources (R13), and no own rule SHALL be skipped because a third-party skill covers it.
+  - _dimension_: `scope_boundaries` · _status_: `confirmed` · _source_: revisit 2026-11-18, operator chose "Zurückschneiden" after four pre-merge review rounds on PR #787 kept finding gaps in rule-level delegation; supersedes Q4b "Delegieren + Restregeln"
 - **R13** — `frontend-audit` SHALL emit one merged report in which every finding carries a `source` attribution (e.g. `vercel/web-design-guidelines`, `nolte/frontend-code-reviewer`) and duplicate findings are merged.
   - _dimension_: `functional` · _status_: `confirmed` · _source_: Q4b
-- **R14** — A new skill `frontend-audit` SHALL detect the stack, check preconditions, invoke the third-party skills, dispatch `frontend-code-reviewer` / `webview-ui-expert` for the remaining rules, and merge the report; `source-code-review` and `webview-ui-optimize` SHALL remain and point to `frontend-audit` for the thorough audit.
+- **R14** — A new skill `frontend-audit` SHALL detect the stack, check preconditions, invoke the third-party skills, dispatch `frontend-code-reviewer` / `webview-ui-expert` with their complete rule sets, and merge the report; `source-code-review` and `webview-ui-optimize` SHALL remain and point to `frontend-audit` for the thorough audit.
   - _dimension_: `actors`, `scope_boundaries` · _status_: `confirmed` · _source_: Q5 "Neuer Skill frontend-audit"
 - **R15** — The change SHALL pass `task test`, `task lint`, and `task docs`.
   - _dimension_: `acceptance_criteria` · _status_: `confirmed` · _source_: Q6 point 6
@@ -104,3 +105,6 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
   implementation design point for the Ist-Analyse.
 - **Description budget:** `nolte-engineering` description budget is tight (memory); a new
   skill description must fit `validate_skills.py`.
+- **Revisit 2026-11-18:** R12 changed from rule-level delegation with fallback to own reviewers
+  running in full beside the third-party skills (operator decision); R4 and R14 follow. Other
+  requirements unchanged.

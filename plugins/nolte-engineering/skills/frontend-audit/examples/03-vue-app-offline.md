@@ -19,15 +19,12 @@ is unreachable from the audit host.
 2. `vercel-react-best-practices` reported `not applicable` (no React or
    Next.js dependency), not as a gap.
 3. `web-design-guidelines` fails its fetch: a coverage gap with the
-   observed error, and no cached guidelines are used. It didn't run to
-   completion, so every rule delegated to it is a fallback.
-4. `webview-ui-expert` runs the generic webview-ui Accessibility and UX
-   rules as active fallbacks.
+   observed error, and no cached guidelines are used.
+4. `webview-ui-expert` runs its rule set over the UI; the React-, MUI-,
+   react-hook-form-, notistack-, and Recharts-specific rules are
+   recorded as `not applicable`, not as a gap.
 5. `frontend-code-reviewer` reports Vue as unsupported per
-   `spec/frontend/source-code-review/` §Framework profiles, so the F6,
-   F8, and F10 fallbacks and every other F rule are missing from its
-   applied-rules list: the header lists every rule absent from that
-   list, at least the whole F1–F11 overlay, as **uncovered**, not as
-   rules that ran.
+   `spec/frontend/source-code-review/` §Framework profiles; the report
+   lists that as a coverage gap of the code strand.
 6. `frontend-design` still runs as an advisory lens; its findings are
    Info and routed to `frontend-usability-optimizer`.
