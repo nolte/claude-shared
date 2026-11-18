@@ -164,7 +164,7 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   Request geöffnet wird — in einem **dedizierten, off `origin/develop` erzeugten
   Worktree** ausführen, gemäß `spec/project/parallel-working-copies/`
   §Branch-to-worktree mapping und §Lifecycle: Create; der Referenz-Erzeugungspfad ist
-  `task worktree:add -- <branch> [slug]`. Der Primary-Checkout **MUSS** auf `develop`
+  `task worktree:add -- <branch> [slug]`; ein Repository ohne dieses Target nutzt den `git worktree add -b`-Fallback aus `spec/project/parallel-working-copies/` §Lebenszyklus: Anlegen und hält ihn im Voranalyse-Artefakt fest. Der Primary-Checkout **MUSS** auf `develop`
   bleiben und **DARF NICHT** auf den Feature-Branch umgeschaltet werden, auch nicht
   für ein Ein-Paket-Issue
 - **MUSS [MUST]** den Worktree vor dem ersten versionierten Datei-Write etablieren,
@@ -256,6 +256,7 @@ verifiziert und gemergt ist.
   derselbe Lebenszyklus, den jene Spezifikation einem Review-Plan gibt — erzeugen,
   abarbeiten, löschen und die Git-Historie den Trail sein lassen — angewandt auf
   dieses Artefakt
+- **MUSS [MUST]** vor dem Schreiben des Artefakts im Worktree `git check-ignore -q .audits/issue-orchestrate/<issue-number>/analysis.md` ausführen. Ist der Pfad ignoriert (Exit 0), **MUSS [MUST]** der Lauf vor dem Schreiben anhalten und den passenden Eintrag (die Ausgabe von `git check-ignore -v`) dem Operator als `.gitignore`-Drift für `project-structure-apply` melden; er **DARF NICHT [MUST NOT]** das Artefakt erzwungen hinzufügen (`git add -f`) und **DARF NICHT [MUST NOT]** mit einem untrackten Artefakt weiterarbeiten. Ein Repository, das diesen Prozess übernimmt, **DARF NICHT [MUST NOT]** `.audits/issue-orchestrate/` ignorieren; die Regel gilt nur für diesen Pfad und lässt Einträge für datierte Audit-Aufzeichnungen (zum Beispiel `.audits/2026-Q*/`) unberührt. Das Urteil ist der Exit-Code von `-q`; ein Eintrag aus `.git/info/exclude` oder der globalen Excludes-Datei ist keine Repository-Drift und wird dem Operator als lokale Einstellung gemeldet, weil keine Zeile im Repository ihn wieder einschließen kann
 - **MUSS [MUST]** den dauerhaften Audit-Trail außerhalb der Datei landen, bevor sie
   verschwindet: den Abschnitt **Risk / rollout notes** des Pull Requests (gemäß
   §Verifikation und Nachvollziehbarkeit) und den Issue-Kommentar, der Klassifikation,
@@ -550,8 +551,7 @@ Diese Kriterien gelten für Läufe, die begonnen haben, nachdem die Transient-Re
 - [ ] Für jeden von dieser Orchestrierung produzierten Pull Request trägt der
   Feature-Branch sowohl den Erzeugungs- als auch den Entfernungs-Commit des Artefakts,
   der Entfernungs-Commit liegt nach dem letzten im Artefakt festgehaltenen
-  Spezialisten-Ergebnis, und `.gitignore` trägt keinen
-  `.audits/issue-orchestrate/`-Eintrag
+  Spezialisten-Ergebnis, und `git check-ignore -q .audits/issue-orchestrate/0/analysis.md` endet auf dem Default-Branch mit Exit 1, sodass kein `.gitignore`-Eintrag (auch kein breites `/.audits/`) den Artefaktpfad ignoriert
 - [ ] Für jeden gemergten Orchestrierungslauf ist das Requirement-Artefakt unter
   `project/requirements/<slug>.md`, das die Dekomposition grundiert hat, nach dem
   Merge weiterhin auf dem Default-Branch vorhanden

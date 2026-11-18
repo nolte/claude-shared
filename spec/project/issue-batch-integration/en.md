@@ -63,6 +63,7 @@ Readers: operators running a grouped backlog pass, skill and agent authors imple
 - **MUST**, in Mode B (§C), create each member sub-branch off the integration branch tip in its own worktree, since a branch is checked out at most once per `parallel-working-copies` §Branch-to-worktree mapping, and merge it back into the integration branch **without opening a pull request**
 - **MUST NOT** open a pull request whose base is the integration branch. `pull-request-workflow` §PR preconditions requires every pull request to target `develop`, and the bundle pull request is the group's single review surface. The accepted trade-off is that a member gets no review gate of its own; §"Open Questions" records it
 - **MUST** retire every member sub-branch and its worktree once it's merged into the integration branch, per `parallel-working-copies` §Lifecycle: Retire
+- **MUST**, when the repository has no `worktree:add` Taskfile target, create the integration branch's worktree with the fallback of `parallel-working-copies` §Lifecycle: Create and record it in the group artifact
 
 ### C. The mode gate
 
@@ -91,6 +92,7 @@ Readers: operators running a grouped backlog pass, skill and agent authors imple
 - **MUST** obtain operator approval of the artifact before the first member is implemented; implementing against an unapproved group plan is forbidden
 - **MUST** treat the admission of a further member after the plan is approved as a structural regression, not an amendment: the plan returns to Plan, the matrix is recomputed, and the operator re-approves
 - **MUST** treat the artifact as run-scoped exactly as `issue-orchestration` §"Pre-analysis artifact lifecycle" treats its own: committed on the integration branch, removed by a fix-forward `git rm` once every member is implemented and the gate is green, never reaching the default branch, and never concealed behind a `.gitignore` entry. Where a delegated member run writes its own `.audits/issue-orchestrate/<n>/analysis.md` on the same branch, both are removed before the bundle merges
+- **MUST** run `git check-ignore -q .audits/issue-batch-integration/<group-id>/analysis.md` before writing the artifact and, when the path is ignored, stop and report the matching `.gitignore` entry as drift for `project-structure-apply`, per `issue-orchestration` §"Pre-analysis artifact lifecycle (transient)"; it **MUST NOT** force-add the artifact or continue with it untracked, and a repository that adopts this process **MUST NOT** ignore `.audits/issue-batch-integration/`. Entries for dated audit records stay permitted
 - **MUST NOT** restate a member's own decomposition in the group artifact; the group artifact records the group layer, and the member's work packages stay with the delegated run
 
 ### E. Structural findings and process feedback
@@ -206,6 +208,7 @@ The partition is the step before §A: it takes the whole open backlog of one rep
 - [ ] Every group a partition handed on was processed under the same group id the partition assigned, and the group artifact records which provisional values (cluster kind, branch type) the group's own analysis confirmed or overturned
 - [ ] No partition artifact path appears in any branch's tree (`git log --all --diff-filter=A --name-only -- .audits/issue-backlog-partition/` is empty) and `.gitignore` carries no `.audits/issue-backlog-partition/` entry
 - [ ] The partition checkpoint under `.resume/` records the operator approval as one decision covering the whole partition, and a resumed survey re-fetched no issue whose record the checkpoint already carried
+- [ ] On the default branch, `git check-ignore -q .audits/issue-batch-integration/probe/analysis.md` exits 1
 
 ## Open Questions
 

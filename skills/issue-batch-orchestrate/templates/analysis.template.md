@@ -34,6 +34,9 @@ independent}}
 **Reason:** {{Mode B requires a member likely to need removal: uncertain acceptance, an
 external dependency, or an outstanding review that could reject it}}
 
+**Working copy:** {{worktree path; detect={{exit code or no-taskfile}}; created via
+`task worktree:add` / via the `git worktree add -b` fallback}}
+
 ## Structural finding
 
 **Cluster shape:** {{symptom cluster / class cluster / neither — none found}}

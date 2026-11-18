@@ -158,6 +158,11 @@ member table, the cross-member dependency ordering, the shared touch surface, th
 decision, the completeness matrix, the risks, the out-of-scope boundary, and the open
 questions. It must read on its own, without the conversation that produced it.
 
+Before writing it, run `git check-ignore -q` on that path. Exit 0 means the repository
+ignores it: stop, and report the entry `git check-ignore -v` names, routed by its source
+per `issue-orchestrate`'s `references/working-copy.md` §2. Never force-add the artifact
+or leave it untracked.
+
 Read `references/completeness-matrix.md` before filling the matrix — it carries how to
 derive the column set from the repository under change, the cell contract, and why an
 empty cell is an incomplete plan rather than a tacit "nothing to do".
@@ -182,7 +187,9 @@ opened.
 
 Create one dedicated **integration branch** off `origin/develop` via
 `task worktree:add -- <type>/<group-id> <slug>`, where `<type>` is the
-Conventional-Commits type of the group's dominant change. Never default to `exp/` for a
+Conventional-Commits type of the group's dominant change. Without that target, use the
+`git worktree add -b` fallback in `issue-orchestrate`'s `references/working-copy.md` and
+record it in the artifact. Never default to `exp/` for a
 group carrying shipped work: `branching-model` excludes `exp` titles from user-facing
 release notes. The primary checkout stays on `develop`. Commit the approved group artifact on the
 integration branch before the first dispatch, so every delegated run resolves
@@ -294,7 +301,7 @@ a member whose result is already recorded in the artifact.
 - **Never** leave a matrix cell empty. Every cell holds a named change with its proving
   check, or an explicit `not applicable` with a reason.
 - **Never** let a group artifact reach the default branch; remove it fix-forward before
-  the bundle merges, and never hide it in `.gitignore`.
+  the bundle merges, and never hide it in `.gitignore` or force-add it past an entry.
 - **Never** close a member issue without explicit operator confirmation, and never close
   one that was dropped from the group.
 - **Never** merge the bundle (`pull-request-merge` owns that), pass `--admin`, or mask a

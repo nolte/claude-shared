@@ -63,6 +63,7 @@ Leserschaft: Operatoren, die einen gruppierten Backlog-Durchlauf fahren, Skill- 
 - **MUSS [MUST]** in Modus B (§C) jeden Mitglieds-Sub-Branch vom Kopf des Integrationsbranches in einem eigenen Worktree anlegen — ein Branch ist gemäß `parallel-working-copies` §"Branch-zu-Worktree-Zuordnung" höchstens einmal ausgecheckt — und ihn **ohne Pull Request** in den Integrationsbranch zurückmergen
 - **MUSS NICHT [MUST NOT]** einen Pull Request eröffnen, dessen Basis der Integrationsbranch ist. `pull-request-workflow` §"PR-Rahmenbedingungen" verlangt, dass jeder Pull Request auf `develop` zielt, und der Bündel-Pull-Request ist die einzige Review-Oberfläche der Gruppe. Der akzeptierte Preis ist, dass ein Mitglied kein eigenes Review-Gate erhält; §"Offene Fragen" hält das fest
 - **MUSS [MUST]** jeden Mitglieds-Sub-Branch samt Worktree zurückbauen, sobald er in den Integrationsbranch gemergt ist, gemäß `parallel-working-copies` §"Lebenszyklus: Stilllegen"
+- **MUSS [MUST]**, wenn das Repository kein `worktree:add`-Taskfile-Target hat, den Worktree des Integrationsbranches mit dem Fallback aus `parallel-working-copies` §Lebenszyklus: Anlegen anlegen und ihn im Gruppen-Artefakt festhalten
 
 ### C. Das Modus-Gate
 
@@ -91,6 +92,7 @@ Leserschaft: Operatoren, die einen gruppierten Backlog-Durchlauf fahren, Skill- 
 - **MUSS [MUST]** die Freigabe des Artefakts durch den Operator einholen, bevor das erste Mitglied umgesetzt wird; die Umsetzung gegen einen nicht freigegebenen Gruppenplan ist verboten
 - **MUSS [MUST]** die Aufnahme eines weiteren Mitglieds nach der Plan-Freigabe als strukturelle Regression behandeln, nicht als Nachtrag: Der Plan kehrt zu Plan zurück, die Matrix wird neu berechnet, und der Operator gibt erneut frei
 - **MUSS [MUST]** das Artefakt genauso lauf-gebunden behandeln, wie `issue-orchestration` §"Lebenszyklus des Voranalyse-Artefakts (transient)" es mit seinem eigenen hält: auf dem Integrationsbranch committet, per fix-forward `git rm` entfernt, sobald jedes Mitglied umgesetzt und das Gate grün ist, niemals auf dem Default-Branch und niemals hinter einem `.gitignore`-Eintrag verborgen. Schreibt ein delegierter Mitgliedslauf sein eigenes `.audits/issue-orchestrate/<n>/analysis.md` auf denselben Branch, werden beide vor dem Merge des Bündels entfernt
+- **MUSS [MUST]** vor dem Schreiben des Artefakts `git check-ignore -q .audits/issue-batch-integration/<group-id>/analysis.md` ausführen und, wenn der Pfad ignoriert ist, anhalten und den passenden `.gitignore`-Eintrag als Drift für `project-structure-apply` melden, gemäß `issue-orchestration` §"Lebenszyklus des Voranalyse-Artefakts (transient)"; er **MUSS NICHT [MUST NOT]** das Artefakt erzwungen hinzufügen oder mit einem untrackten Artefakt weiterarbeiten, und ein Repository, das diesen Prozess übernimmt, **MUSS NICHT [MUST NOT]** `.audits/issue-batch-integration/` ignorieren. Einträge für datierte Audit-Aufzeichnungen bleiben erlaubt
 - **MUSS NICHT [MUST NOT]** die Zerlegung eines Mitglieds im Gruppen-Artefakt wiederholen; das Gruppen-Artefakt hält die Gruppen-Schicht fest, und die Work-Packages des Mitglieds bleiben beim delegierten Lauf
 
 ### E. Strukturbefunde und Prozess-Rückkopplung
@@ -206,6 +208,7 @@ Die Zerlegung ist der Schritt vor §A: Sie nimmt den gesamten offenen Backlog ei
 - [ ] Jede Gruppe, die eine Zerlegung übergeben hat, wurde unter derselben Gruppen-Id verarbeitet, die die Zerlegung vergab, und das Gruppen-Artefakt hält fest, welche vorläufigen Werte (Cluster-Art, Branch-Typ) die eigene Analyse der Gruppe bestätigte oder umstieß
 - [ ] Kein Pfad eines Zerlegungs-Artefakts erscheint im Baum irgendeines Branches (`git log --all --diff-filter=A --name-only -- .audits/issue-backlog-partition/` ist leer), und `.gitignore` trägt keinen Eintrag `.audits/issue-backlog-partition/`
 - [ ] Der Zerlegungs-Checkpoint unter `.resume/` hält die Operator-Freigabe als eine Entscheidung fest, die die gesamte Zerlegung deckt, und eine wiederaufgenommene Vermessung hat kein Issue neu geladen, dessen Datensatz der Checkpoint bereits trug
+- [ ] Auf dem Default-Branch endet `git check-ignore -q .audits/issue-batch-integration/probe/analysis.md` mit Exit 1
 
 ## Offene Fragen
 
