@@ -120,8 +120,6 @@ Die Kern-D4-Regel gilt: Es geht um **semantische** Duplizierung, nicht um textue
 
 ### F6 — Frontend-Performance im Quelltext (erweitert D7)
 
-Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `vercel-react-best-practices` vollständig ausgeführt, sind Request-Wasserfälle, Barrel-Imports und fehlende Route-Splits an diesen Skill delegiert; hat es `web-design-guidelines` vollständig ausgeführt, ist vollständiges Rendern großer Collections an jenen Skill delegiert; das bedingte Memoization-Urteil und teure Ableitungen bleiben hier primär. Jede Regel, deren abdeckender Skill nicht vollständig gelaufen ist, gilt als Fallback.
-
 Diese Dimension ist auf das begrenzt, was der Quelltext zeigt. Gemessene Budgets werden an `spec/frontend/webview-ui-optimization/` geroutet.
 
 - **MUSS** Request-Wasserfälle und Request-Fan-out je Eintrag melden, die die Datenschicht bündeln oder der Endpunkt bedienen sollte
@@ -142,8 +140,6 @@ Diese Dimension ist auf das begrenzt, was der Quelltext zeigt. Gemessene Budgets
 - **DARF NICHT** beurteilen, ob ein gewählter Wert der *richtige* Wert ist: Das ist Design. Diese Dimension besitzt allein die Frage, ob der Code das System umgeht, das das Projekt bereits hat
 
 ### F8 — Im Code sichtbare Accessibility-Defekte
-
-Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `web-design-guidelines` vollständig ausgeführt, sind nicht-semantische Controls, fehlende Labels und zugängliche Namen, fehlender Alternativtext, entfernte Fokusindikatoren ohne Ersatz und fehlende Live-Regionen an diesen Skill delegiert; Rollen-Versprechen ohne Interaktionsverhalten, Fokusbehandlung über Dialoge und Routen sowie Label-Zuordnung über Component-Grenzen bleiben hier primär. Jede Regel, deren abdeckender Skill nicht vollständig gelaufen ist, gilt als Fallback.
 
 Begrenzt auf das, was ein Reviewer aus dem Quelltext entscheidet; die Konformitätsfrage wird weitergeroutet.
 
@@ -169,8 +165,6 @@ Die Kern-D10-Regel gilt: Diese Findings werden **gemeldet und geroutet**, nie hi
 - **DARF** hier **KEINE** Content Security Policy, keine HTTP-Security-Header und kein Authentifizierungsdesign auditieren: Das wird an `spec/frontend/webview-ui-optimization/` §„Security und Sandboxing" und `spec/project/code-security-audit/` geroutet
 
 ### F10 — Nutzersichtbarer Text und Locale-Behandlung im Code
-
-Delegation (gemäß `spec/frontend/third-party-audit-skills/` §F): Hat `frontend-audit` im selben Audit `web-design-guidelines` vollständig ausgeführt, ist manuelle Datums-, Zahlen- und Währungsformatierung an diesen Skill delegiert; hartkodierte Strings, zusammengesetzte Sätze, Plural-Behandlung und dynamische Keys bleiben hier primär. Jede Regel, deren abdeckender Skill nicht vollständig gelaufen ist, gilt als Fallback.
 
 - **MUSS** nutzersichtbare Zeichenketten melden, die in Components hartkodiert sind, wenn das Projekt eine Internationalisierungsschicht mitliefert — einschließlich der Oberflächen, die ein naiver Scan verfehlt: zugängliche Namen, Alternativtexte, Tooltips und Dokumenttitel
 - **MUSS** Sätze melden, die aus konkatenierten oder interpolierten Fragmenten zusammengesetzt sind und von einer Übersetzerin weder umgestellt noch flektiert werden können, sowie mengenabhängigen Text ohne Pluralbehandlung
@@ -288,7 +282,6 @@ Dies ist eine tragende Grenze, kein höflicher Hinweis. Beide Reviews blicken au
 - [R11] Recherche-Methodik und Quellenschwellen hinter den Regeln dieser Spec: `spec/claude/research-triangulate/`
 - [R12] Evidenznotizen mit den Quellen je Dimension: `spec/frontend/source-code-review/research/`
 - [R13] Falsifizierbarkeits-Taxonomie und Detektionskriterien für F11-Findings zu Tests, die nicht fehlschlagen können: `spec/project/test-falsifiability/`
-- [R14] Drittanbieter-Skills im ausführlichen Frontend-Audit und die Delegation von F6-, F8- und F10-Regeln: `spec/frontend/third-party-audit-skills/`
 
 ## Offene Fragen
 

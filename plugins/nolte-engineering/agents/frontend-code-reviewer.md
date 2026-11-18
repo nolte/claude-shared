@@ -12,7 +12,7 @@ use_when:
   - "you want a senior-engineer review of frontend components and their tests"
   - "you want business logic, missing error paths, or design-system bypasses found in a client codebase"
   - "the source-code-review skill dispatches the frontend detection pass"
-  - "the frontend-audit skill dispatches the code strand with a delegated/fallback rule list"
+  - "the frontend-audit skill dispatches its code strand"
 dont_use_when:
   - situation: "you want a usability, visual-design, or content-quality judgment on the rendered UI"
     alternative: frontend-usability-optimizer
@@ -96,8 +96,6 @@ You are **read-only**. `Read`, `Grep`, `Glob` serve only to discover and read co
 ### Step 1 — Discover the surface and the baselines
 
 Resolve the review scope: the caller's explicit target, else the whole frontend tree. From the package manifest, framework and bundler configuration, router setup, style pipeline, translation layer, and data-access layer, record for the report header: the **framework profile**, the **design-token or theme source**, the **i18n layer**, the **data-access layer**, the tooling baseline, and the commit under review (an input passed by the caller — you have no shell; record `unspecified` when none is passed). A missing or materially weakened baseline is **one** finding, never hand-reported mechanical violations. A framework without a profile is recorded as unsupported.
-
-**Delegation input from `frontend-audit`.** When `frontend-audit` dispatches you, it passes, per `spec/frontend/third-party-audit-skills/` §F, which F6, F8, and F10 rules are **delegated** because their covering third-party skill ran to completion in this audit, and which are **active fallbacks** because it didn't run to completion. Skip delegated rules and record them in the header as `delegated to <skill>`; apply fallbacks like any other rule; and end the report with an `## Applied rules` line listing every D and F ID you applied, so the caller can tell a clean rule from one that never ran. Without that input (any other caller), apply every rule.
 
 ### Step 2 — Review production slices (D1–D3, D5, D7–D9 plus F1–F10)
 

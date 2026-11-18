@@ -1,7 +1,7 @@
-# Example 02 — React app, `react-best-practices` missing
+# Example 02 — React app, `vercel-react-best-practices` missing
 
-A missing applicable skill becomes a coverage gap and reactivates the
-own rules it covers.
+A missing applicable skill becomes a coverage gap; the own reviewers
+run unchanged.
 
 ## Input prompt
 
@@ -15,13 +15,12 @@ given.
 
 ## Expected behaviour
 
-1. `react-best-practices` reported `missing`; the report lists a
+1. `vercel-react-best-practices` reported `missing`; the report lists a
    coverage gap with the pinned command
    `npx skills add vercel-labs/agent-skills@<ref> --skill react-best-practices -a claude-code`.
 2. The skill runs no install command itself.
-3. `web-design-guidelines` runs to completion, so full renders of
-   large collections stay delegated to it; `frontend-code-reviewer` is
-   dispatched with F6's waterfall, barrel-import, and route-split rules
-   as active fallbacks, and the header lists them.
+3. `frontend-code-reviewer` runs its full rule set, F6 included; its
+   findings are the same as with the skill installed.
 4. The rendered strand is a coverage gap ("no application URL
-   supplied"); no app is started.
+   supplied"); no app is started, and older run directories are removed
+   when the new report is written.

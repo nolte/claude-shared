@@ -78,8 +78,6 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 #### Charts and long lists
 
-Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `web-design-guidelines` to completion in the same audit, the list-virtualisation rule below is delegated to that skill; Recharts lazy-loading stays primary here. The `webview-ui-optimize` rule table still judges every rule below; delegation only affects the `frontend-audit` run.
-
 - **SHOULD** virtualise lists/grids that can mount more than ≈100 simultaneously rendered rows (`react-window` `FixedSizeList`/`VariableSizeList` or MUI X virtualised modes) with a small `overscanCount` (≈ 5).
 - **SHOULD** lazy-load Recharts charts via `React.lazy` + Suspense; **SHOULD** gate them on `IntersectionObserver` for off-screen widgets.
 
@@ -145,8 +143,6 @@ Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-a
 - **MUST** apply Subresource Integrity (`integrity` + `crossorigin="anonymous"`) to every `<script>` and `<link rel="stylesheet">` from a foreign origin; the default posture is to self-host via Vite so SRI is moot.
 
 ### Accessibility (WCAG 2.2 Level AA)
-
-Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `web-design-guidelines` to completion in the same audit, the generic HTML and CSS rules in this domain (icon-button names, `div` click handlers, `outline: none` without replacement) are delegated to that skill; every MUI, react-hook-form, notistack, and Recharts rule and every WCAG threshold stays primary here. The `webview-ui-optimize` rule table still judges every rule below; delegation only affects the `frontend-audit` run.
 
 #### Document structure
 
@@ -245,8 +241,6 @@ Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-a
 - **MUST** author keys as stable, lowercase, dotted identifiers (`plants.list.empty`); text-as-key is forbidden because every English edit breaks every translation.
 
 ### UX and native feel
-
-Delegation (per `spec/frontend/third-party-audit-skills/` §F): when `frontend-audit` ran `web-design-guidelines` to completion in the same audit, the generic CSS rules in this domain (`prefers-reduced-motion`, safe-area insets, `transition: all`) are delegated to that skill; every MUI, React Router, react-hook-form, and notistack rule stays primary here. The `webview-ui-optimize` rule table still judges every rule below; delegation only affects the `frontend-audit` run.
 
 #### Loading and feedback hierarchy
 

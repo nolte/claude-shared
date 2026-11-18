@@ -1,7 +1,7 @@
 # Example 01 — React app, every skill installed, URL supplied
 
 The happy path: all four third-party skills apply and are available, so
-every strand runs and the delegated own rules stay off.
+every strand runs beside the own reviewers and overlap is merged.
 
 ## Input prompt
 
@@ -22,16 +22,21 @@ prints a version and a browser is installed.
 
 ## Expected behaviour
 
-1. Stack detected as React, client-side rendered; the server-side
-   categories of `react-best-practices` are `not applicable`.
+1. Stack detected as React, client-side rendered; findings in the
+   server-side categories of `vercel-react-best-practices` are dropped.
 2. All four skills reported `available` with location and commit or
    version; no coverage gap.
-3. The three third-party skills run first and all complete, so the
-   F6, F8, and F10 rules and the generic webview-ui Accessibility and
-   UX rules are delegated; no fallback, nothing uncovered.
-4. The reviewers and the rendered strand run; `playwright-cli` opens
-   with `--config=.audits/frontend-audit/evidence/<target-slug>/cli.config.json`,
-   so snapshots and screenshots land there, and the session is closed. Rendered evidence
-   is attached to findings, never the sole basis above Info.
-5. The report header records the guidelines fetch time and SHA-256;
-   every finding carries `source`; no third-party finding is Critical.
+3. The third-party skills run, and both own reviewers run their full
+   rule sets alongside them.
+4. `playwright-cli` opens with the `cli.config.json` in the run
+   directory `.audits/frontend-audit/evidence/<target-slug>/<run-id>/`, so
+   snapshots and screenshots land there, and the session is closed.
+   Rendered evidence is attached to findings, never the sole basis
+   above Info.
+5. A missing `alt` attribute that `web-design-guidelines` and
+   `frontend-code-reviewer` (F8) both report at `Gallery.tsx:42` appears
+   once, with both sources and the reviewer's implementation proposal.
+6. The report header records the guidelines fetch time and SHA-256;
+   every finding carries `source`; no finding whose only source is a
+   third-party skill is Critical. Only after the report is written are
+   older run directories of this target removed.
