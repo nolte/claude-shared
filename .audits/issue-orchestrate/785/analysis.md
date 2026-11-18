@@ -99,5 +99,18 @@ none
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| `dependency-audit` routed Renovate config work to `project-structure-apply`, colliding with the new agent | P1 specialist @ 5de7cd07 | fixed directly (dcae99d1) | `grep -n "Renovate configs" plugins/nolte-engineering/skills/dependency-audit/SKILL.md` | — |
+| step 2 "inline the preset" yields duplicate keys that drop the preset's rules | diff review @ 5cf8392d | fixed directly (next commit) | reviewer's scenario: both files set `packageRules` | — |
+| a `config.js` in the directory Renovate runs in is executed as global config | diff review @ 5cf8392d | fixed directly: new precondition | `lib/workers/global/config/parse/file.ts:13` per reviewer | — |
+| capture table asked for a line Renovate doesn't report | diff review @ 5cf8392d | fixed directly | `lib/workers/repository/process/index.ts:313-316` per reviewer | — |
+| "no installs" contradicted the authorisable `npx` runner; `gh api` read-only not stated for `-f`/`-F` | diff review @ 5cf8392d | fixed directly | text reading | — |
+| `project-structure-apply` kept a weaker claim on Renovate config | diff review @ 5cf8392d | fixed directly: `dont_use_when` entry | description grep | — |
+| tag `implementation` means code implementation | diff review @ 5cf8392d | fixed directly: tag dropped | `spec/claude/agent-management/en.md` starter vocabulary | — |
+| `resumable` not declared while two sibling authoring agents declare it | diff review @ 5cf8392d; agent-review Info | not fixed: judgement call, named in the PR | — | — |
+| review plan stays `status: open` with five Info items | diff review @ 5cf8392d | not fixed: closing a plan is a separate commit per `agent-review`; verdict PASS | — | — |
+| `docs/{en,de}/guides/development-lifecycle.md:132` still names `project-structure-apply` for Renovate config | diff review @ 5cf8392d | not fixed: true for the pointer file; named in the PR | — | — |
 
 ## Dispatch log
+
+2026-11-18 P1 dispatched to `nolte-claude-dev:claude-plugin-developer` (draft-and-return) — `agents/renovate-config-author.md` (sha256 847e3a8c…), README row, `dependency-audit` redirect; applied unchanged (dcae99d1). Description 658 chars; `agents/` aggregate 10071 of 10824.
+2026-11-18 P2 `nolte-claude-dev:agent-review` (skill) — plan at `.audits/agent-review/renovate-config-author.md`: 0C/0W/0S/5I, PASS (5cf8392d). Routing lookup: five descriptions mention Renovate (`renovate-config-author`, `backlog-delivery-orchestrate`, `project-structure-apply`, `tech-stack-capture`, `dependency-audit`); only the new agent claims preset and config authoring. Catalog: `python3 scripts/docs/gen_catalog.py` → "wrote 74 skill(s) and 66 agent(s)", page `docs/en/agents/nolte-shared/renovate-config-author.md` generated.
