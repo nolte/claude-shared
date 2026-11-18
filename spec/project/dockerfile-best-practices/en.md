@@ -43,7 +43,7 @@ Beyond labels, the defaults of a naively-written `Dockerfile` are the wrong post
   ```yaml
   - name: Extract metadata
     id: meta
-    uses: docker/metadata-action@v6
+    uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
     env:
       DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
     with:
@@ -55,7 +55,7 @@ Beyond labels, the defaults of a naively-written `Dockerfile` are the wrong post
         org.opencontainers.image.vendor=<vendor>
 
   - name: Build and push
-    uses: docker/build-push-action@v7
+    uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
     with:
       # ...
       labels: ${{ steps.meta.outputs.labels }}
