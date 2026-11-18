@@ -34,7 +34,7 @@ Readers: prompt authors and skill/agent authors targeting FLUX; operators tuning
 - **MUST** record which FLUX variant produced an asset; the `image-generation` tool's sidecar `model` field satisfies this.
 
 ### Prompting (natural language)
-- **MUST** write prompts as natural-language descriptive sentences, not comma-separated SDXL-style tag lists; FLUX's T5-XXL encoder rewards descriptive phrasing (`a sign with green text` over `sign, green`).
+- **MUST** write prompts as natural-language descriptive sentences, not comma-separated SDXL-style tag lists; the FLUX T5-XXL encoder rewards descriptive phrasing (`a sign with green text` over `sign, green`).
 - **SHOULD** follow Black Forest Labs' prompt order—subject, then location/setting, style/medium, camera, lighting, colors, effect, additional elements—leading with the subject (front-loading the most important content).
 - **MUST** render any in-image text by quoting the literal string (for example `"OPEN"`) and keep such strings short; T5-XXL makes FLUX strong at legible text, but only when the literal is quoted.
 - **MUST NOT** use prompt weights (`(word:1.3)`, `++`, emphasis brackets); FLUX ignores them, so express emphasis in words (`with emphasis on the foreground`).

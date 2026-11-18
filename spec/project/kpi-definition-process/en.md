@@ -46,7 +46,7 @@ Readers: teams and repositories that need to determine the meaningful KPIs of th
 
 ### The per-KPI definition contract
 
-- Every defined KPI **MUST** carry all of these fields; a KPI missing any field is **not yet defined**:
+- Every defined KPI **MUST** carry all of these fields; a KPI missing any field **isn't yet defined**:
   - `id`: a stable short identifier (for example `K1`) for cross-reference and traceability
   - `name`: a human-readable name
   - `definition`: a one-sentence plain-language statement of what the KPI measures

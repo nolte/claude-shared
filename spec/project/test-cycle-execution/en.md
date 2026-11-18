@@ -48,7 +48,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 ### Inputs and outputs (the phase-2 contract)
 
 - **MUST** consume, as input, the set of cases from phase 1 (TC-IDs and chosen tiers).
-- **MUST** emit, as output, a **structured, machine-readable result per case**: pass / fail / error / skip, plus failure message and stack trace, timing, coverage data where the tier produces it, and the screenshot/protocol artefacts at the E2E tier—so phase 3 can analyse it without out-of-band knowledge [R13]. Standard formats (for example TAP's `ok`/`not ok` with YAML diagnostics, or JUnit XML) are illustrative.
+- **MUST** emit, as output, a **structured, machine-readable result per case**: pass / fail / error / skip, plus failure message and stack trace, timing, coverage data where the tier produces it, and the screenshot/protocol artefacts at the E2E tier—so phase 3 can analyse it without out-of-band knowledge [R13]. Standard formats (for example the TAP `ok`/`not ok` lines with YAML diagnostics, or JUnit XML) are illustrative.
 
 ### Deterministic and hermetic execution
 
