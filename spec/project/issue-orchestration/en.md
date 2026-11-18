@@ -211,6 +211,7 @@ specialist exists.
   work-package table, the cross-package dependency ordering, the risks, and any open
   questions for the operator; the artifact is run-scoped and removed again before
   the merge, per §Pre-analysis artifact lifecycle
+- **MUST**, when the repository ships a deployable artefact (resolved against `spec/project/release-artifact/` §"Artefact taxonomy"; an OS or appliance image or a Helm chart the taxonomy doesn't name yet counts too), record in the pre-analysis artifact, per work package that changes what an installation runs, the state an installation updated from the previous release is in, whether the update tool's health gate still passes, what a rollback restores and what it can't, and the update or migration check that proves it; where the update path has no health gate (a Claude plugin, a library consumed by version), it records `health gate: none` and names the state surfaces the installed version reads (persisted state, consumer configuration keys, invocation names, artifact paths) with the check proving them compatible; a package that touches none of those surfaces records `not applicable` naming that checklist, and one that can't reach an installation at all (only where the update path has a health gate) records `not applicable` with the reason, and a repository without a deployable artefact records that once
 - **MUST** present the pre-analysis artifact for operator approval before any
   dispatch; the artifact is the reviewable hand-off contract, and dispatch on an
   unapproved decomposition is forbidden
@@ -559,6 +560,7 @@ These criteria apply to runs started after the transient pre-analysis rule becam
 - [ ] For every issue a group process supplied with a `requirement_artifact`, the pre-analysis artifact records the coverage check against that artifact, and `requirements-elicit` ran only for an issue the artifact didn't cover
 - [ ] For every run started under a group authorisation, the checkpoint carries the `authorised_by` reference, and no run asked for a confirmation that reference covers
 - [ ] For every orchestrated issue that asserts a cause, the pre-analysis artifact records the observation that verified or refuted it before the first tracked change, and a refuted cause is recorded with the measurement that refuted it. Applied to the five cases in `nolte/claude-shared#641` (a fixture-size flake, a login gate, a favourites resolver, a favourites error clause, a dependency sweep), the rule fires on each; a rule set that grades them as conformant is wrong
+- [ ] Every pre-analysis artifact in a repository that ships a deployable artefact records, per work package that changes what an installation runs, the upgraded state, the update health gate's result (or `none` with the state surfaces checked), what a rollback restores, and an update, migration or compatibility check against the previous release, or `not applicable` with the reason
 
 ## Open Questions
 - §Routing now defines *bounded* operationally (one goal outcome, one feature branch

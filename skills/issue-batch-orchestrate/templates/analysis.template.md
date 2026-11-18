@@ -63,11 +63,16 @@ and its `U_gate`, or "not applicable — symptom cluster, per-member elicitation
 
 One row per member, one column per artifact class this repository ships. Every cell
 holds a named change plus its proving check, or `not applicable` with a reason. No cell
-is empty.
+is empty. When the repository ships a deployable artefact, the last column is Existing
+installations / upgrade / rollback; otherwise replace it with the one line below the
+table.
 
-| Member | {{class}} | {{class}} | {{class}} |
-|---|---|---|---|
-| #{{n}} | {{change; check: `{{command}}`}} | {{not applicable — reason}} | {{change; check: `{{command}}`}} |
+| Member | {{class}} | {{class}} | {{class}} | Existing installations / upgrade / rollback |
+|---|---|---|---|---|
+| #{{n}} | {{change; check: `{{command}}`}} | {{not applicable — reason}} | {{change; check: `{{command}}`}} | {{upgraded state; health gate passes or fails, or `health gate: none (<artefact kind>)` plus the state surfaces read; what a rollback restores and what it can't; check: `{{update boot, migration, or compatibility test}}` — or not applicable — reason}} |
+
+{{Only without a deployable artefact: "Existing installations / upgrade / rollback: not
+applicable — the repository ships no deployable artefact ({{project type}})."}}
 
 ## Risks
 

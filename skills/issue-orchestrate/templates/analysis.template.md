@@ -65,6 +65,28 @@ created: ""
 - **Depends on**: <!-- P<j>, ... | none -->
 -->
 
+## Existing installations / upgrade / rollback
+
+<!-- Required when the repository ships a deployable artefact: resolve the detected
+     project type against spec/project/release-artifact/ §"Artefact taxonomy"; an OS or
+     appliance image or a Helm chart the taxonomy doesn't name yet counts too. One row
+     per package that changes what an installation runs. Prove it with an update test
+     from the previous release, never a fresh install, which carries none of its state.
+     No update health gate (a Claude plugin, a library or package consumed by version):
+     write "health gate: none (<artefact kind>)" and name the state surfaces the installed
+     version reads — persisted state (checkpoint schemas under .resume/<skill>/), consumer
+     configuration keys or files, invocation names (skill/agent names, CLI flags),
+     artifact paths — with a check proving compatibility (resume a previous-release
+     checkpoint, a `name:` diff against the previous release tag, a config-parse test).
+| Package | Upgraded state | Update health gate | What a rollback restores and what it can't | Proving check |
+|---|---|---|---|---|
+| P<k> | <state of an installation updated from the previous release> | <gate name: passes / fails, or none (<artefact kind>) + surfaces read> | <restored state; what it can't restore> | <update boot / migration / compatibility test command> |
+     A package that can't reach an installation: "P<k>: not applicable — <reason>".
+     Without a health gate the only valid reason is "P<k>: not applicable — touches no
+     persisted state, consumer configuration key, invocation name or artifact path".
+     No deployable artefact: replace the table with
+     "not applicable — the repository ships no deployable artefact (<project type>)". -->
+
 ## Dependency ordering
 
 <!-- The DAG dispatch order, e.g. P1 → P2 → P4 ; P3 (independent). -->
