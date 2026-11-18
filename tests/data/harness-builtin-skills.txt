@@ -1,0 +1,30 @@
+# Skills the Claude Code harness provides itself, one name per line.
+# tests/test_delegation_targets.py accepts a reference to one of these although the
+# repository doesn't ship it.
+#
+# Refresh: start a Claude Code session in this repository with no plugin loaded
+# (`claude`, without `--plugin-dir` and without marketplace plugins enabled), read the
+# skill listing the session announces, and replace the names below with it. Skills that a
+# plugin contributes (`<plugin>:<name>`) never belong here. A name that disappears from
+# the harness is removed here, and the test then reports every reference that still
+# delegates to it.
+#
+# Last refreshed: 2026-11-18, from the skill listing of a Claude Code session.
+artifact-capabilities
+artifact-design
+artifact-diagramming
+claude-api
+claude-in-chrome
+code-review
+dataviz
+fewer-permission-prompts
+init
+keybindings-help
+loop
+plugin-authoring
+run
+schedule
+security-review
+simplify
+update-config
+workflow-authoring
