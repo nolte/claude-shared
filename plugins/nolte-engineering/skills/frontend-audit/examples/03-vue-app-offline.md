@@ -10,7 +10,7 @@ fetch never falls back to a remembered copy.
 ## Input files
 
 `web/package.json` depends on `vue` and `vite`; every third-party
-skill is installed. The guidelines URL on `raw.githubusercontent.com`
+skill is installed project-scoped and passes the lock check. The guidelines URL on `raw.githubusercontent.com`
 is unreachable from the audit host.
 
 ## Expected behaviour

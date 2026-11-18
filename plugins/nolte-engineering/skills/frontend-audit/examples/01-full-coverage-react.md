@@ -25,7 +25,10 @@ prints a version and a browser is installed.
 1. Stack detected as React, client-side rendered; findings in the
    server-side categories of `vercel-react-best-practices` are dropped.
 2. All four skills reported `available` with location and commit or
-   version; no coverage gap.
+   version; the two Vercel skills pass the lock check and the
+   `frontend-design` plugin is recorded with its plugin version, so the
+   plan asks for no extra confirmation and the header carries no setup
+   Warning; no coverage gap.
 3. The third-party skills run, and both own reviewers run their full
    rule sets alongside them.
 4. `playwright-cli` opens with the `cli.config.json` in the run
@@ -36,7 +39,9 @@ prints a version and a browser is installed.
 5. A missing `alt` attribute that `web-design-guidelines` and
    `frontend-code-reviewer` (F8) both report at `Gallery.tsx:42` appears
    once, with both sources and the reviewer's implementation proposal.
-6. The report header records the guidelines fetch time and SHA-256;
+6. The report header records per skill the lock check result, the
+   `frontend-design` plugin version, and the guidelines fetch time and
+   SHA-256;
    every finding carries `source`; no finding whose only source is a
    third-party skill is Critical. Only after the report is written are
    older run directories of this target removed.

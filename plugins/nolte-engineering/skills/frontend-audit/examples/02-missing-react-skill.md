@@ -18,6 +18,9 @@ given.
 1. `vercel-react-best-practices` reported `missing`; the report lists a
    coverage gap with the pinned command
    `npx skills add vercel-labs/agent-skills@<ref> --skill react-best-practices -a claude-code`.
+   `web-design-guidelines` passes the lock check and the
+   `frontend-design` plugin is recorded with its plugin version, so the
+   header carries no setup Warning.
 2. The skill runs no install command itself.
 3. `frontend-code-reviewer` runs its full rule set, F6 included; its
    findings are the same as with the skill installed.
