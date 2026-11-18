@@ -28,7 +28,7 @@ is improvised: requirements and code land in the same pull request, the requirem
 never exist as an independently reviewable artefact, and the hand-off from "what we
 agreed to build" to "who builds it" is informal.
 
-This spec names that split and prescribes its flow. It does **not** make separation
+This spec names that split and prescribes its flow. It **doesn't** make separation
 mandatory: a contributor who wants to elicit and implement together stays on the
 integrated `issue-orchestration` path. The mode is a tool a contributor **MAY** reach
 for when they want the requirements to be a merged artefact before implementation
@@ -55,7 +55,7 @@ starts.
 ## Non-Goals
 
 - **Making separation mandatory.** This spec never forces the split. It says "*this*
-  is how you separate cleanly when you choose to", not "you *must* always separate".
+  is how you separate cleanly when you choose to," not "you *must* always separate."
   The integrated path (`issue-orchestration`) remains fully valid.
 - **Redefining requirements elicitation.** `spec/project/requirements-elicitation/`
   remains authoritative for *how* requirements are elicited and for the `U_gate` /

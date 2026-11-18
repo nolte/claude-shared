@@ -43,7 +43,7 @@ The nolte portfolio is built largely from hobby-scale projects. Sprint cadence, 
 ### `roadmap.md` shape and per-item schema
 
 - **MUST** structure the roadmap as a flat ordered list (top-to-bottom is highest-to-lowest priority) of roadmap items. Items **MAY** be grouped under level-2 phase headings (for example `## Phase 1 — Foundations`) when phases help reading; phases are optional and carry no schema beyond the heading text.
-- **MUST** represent every roadmap item as the following three-part shape, in this order: (a) a level-3 markdown heading naming the item (typically a `###` heading whose text reads `<id>` followed by an em-dash and the `<title>`, as illustrated in the concrete-shape example below); (b) immediately followed by a fenced YAML code block (` ```yaml … ``` `) carrying the schema fields below, in the declared order; (c) immediately followed by the free-text body whose required depth is gated by `detail` (see below). The heading-plus-YAML-block pair identifies the item to consuming skills; the body is for human reading. A standalone document-level YAML frontmatter (`---` at the top of `roadmap.md`) is **not** how items are represented; each item carries its own inline YAML code block.
+- **MUST** represent every roadmap item as the following three-part shape, in this order: (a) a level-3 markdown heading naming the item (typically a `###` heading whose text reads `<id>` followed by an em-dash and the `<title>`, as illustrated in the concrete-shape example below); (b) immediately followed by a fenced YAML code block (` ```yaml … ``` `) carrying the schema fields below, in the declared order; (c) immediately followed by the free-text body whose required depth is gated by `detail` (see below). The heading-plus-YAML-block pair identifies the item to consuming skills; the body is for human reading. A standalone document-level YAML frontmatter (`---` at the top of `roadmap.md`) **isn't** how items are represented; each item carries its own inline YAML code block.
 - **MUST** carry the following fields in the per-item YAML block, in this order:
   - `id` (string, required): pattern `R-<n>`, monotonically assigned, never reused;
   - `title` (string, required): one-line summary in the project's primary language;
@@ -87,7 +87,7 @@ End users authenticate via the new SSO provider in under three steps; the legacy
 
 ### Outcome linkage
 
-- **MUST** reject any roadmap item whose `outcomes` list is empty or references an outcome ID that does not exist in `goals.md`. Consuming skills **MUST** refuse to write such items.
+- **MUST** reject any roadmap item whose `outcomes` list is empty or references an outcome ID that doesn't exist in `goals.md`. Consuming skills **MUST** refuse to write such items.
 - **SHOULD** prefer one or two outcome links per item; long lists are a smell that the item should be split.
 
 ### Sprint and feature linkage
