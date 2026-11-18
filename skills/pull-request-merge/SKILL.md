@@ -23,7 +23,7 @@ resumable: true
 
 # Pull Request Merge
 
-Promotes an open draft pull request (typically the one opened by `pull-request-create`) to a merged state on `develop`. This skill is the counterpart to `pull-request-create`: that skill opens the PR; this skill lands it. It honors `spec/project/pull-request-workflow/<canonical_language>.md`, `spec/project/branching-model/<canonical_language>.md`, and `spec/project/workflow-health/<canonical_language>.md` end-to-end: `enforce_admins: true` is respected, `--squash` is the only merge strategy, and failing required checks route to workflow-health triage rather than to a waiver.
+Promotes an open draft pull request (typically the one opened by `pull-request-create`) to a merged state on `develop`. This skill is the counterpart to `pull-request-create`: that skill opens the PR; this skill lands it. It honors `spec/project/pull-request-workflow/<canonical_language>.md`, `spec/project/branching-model/<canonical_language>.md`, and `spec/project/workflow-health/<canonical_language>.md` end-to-end; the Hard rules carry its invariants.
 
 ## Why this is a skill, not an agent
 
@@ -61,6 +61,8 @@ Run in parallel:
 **Tooling (optional GitHub MCP):** prefer `github:pull_request_read` for the PR-state reads and `github:list_pull_requests` / `github:list_branches` for the sibling-PR and branch-existence checks, falling back to the `gh` commands shown, per `spec/claude/mcp-tool-preference/`. `gh pr checks` (check rollup) and `gh label list` have no MCP tool and stay `gh` (OQ-D); every merge/label/ready/delete write stays `gh`/git. `gh` stays authoritative; output identical.
 
 Confirm the PR is open, draft, targets `develop`, and reports `mergeable: MERGEABLE`. If `mergeable: CONFLICTING`, stop and hand back to the user—conflicts are resolved in the working tree, not by this skill.
+
+Then check `develop`'s health per `references/develop-health.md` (latest `develop` run of every workflow, required or not): a red one stops here and goes to `workflow-health-triage` unless the checkpoint records an operator override with the run id and reason.
 
 ### 2. Review the real diff
 
@@ -102,8 +104,6 @@ Apply the repository label `automerge` so that the `automerge.yaml` workflow (ba
 ```
 gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=automerge"
 ```
-
-(`gh pr edit <number> --add-label automerge` is equivalent on most repositories, but sometimes fails with a deprecated-Projects GraphQL warning where Projects Classic is still enabled; the REST call avoids that noise.)
 
 - The `automerge` label must exist in the repository (collected via `gh label list` in step 1) and the PR must already be non-draft (step 5). Applying the label on a red or pending head commit is a spec violation—re-verify checks in step 4 before this step.
 - **Fallback (MAY path)**: if the repository doesn't ship the `automerge.yaml` workflow or lacks the `automerge` label, fall back to GitHub native automerge and report the missing automation to the user as a portfolio gap to close via `.github/settings.yml`:
@@ -157,7 +157,7 @@ Finally, surface what still holds the slot (`gh pr list --state open --base deve
 
 ## Wait mode
 
-The skill is single-shot by default: when step 4 finds pending checks or step 7a finds the PR still `OPEN`, the skill reports and stops; the user re-invokes once GitHub is in the next state. **Wait mode** is an opt-in that lets the skill wait for state transitions inside a single invocation, bounded by hard caps and a visible status line per round. Read `references/wait-mode.md` when the user opts in via `--wait` or an unambiguous "wait until X" instruction in the prompt — it covers activation, every cap with its rationale, the step 4 vs. step 7a pattern, and the prompt-cache trade-off.
+The skill is single-shot by default: when step 4 finds pending checks or step 7a finds the PR still `OPEN`, the skill reports and stops; the user re-invokes once GitHub is in the next state. **Wait mode** is an opt-in to wait inside one invocation, bounded by hard caps and a visible status line per round. Read `references/wait-mode.md` when the user opts in via `--wait` or an unambiguous "wait until X" instruction in the prompt — it covers activation, every cap with its rationale, the step 4 vs. step 7a pattern, and the prompt-cache trade-off.
 
 ## Examples
 
@@ -182,6 +182,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** create a new GitHub label from this skill. Label candidates that don't exist in the repository are reported as a gap, not silently added.
 - **Never** skip the step 2 review of the real worktree diff, and never accept a clean result over an empty diff. A final review is the cheapest pre-merge gate; only an explicit user override bypasses it.
 - **Never** let a red check on the head commit pass silently because it isn't required: classify it via `workflow-health-triage`, or show it red on `develop` too, before step 5.
+- **Never** continue past a red `develop` run (step 1) without a recorded operator override naming it.
 - **Never** rebase or merge `develop` into the feature branch silently to fix a lag. Branch-freshness gaps return control to the user, consistent with `pull-request-create`.
 - **Never** merge two PRs at once. Per the pull-request-workflow spec they merge one at a time; after each merge every remaining open PR lags `develop` and must be rebased onto the new tip (enforced by the Preconditions lag-check) before this skill proceeds, in dependency order where one PR builds on another.
 - **Never** poll, sleep, or loop waiting for checks to complete **unless the user has opted in to wait mode** (see "Wait mode" below). Outside wait mode, report the outstanding state and stop; the user re-invokes the skill when ready. Inside wait mode, polling is permitted but bounded by the documented retry / interval / timeout caps and **never** silently in the background — every wait round produces a visible status line.

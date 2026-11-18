@@ -24,7 +24,7 @@ The single gate asks the operator to approve, in one answer:
 
 ## Never covered
 
-`--admin`; a merge strategy other than squash; waiving a red required check, or re-running one without classification; deleting a remote branch; touching an issue or PR outside the approved partition other than a dependency-bot PR; any action on a foreign PR (it is reported and waited for); cancelling `push`, `schedule`, `workflow_dispatch`, `release`, or `merge_group` runs, runs on `develop` or `main`, or delivery-workflow runs; pushing to `develop` directly; force-pushing a PR branch outside the platform's rebase update.
+`--admin`; a merge strategy other than squash; continuing past a red `develop` run, which needs its own override per `${CLAUDE_PLUGIN_ROOT}/skills/pull-request-merge/references/develop-health.md`; waiving a red required check, or re-running one without classification; deleting a remote branch; touching an issue or PR outside the approved partition other than a dependency-bot PR; any action on a foreign PR (it is reported and waited for); cancelling `push`, `schedule`, `workflow_dispatch`, `release`, or `merge_group` runs, runs on `develop` or `main`, or delivery-workflow runs; pushing to `develop` directly; force-pushing a PR branch outside the platform's rebase update.
 
 ## State file
 
@@ -51,6 +51,6 @@ state:
       blocked_reason: null
 ```
 
-`phase` values this skill writes: `partitioned`, `authorised`, `round-<n>-running`, `round-<n>-done`, `train-head-<pr>`, `awaiting-slot`, `awaiting-ci`, `merged-<pr>`, `ready-to-restart`, `closed`.
+`phase` values this skill writes: `partitioned`, `authorised`, `round-<n>-running`, `round-<n>-done`, `train-head-<pr>`, `awaiting-slot`, `awaiting-ci`, `awaiting-develop`, `merged-<pr>`, `ready-to-restart`, `closed`.
 
 The file holds no secrets and no GitHub facts a later step relies on; lane status is a hint, the live PR state decides.

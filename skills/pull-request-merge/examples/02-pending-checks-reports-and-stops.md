@@ -47,7 +47,8 @@ Repository state assumed by the harness when this prompt fires:
    clean tree, authenticated `gh`, freshness check passes.
 2. **Step 1 inspection runs in parallel.** The skill notes the
    mixed check-bucket result up front: 3 green, 2 pending, 0
-   failed.
+   failed. The develop-health pre-flight finds the latest
+   `develop` run of every workflow green.
 3. **Step 2 reviews the real diff** (`code-review` on the PR
    number plus a read-only agent over the worktree range). No
    security-sensitive paths are touched, so no security lane runs.

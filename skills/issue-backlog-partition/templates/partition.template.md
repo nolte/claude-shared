@@ -86,5 +86,7 @@ a group}}
 | {{group id}} | issue-batch-orchestrate | {{timestamp}} | {{—}} |
 
 An outcome ordered after another one whose pull request hasn't merged yet is logged with
-`waiting-on <id>` in **Handed at** and handed on by a later re-invocation. Every handed-on
-group or single carries `lane: true` and returns `committed-locally`.
+`waiting-on <id>` in **Handed at** and handed on by a later re-invocation; one held back by
+a red `develop` run is logged as `waiting-on develop (run <run id>)`, or with the override's
+run id and reason when the operator overrode it. Every handed-on group or single carries
+`lane: true` and returns `committed-locally`.

@@ -30,7 +30,7 @@ Repository state when the skill is invoked:
 
 ## Expected behaviour
 
-1. **Reproducible-evidence check.** The skill verifies the spec's strict definition of `flake`: same `headSha`, second run returned green, no infra signal in the first run, the failing test's tolerance (2.0s) is suspiciously close to the observed value (2.04s) — a timing-margin classic. The classification is `flake`.
+1. **Reproducible-evidence check.** The skill verifies the spec's strict definition of `flake`: same `headSha`, second run returned green, no infra signal in the first run, the failing test's tolerance (2.0s) is suspiciously close to the observed value (2.04s) — a timing-margin classic. The recurrence check (`gh run list --workflow tests.yml --json conclusion,headSha,databaseId` plus each failed run's `--log-failed`) finds no other run, on `develop` or on a PR, failing with the same assertion message. The classification is `flake`; had the message recurred, the `flake` row would not have matched and the recurrence row would have classified it `defect`.
 2. **Confirm with the user.** `flake` is one of the three high-cost classes (misclassifying a real `defect` as `flake` and re-running into green is exactly the *Gotchas* anti-pattern). The skill quotes the spec's reproducible-evidence rule in German and asks the user to confirm before proceeding.
 3. **No agent dispatch.** Per the SKILL's §3.3 *Recognise the no-fix classifications*, `flake` produces no specialised-agent dispatch by design. The skill **does not** `Glob` `agents/*.md` for a match — there is no fix to delegate. (The runtime-discovery walk is skipped; the no-fix branch is detected before candidate enumeration.)
 4. **Record in the flake registry.** The skill adds a new entry to `FLAKES.md`:
