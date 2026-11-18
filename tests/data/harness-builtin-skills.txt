@@ -4,10 +4,13 @@
 #
 # Refresh: start a Claude Code session in this repository with no plugin loaded
 # (`claude`, without `--plugin-dir` and without marketplace plugins enabled), read the
-# skill listing the session announces, and replace the names below with it. Skills that a
-# plugin contributes (`<plugin>:<name>`) never belong here. A name that disappears from
-# the harness is removed here, and the test then reports every reference that still
-# delegates to it.
+# skill listing the session announces, and replace the names below with it. Keep out
+# everything the harness doesn't ship itself: a skill a plugin contributes
+# (`<plugin>:<name>`), and a user or project skill, which the listing shows without a
+# prefix (anything under `~/.claude/skills/` or `.claude/skills/`). Some built-ins appear
+# only when a feature is enabled, so a name missing from one listing is removed only after
+# checking it is gone from the harness. A name removed here makes the test report every
+# reference that still delegates to it.
 #
 # Last refreshed: 2026-11-18, from the skill listing of a Claude Code session.
 artifact-capabilities

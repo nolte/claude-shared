@@ -19,17 +19,21 @@ NAME = r"/?(?:[a-z0-9][a-z0-9-]*:)?([a-z0-9][a-z0-9-]*)"
 # not checked either.
 FORMS = (
     re.compile(r"""Skill\(\s*skill\s*=\s*["']""" + NAME + r"""["']"""),
-    re.compile(r"\bthe `" + NAME + r"` skill(?![\w-])"),
+    re.compile(r"\b[Tt]he `" + NAME + r"` skill(?![\w-])"),
     re.compile(r"`" + NAME + r"`-Skill(?![\w-])"),
 )
 
 
 def references(text: str) -> list[tuple[int, str]]:
     """Every (line number, skill name) a delegation form names; a plugin prefix is dropped."""
+    return [(lineno, name) for lineno, name, _ in matches(text)]
+
+
+def matches(text: str) -> list[tuple[int, str, int]]:
     hits = []
     for lineno, line in enumerate(text.splitlines(), 1):
-        for form in FORMS:
-            hits.extend((lineno, match.group(1)) for match in form.finditer(line))
+        for index, form in enumerate(FORMS):
+            hits.extend((lineno, match.group(1), index) for match in form.finditer(line))
     return hits
 
 
@@ -40,18 +44,21 @@ def shipped_skills() -> set[str]:
 
 def builtin_skills() -> set[str]:
     lines = BUILTINS_FILE.read_text(encoding="utf-8").splitlines()
-    return {line.strip() for line in lines if line.strip() and not line.startswith("#")}
+    return {line.strip() for line in lines if line.strip() and not line.strip().startswith("#")}
 
 
-def scanned_files() -> list[Path]:
-    roots = [
+def scanned_roots() -> list[Path]:
+    return [
         ROOT / "skills",
         ROOT / "agents",
         ROOT / "spec",
-        *ROOT.glob("plugins/*/skills"),
-        *ROOT.glob("plugins/*/agents"),
+        *sorted(ROOT.glob("plugins/*/skills")),
+        *sorted(ROOT.glob("plugins/*/agents")),
     ]
-    return sorted(path for root in roots for path in root.rglob("*.md"))
+
+
+def scanned_files() -> list[Path]:
+    return sorted(path for root in scanned_roots() for path in root.rglob("*.md"))
 
 
 def unresolved(text: str, known: set[str]) -> list[tuple[int, str]]:
@@ -62,7 +69,7 @@ def test_detector_flags_each_form_and_accepts_known_names():
     known = {"spec", "security-review"}
     dead = (
         'Run `Skill(skill="no-such-skill")` first.\n'
-        "Hand the result to the `no-such-skill` skill.\n"
+        "The `no-such-skill` skill takes the result.\n"
         "Danach übernimmt der `no-such-skill`-Skill.\n"
     )
     assert unresolved(dead, known) == [(1, "no-such-skill"), (2, "no-such-skill"), (3, "no-such-skill")]
@@ -92,17 +99,23 @@ def test_builtin_list_names_no_shipped_skill():
 
 def test_every_delegation_reference_names_an_existing_skill():
     known = shipped_skills() | builtin_skills()
-    files = scanned_files()
-    assert files, "no file scanned; the roots moved"
+    roots = scanned_roots()
+    # The three top-level roots plus at least one plugin's skills and one plugin's agents.
+    assert len(roots) >= 5, "a scanned root is missing; the layout moved"
+    for root in roots:
+        assert any(root.rglob("*.md")), f"{root.relative_to(ROOT)} holds no Markdown file; the layout moved"
 
-    total = 0
+    per_form = [0] * len(FORMS)
     dead = []
-    for path in files:
+    for path in scanned_files():
         text = path.read_text(encoding="utf-8")
-        total += len(references(text))
+        for _, _, index in matches(text):
+            per_form[index] += 1
         dead.extend(f"{path.relative_to(ROOT)}:{lineno}: `{name}`" for lineno, name in unresolved(text, known))
 
-    assert total, "no delegation reference found; the patterns no longer match the corpus"
+    # `Skill(skill="…")` has no corpus hit today; the detector test alone covers it.
+    assert per_form[1], "the English prose form no longer matches the corpus"
+    assert per_form[2], "the German prose form no longer matches the corpus"
     assert not dead, (
         "delegation to a skill that neither this repository ships nor the harness provides "
         f"({BUILTINS_FILE.relative_to(ROOT)}):\n" + "\n".join(dead)
