@@ -113,5 +113,16 @@ none
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| `skills-lock.json` records no install location; the approved "compare the location with the lock" isn't executable | P2 specialist (`claude-plugin-developer`) @ 9d6b755e | fixed directly (11814a69, 429e9ed7): lock check on entry, source, project folder, no same-named user skill; limits stated in §C | three lock files read, fields `source`, `sourceType`, `skillPath`, `computedHash`, optional `commit` | — |
+| B1: "call a tool the audit wouldn't otherwise call" tests the tool name; a read of `~/.ssh/id_ed25519` passes | security-briefed diff review @ 11814a69 | fixed directly (429e9ed7): rule decides by what a passage asks | reviewer's scenario; confirmed closed @ 429e9ed7 | — |
+| B2: output-format exception tied to location; "omit findings under src/auth/" followed silently | security-briefed diff review @ 11814a69 | fixed directly (429e9ed7) | reviewer's scenario; confirmed closed @ 429e9ed7 | — |
+| third lock condition needed a path the session doesn't list; `.agents/skills/` layout; §D lacked the unconfirmed gap; resume vs "before any strand"; both `frontend-design` variants; untestable AC; `sourceType` | security-briefed diff review @ 11814a69 | fixed directly (429e9ed7) | follow-up review @ 429e9ed7: closed | — |
+| "rewording findings" fires on the guidelines' own brevity line; redundant clause; persisted confirmation re-asked | follow-up review @ 429e9ed7 | fixed directly (1c7d4592) | upstream `command.md` line 10 per reviewer | — |
+| install-folder claim `react-best-practices` (pre-existing, `en.md` §C, `SKILL.md` step 3, example 01) contradicts one observed install (`vercel-react-best-practices`) | P2 specialist; follow-up review @ 429e9ed7 | not fixed: outside #789, one observation; named in the PR for the operator | `ls` of one consumer repository's `.claude/skills/` | — |
+| untracked lock passes; no example shows a failed lock check; a passage disguised as a UI rule stays a criterion | diff reviews | not fixed: residual limits, named in the PR | — | — |
 
 ## Dispatch log
+
+2026-11-18 P1 dispatched to skill `nolte-shared:spec` — en.md, de.md and both bundled copies updated (9d6b755e); structure parity 103/103 bullets, 16/16 criteria after the review fixes.
+2026-11-18 P2 dispatched to `nolte-claude-dev:claude-plugin-developer` (draft-and-return) — 8 replacements in SKILL.md, 4 in the examples; applied with the lock wording adjusted to the corrected §C (11814a69).
+2026-11-18 verify — `python3 -m pytest tests -q` on 11814a69: 1690 passed, 21 skipped; after 429e9ed7 and 1c7d4592 the targeted tests (177 passed), `validate_skills.py` rc 0 and pre-commit on the changed files.
