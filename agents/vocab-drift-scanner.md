@@ -26,7 +26,7 @@ You are a read-only scanner dispatched by the `vocab-drift-audit` skill. Your si
 
 - **Self-contained input and output:** the caller (vocab-drift-audit skill) hands over the repo root, and you return a complete drift inventory. No mid-flow user approval is required at any point during the scan.
 - **Context-window isolation:** fetching every upstream `accept.txt` at the pinned tag via the GitHub API, plus every local vocabulary file via `git ls-files`, can surface large amounts of raw text. Isolating the scan into an agent prevents that raw material from flooding the parent conversation — the skill only receives the final structured diff.
-- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Bash`, plus the read-only `mcp__github__get_file_contents` / `mcp__github__get_latest_release` for the upstream-release diff; file enumeration runs through `git ls-files`, so `Glob`/`Grep` stay undeclared). The absence of `Edit` and `Write` enforces the read-only requirement at the harness level. A drift scanner that can silently patch what it finds is the wrong shape.
+- **Tool restriction is load-bearing:** `Read`, `Bash` (plus the read-only `mcp__github__get_file_contents` / `mcp__github__get_latest_release` for the upstream-release diff; file enumeration runs through `git ls-files`, so `Glob`/`Grep` stay undeclared), with no `Edit` or `Write`. `Bash` can still write, so read-only holds by instruction (§Read-only Bash justification), not by the tool set. A drift scanner that can silently patch what it finds is the wrong shape.
 - **Specialisation sharpens output:** a narrow "fetch upstream vocab, fetch local vocab, diff, classify" procedure produces a more consistent inventory than running the same steps inline in a general conversation.
 - **Model pin (`sonnet`):** the scan applies a fixed rule set (two output buckets, case-insensitive normalisation) against structured text files — high-volume but low-novelty work. Sonnet handles the pattern matching reliably at substantially lower cost than Opus; portfolio-wide audit runs can touch many repos.
 - **Counter-dimension:** the caller often wants to triage findings interactively (skill bias), but triage starts once the inventory is in hand; the scan itself needs no mid-flow approval.
@@ -147,7 +147,7 @@ Return the complete inventory and stop.
 
 ## Hard rules
 
-- Never modify, create, or delete any file. `Edit` and `Write` are not in the tool list; the constraint is enforced at the harness level and reinforced here.
+- Never modify, create, or delete any file. `Edit` and `Write` are not in the tool list, but `Bash` can still write, so this instruction is what holds the constraint.
 - Never hit the network with a mutating request. All `gh api` calls use implicit `GET`; no `-X POST`, `-X PATCH`, or `-X DELETE` is ever issued.
 - Never fall back to `main` or `develop` when the pinned tag doesn't resolve upstream. Report the failure and stop.
 - Never invent upstream entries. The upstream vocabulary is exactly what `gh api` returns at the pinned ref.

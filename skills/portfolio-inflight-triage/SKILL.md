@@ -117,7 +117,7 @@ When the spec disagrees with this skill, the spec wins. Propose a skill update r
 ## Hard rules
 
 - Never close any GitHub issue, merge any PR, delete any branch, mark any review comment resolved, or close any Discussion. The audit is observational only per §Operator authority.
-- Never invoke `gh api` with `-X POST`, `-X PATCH`, or `-X DELETE` against any repository — including `claude-shared`. The underlying agent enforces this at the harness level; the skill also doesn't issue such calls per §Operator authority.
+- Never invoke `gh api` with `-X POST`, `-X PATCH`, or `-X DELETE` against any repository — including `claude-shared`. The collector refuses these by instruction, not by tool set; the skill also doesn't issue such calls per §Operator authority.
 - Never modify any file in any Portfolio-Member repository other than `claude-shared`. The single write path is `.audits/portfolio-inflight/<YYYY-MM-DD>.md` per §Operator authority.
 - Never dispatch the recommended specialist automatically. Emit the slash-command invocation verbatim in the report; the operator dispatches by copy-paste per §Specialist recommendation `MUST NOT` and §Operator authority `MUST`.
 - Never use a severity outside the canonical four (`Critical` / `Warning` / `Suggestion` / `Info`). ALL-CAPS variants and extra levels (`HIGH`, `P0`, …) are forbidden per `spec/claude/review-plan/` §Severity scale and §Classification and prioritisation `MUST NOT`.

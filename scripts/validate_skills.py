@@ -149,6 +149,21 @@ class Finding:
         return f"{self.severity:11s} {self.target}  [{self.rule}] {self.message}"
 
 
+def _unquote(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1]
+    return value
+
+
+def _split_tool_names(raw: str) -> list[str]:
+    """Split an inline `tools` value: `A, B` or the YAML flow list `[A, "B"]`."""
+    raw = raw.strip()
+    if raw.startswith("[") and raw.endswith("]"):
+        raw = raw[1:-1]
+    return [_unquote(t) for t in raw.split(",") if t.strip()]
+
+
 def parse_frontmatter(text: str) -> dict | None:
     """Return a dict of frontmatter scalars, or None when no `---` block exists.
 
@@ -195,10 +210,17 @@ def parse_frontmatter(text: str) -> dict | None:
                 for line in m2.group(1).split("\n") if line.strip()
             ]
 
-    # tools: comma list OR multi-line
-    m = re.search(r"^tools:\s*(.+)$", fm, re.M)
+    # tools: comma list, flow list `[a, b]`, OR block list (`- a` lines).
+    # `[ \t]*` (not `\s*`) so an empty inline value can't swallow the next line.
+    m = re.search(r"^tools:[ \t]*(\S.*)?$", fm, re.M)
     if m:
-        out["tools"] = [t.strip() for t in m.group(1).split(",") if t.strip()]
+        if m.group(1):
+            out["tools"] = _split_tool_names(m.group(1))
+        else:
+            m2 = re.search(r"^tools:[ \t]*\n((?:[ \t]+- .+\n?)+)", fm, re.M)
+            out["tools"] = [
+                _unquote(line.strip()[2:]) for line in m2.group(1).splitlines() if line.strip()
+            ] if m2 else None  # bare `tools:` is YAML null: inherits every tool
 
     return out
 
@@ -765,8 +787,8 @@ def _tools_list(tools) -> list[str]:
     if tools is None:
         return []
     if isinstance(tools, list):
-        return [str(t).strip() for t in tools]
-    return [t.strip() for t in str(tools).split(",") if t.strip()]
+        return [_unquote(str(t)) for t in tools]
+    return _split_tool_names(str(tools))
 
 
 def check_bash_justification(tools, desc: str | None, body: str, target: str) -> list[Finding]:
@@ -796,6 +818,111 @@ def check_bash_justification(tools, desc: str | None, body: str, target: str) ->
         "section naming its command envelope (agent-management §Tool access)")]
 
 
+# Tool-enforced read-only claims (#758, defect-class-guards G1/G3/G6).
+#
+# Predicate: an agent whose body claims that its tool set or the harness
+# *enforces* read-only behaviour, while its `tools` frontmatter grants a
+# write-capable tool. Write-capable = `Edit`, `Write`, `NotebookEdit`, `Bash`
+# (a shell can write any file), or an MCP tool whose final name segment isn't
+# a read verb (`get_*`, `list_*`, `search_*`, `*_read`); a missing `tools`
+# field inherits every tool and counts as write-capable. Claim vocabulary is a
+# fixed phrase list, not a negation-aware regex: "harness level"/"harness-level",
+# "the harness enforces", "enforced by/at the harness", "tool-set
+# construction", "read-only surface ... enforces", and "absence of ...
+# enforces". Selector: every agent `check_agent` sees, plugin and consumer
+# trees alike — no per-file opt-in. Fenced code blocks are ignored.
+WRITE_CAPABLE_TOOLS = frozenset({"Edit", "Write", "NotebookEdit", "Bash"})
+_MCP_READ_SEGMENT = re.compile(r"^(?:get|list|search)_|_read$|^read$")
+_TOOL_ENFORCEMENT_CLAIM = re.compile(
+    r"\bharness[- ]level\b"
+    r"|\bthe harness enforces\b"
+    r"|\benforced (?:by|at) the harness\b"
+    r"|\btool-set construction\b"
+    r"|\bread-only surface\b[^.\n]{0,120}\benforces?\b"
+    r"|\babsence of\b[^.\n]{0,120}\benforces?\b",
+    re.IGNORECASE,
+)
+
+
+def _write_capable(tool: str) -> bool:
+    if tool in WRITE_CAPABLE_TOOLS:
+        return True
+    if tool.startswith("mcp__"):
+        return not _MCP_READ_SEGMENT.search(tool.rsplit("__", 1)[-1])
+    return False
+
+
+def check_tool_enforcement_claim(tools, body: str, target: str, line_offset: int = 0) -> list[Finding]:
+    """Flag a tool-enforced read-only claim the declared tool set can't keep.
+
+    See the predicate in the comment block above. One finding per agent,
+    citing the first claiming line (`line_offset` maps a body line to its
+    file line); Critical, because the claim misstates the agent's safety
+    boundary (agent-management §Tool access).
+    """
+    if tools is None:  # no `tools` field: the agent inherits every tool, writers included
+        writers = ["all tools (no `tools` field)"]
+    else:
+        writers = [t for t in _tools_list(tools) if _write_capable(t)]
+    if not writers:
+        return []
+    for lineno, line in enumerate(_CODE_FENCE.sub(lambda m: "\n" * m.group(0).count("\n"), body).splitlines(), 1):
+        m = _TOOL_ENFORCEMENT_CLAIM.search(line)
+        if m:
+            return [Finding(
+                "Critical", target, "agent-management.tool-enforcement-claim",
+                f"line {lineno + line_offset} claims tool-enforced read-only (\"{m.group(0)}\") "
+                f"but `tools` grants write-capable {', '.join(writers)}; say what the "
+                "tool set enforces and that the rest holds by instruction "
+                "(agent-management §Tool access)")]
+    return []
+
+
+_BACKTICKED = re.compile(r"`([a-z0-9][a-z0-9-]*)`")
+_AGENT_TOOLS_CACHE: dict[Path, dict[str, object]] = {}
+
+
+def _agent_tools_in(agents_dir: Path) -> dict[str, object]:
+    """Map agent name -> parsed `tools` (None = field absent) for one agents/ dir."""
+    key = agents_dir.resolve()
+    if key not in _AGENT_TOOLS_CACHE:
+        index: dict[str, object] = {}
+        for f in sorted(agents_dir.glob("*.md")) if agents_dir.is_dir() else []:
+            fm = parse_frontmatter(f.read_text(encoding="utf-8")) or {}
+            index[f.stem] = fm.get("tools")
+        _AGENT_TOOLS_CACHE[key] = index
+    return _AGENT_TOOLS_CACHE[key]
+
+
+def check_skill_tool_enforcement_claim(
+        body: str, target: str, agent_tools: dict[str, object], line_offset: int = 0) -> list[Finding]:
+    """Skill-side twin of `check_tool_enforcement_claim` (#758).
+
+    A skill declares no tools, so a harness/tool-set enforcement claim in its
+    body can only be about a dispatched agent. Predicate: a body line (outside
+    fences) matches `_TOOL_ENFORCEMENT_CLAIM` and either names no known agent
+    in backticks, or names one whose `tools` is write-capable or absent.
+    `agent_tools` holds every agent in scope (see `check_skill`).
+    """
+    clean = _CODE_FENCE.sub(lambda m: "\n" * m.group(0).count("\n"), body)
+    for lineno, line in enumerate(clean.splitlines(), 1):
+        m = _TOOL_ENFORCEMENT_CLAIM.search(line)
+        if not m:
+            continue
+        named = [n for n in _BACKTICKED.findall(line) if n in agent_tools]
+        unbacked = [n for n in named if agent_tools[n] is None
+                    or any(_write_capable(t) for t in _tools_list(agent_tools[n]))]
+        if named and not unbacked:
+            continue
+        why = (f"agent(s) {', '.join(unbacked)} hold a write-capable tool or no `tools` field"
+               if named else "it names no agent whose `tools` field could back it")
+        return [Finding(
+            "Critical", target, "skill-management.tool-enforcement-claim",
+            f"line {lineno + line_offset} claims tool-enforced read-only (\"{m.group(0)}\") but "
+            f"{why}; say the bound holds by instruction (agent-management §Tool access)")]
+    return []
+
+
 def check_skill(path: Path) -> list[Finding]:
     rel = _display(path)
     text = path.read_text(encoding="utf-8")
@@ -822,6 +949,14 @@ def check_skill(path: Path) -> list[Finding]:
     findings += check_description_lead_voice(fm.get("description"), rel, "skill")
     findings += check_description_headroom(fm.get("description"), rel, "skill")
     findings += check_spec_precondition_fallback(body, rel, _in_subdirectory_plugin(path))
+    # Agents in scope: the skill's own plugin root plus every in-repo plugin root
+    # of the working directory (a skill may dispatch a sibling plugin's agent).
+    agent_tools: dict[str, object] = {}
+    for agents_dir in [Path.cwd() / "agents", *sorted(Path.cwd().glob("plugins/*/agents")),
+                       path.parent.parent.parent / "agents"]:
+        agent_tools.update(_agent_tools_in(agents_dir))
+    findings += check_skill_tool_enforcement_claim(
+        body, rel, agent_tools, line_offset=text[: len(text) - len(body)].count("\n"))
     return findings
 
 
@@ -1023,6 +1158,8 @@ def check_agent(path: Path) -> list[Finding]:
     findings += check_description_lead_voice(fm.get("description"), rel, "agent")
     findings += check_description_headroom(fm.get("description"), rel, "agent")
     findings += check_bash_justification(fm.get("tools"), fm.get("description"), body, rel)
+    findings += check_tool_enforcement_claim(
+        fm.get("tools"), body, rel, line_offset=text[: len(text) - len(body)].count("\n"))
     return findings
 
 

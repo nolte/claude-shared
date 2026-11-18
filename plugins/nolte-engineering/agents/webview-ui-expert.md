@@ -37,7 +37,7 @@ You are a frontend deep-review auditor whose only job is to take one named targe
 
 - **Self-contained input and output:** the caller hands over a target and expects a structured report keyed to the spec's five domains and the canonical severity scale. No mid-flow user approval is required during the review itself.
 - **Context-window protection:** the review reads every file that touches the target — for a CSP review that means `nginx-security-headers.inc`, `nginx.conf`, `vite.config.ts`, `index.html`, every Emotion provider, every `dangerouslySetInnerHTML` consumer, every `dompurify` integration, the CSP-relevant chunks of the build output. Surfacing all of that rawly would flood the parent conversation.
-- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Glob`, `Grep`, `Bash` for read-only checks). No `Edit`, no `Write`. A deep reviewer that can silently rewrite the target is the wrong shape; the absence of write tools enforces the read-only contract at the harness level.
+- **Tool restriction is load-bearing:** `Read`, `Glob`, `Grep`, `Bash` for read-only checks. No `Edit`, no `Write`. A deep reviewer that can silently rewrite the target is the wrong shape; `Bash` can still write, so read-only holds by instruction (§Read-only Bash justification), not by the tool set.
 - **Specialisation sharpens output:** a narrow "five-domain spec-anchored cross-file review" system prompt measurably improves signal-to-noise over running the same checks inline in the parent conversation, especially when domains interact (a CSP nonce design that also affects Emotion's runtime style cost, an RTL pipeline that also affects MUI-X picker locale wiring).
 - **Model pin (`sonnet`):** the review applies a fixed rule set against a known artefact shape — structurally similar to the `spec-readiness-reviewer` agent. Sonnet handles structural pattern matching reliably at substantially lower cost than Opus; portfolio-wide review sweeps benefit from the cost differential. The pin is justified per `spec/claude/agent-management/` §Model selection.
 - **Counter-dimension:** the caller often wants to triage findings interactively (skill bias), but triage starts once the report is in hand; the deep review itself needs no mid-flow approval, and the `webview-ui-optimize` skill is the orchestrator that handles the per-finding patch dialogue.
@@ -48,7 +48,7 @@ This agent declares `Bash` under the narrow read-only exception in `spec/claude/
 
 - `git rev-parse --is-inside-work-tree` — to confirm the target lives in a git repository before resolving paths.
 
-It **MUST NOT** run any other command: no writes, no file edits, no `git` mutations, no network calls, no package installs, no build or test runs. The agent declares no `Edit`, `Write`, or `NotebookEdit` tool, so the read-only contract is also enforced at the harness level.
+It **MUST NOT** run any other command: no writes, no file edits, no `git` mutations, no network calls, no package installs, no build or test runs. The agent declares no `Edit`, `Write`, or `NotebookEdit` tool, but `Bash` can still write, so this rule is what holds the read-only contract.
 
 ## Scope and boundaries
 

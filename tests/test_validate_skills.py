@@ -207,6 +207,134 @@ def test_bash_justification_write_capable_warning_and_headings_pass():
     assert v.check_bash_justification("Read, Grep", "Read-only scanner.", "# A\n", "x.md") == []
 
 
+# --- tool-enforced read-only claims (#758) ------------------------------------
+# The pre-#758 wording: a `Bash`-holding agent said its missing Edit/Write tools
+# enforce read-only "at the harness level". A shell can write any file, so only
+# the instruction holds it.
+
+_HARNESS_CLAIM = (
+    "# A\n\n- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Bash`). "
+    "The absence of `Edit` and `Write` enforces the read-only requirement at the harness level.\n")
+
+
+@pytest.mark.parametrize("tools", [
+    "Read, Bash",
+    ["Read", "Edit"],
+    "Read, Write",
+    "Read, NotebookEdit",
+    ["Read", "mcp__github__create_issue"],
+])
+def test_tool_enforcement_claim_with_write_capable_tool_is_critical(tools):
+    findings = v.check_tool_enforcement_claim(tools, _HARNESS_CLAIM, "x.md")
+    assert _rules(findings) == {"agent-management.tool-enforcement-claim"}
+    assert findings[0].severity == "Critical"
+
+
+@pytest.mark.parametrize("claim", [
+    "the absence of `Edit` enforces it at the harness level.",
+    "the read-only contract is also enforced at the harness level.",
+    "so the harness enforces that it cannot mutate the tree.",
+    "Declaring `Read`, `Bash` only is read-only by tool-set construction.",
+    "a strict read-only surface (`Read, Bash`) enforces that run review never mutates anything.",
+    "a harness-level guarantee.",
+])
+def test_tool_enforcement_claim_vocabulary_each_phrase_fires(claim):
+    findings = v.check_tool_enforcement_claim("Read, Bash", f"# A\n\n{claim}\n", "x.md")
+    assert _rules(findings) == {"agent-management.tool-enforcement-claim"}
+
+
+def test_tool_enforcement_claim_holds_without_write_capable_tool():
+    tools = ["Read", "Grep", "Glob", "mcp__github__get_file_contents",
+             "mcp__github__list_issues", "mcp__github__issue_read"]
+    assert v.check_tool_enforcement_claim(tools, _HARNESS_CLAIM, "x.md") == []
+
+
+def test_tool_enforcement_reworded_instruction_level_claim_passes():
+    body = ("# A\n\n- **Tool restriction is load-bearing:** `Read`, `Bash`, with no `Edit` or "
+            "`Write`. `Bash` can still write, so read-only holds by instruction "
+            "(§Read-only Bash justification), not by the tool set. Neither bound is a "
+            "harness guarantee.\n")
+    assert v.check_tool_enforcement_claim("Read, Bash", body, "x.md") == []
+
+
+def test_tool_enforcement_claim_inside_fence_is_ignored():
+    body = "# A\n\n```text\nenforced at the harness level\n```\n"
+    assert v.check_tool_enforcement_claim("Read, Bash", body, "x.md") == []
+
+
+@pytest.mark.parametrize("tools_line", [
+    "tools: [Bash, mcp__github__get_file_contents]",
+    "tools: ['Read', \"Bash\"]",
+    "tools:\n  - Read\n  - Bash",
+    "tools: Read, Glob, Bash",
+])
+def test_check_agent_parses_every_tools_shape_and_flags_the_claim(tmp_path, tools_line):
+    """End to end through `parse_frontmatter`: a flow list once yielded `[Bash`."""
+    agent = tmp_path / "agents" / "x-scanner.md"
+    agent.parent.mkdir()
+    agent.write_text(
+        "---\nname: x-scanner\ndescription: \"Read-only scanner.\"\n" + tools_line
+        + "\n---\n" + _HARNESS_CLAIM, encoding="utf-8")
+    assert "Bash" in v.parse_frontmatter(agent.read_text())["tools"]
+    rules = _rules(v.check_agent(agent))
+    assert "agent-management.tool-enforcement-claim" in rules
+
+
+def test_flow_list_tools_parse_without_brackets():
+    fm = v.parse_frontmatter("---\nname: a\ntools: [Bash, mcp__x__list_y]\n---\n")
+    assert fm["tools"] == ["Bash", "mcp__x__list_y"]
+    assert v._tools_list("[Read, 'Bash']") == ["Read", "Bash"]
+
+
+def test_missing_tools_field_inherits_write_tools_and_fires():
+    assert "tools" not in v.parse_frontmatter("---\nname: a\n---\n")
+    findings = v.check_tool_enforcement_claim(None, _HARNESS_CLAIM, "x.md")
+    assert _rules(findings) == {"agent-management.tool-enforcement-claim"}
+    # an explicit empty list grants nothing, so the claim holds
+    assert v.check_tool_enforcement_claim([], _HARNESS_CLAIM, "x.md") == []
+
+
+_SKILL_CLAIM = "# S\n\n- Never POST. The underlying agent enforces this at the harness level.\n"
+
+
+def test_skill_claim_naming_no_agent_is_critical():
+    findings = v.check_skill_tool_enforcement_claim(_SKILL_CLAIM, "s.md", {"x-scanner": ["Read"]})
+    assert _rules(findings) == {"skill-management.tool-enforcement-claim"}
+    assert findings[0].severity == "Critical"
+
+
+@pytest.mark.parametrize("tools", [["Read", "Bash"], None])
+def test_skill_claim_naming_write_capable_agent_is_critical(tools):
+    body = "# S\n\n`x-scanner` is read-only at the harness level.\n"
+    findings = v.check_skill_tool_enforcement_claim(body, "s.md", {"x-scanner": tools})
+    assert _rules(findings) == {"skill-management.tool-enforcement-claim"}
+
+
+def test_skill_claim_backed_by_read_only_agent_passes():
+    body = "# S\n\n`x-reviewer` is read-only at the harness level.\n"
+    assert v.check_skill_tool_enforcement_claim(
+        body, "s.md", {"x-reviewer": ["Read", "Grep", "Glob"]}) == []
+    reworded = "# S\n\n- Never POST. The collector refuses these by instruction, not by tool set.\n"
+    assert v.check_skill_tool_enforcement_claim(reworded, "s.md", {}) == []
+
+
+def test_tool_enforcement_claim_absent_from_every_shipped_skill():
+    paths = sorted((v.REPO / "skills").glob("*/SKILL.md")) + sorted(v.REPO.glob("plugins/*/skills/*/SKILL.md"))
+    assert paths
+    offenders = [f.target for p in paths for f in v.check_skill(p)
+                 if f.rule == "skill-management.tool-enforcement-claim"]
+    assert offenders == []
+
+
+def test_tool_enforcement_claim_absent_from_every_shipped_agent():
+    """Selector-level guard: every agent the validator discovers, no opt-in list."""
+    paths = sorted((v.REPO / "agents").glob("*.md")) + sorted(v.REPO.glob("plugins/*/agents/*.md"))
+    assert paths
+    offenders = [f.target for p in paths for f in v.check_agent(p)
+                 if f.rule == "agent-management.tool-enforcement-claim"]
+    assert offenders == []
+
+
 # --- checks added by the 2026-08-22 skills-agents sweep, wave W1 -------------
 # Both guard a defect class that shipped to `develop` with CI green, so the tests
 # pin the exact boundary each check turned out to need rather than only the happy

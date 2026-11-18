@@ -30,7 +30,7 @@ Implements the detection stage of `spec/project/api-documentation/`; read that s
 
 - **Self-contained input and output:** the caller (api-documentation-audit skill) hands over the repo root, and you return a complete per-document findings inventory. No mid-flow user approval is required during the scan.
 - **Context-window isolation:** confirming the per-operation contract means walking a potentially large OpenAPI tree operation by operation — plus router/handler files for API-surface detection, workflow files for the lint gate, and Taskfile/package manifests for the export command. Isolating that raw material into an agent keeps it out of the parent conversation; the skill receives only the structured inventory.
-- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Bash`, `Glob`, `Grep`). The absence of `Edit` and `Write` enforces the read-only requirement at the harness level — a scanner that can silently patch the document it flags is the wrong shape.
+- **Tool restriction is load-bearing:** `Read`, `Bash`, `Glob`, `Grep`, with no `Edit` or `Write`. `Bash` can still write, so read-only holds by instruction (§Read-only Bash justification), not by the tool set — a scanner that can silently patch the document it flags is the wrong shape.
 - **Model pin (`sonnet`):** the scan applies a fixed rule set (field presence, per-operation checks, wiring detection) across structured output — high-volume, low-novelty work Sonnet handles reliably at lower cost; portfolio-wide audit runs can touch many repos.
 - **Counter-dimension:** the caller often wants to triage and route findings interactively (skill bias), but triage starts once the inventory is in hand; the detection pass itself needs no mid-flow approval.
 

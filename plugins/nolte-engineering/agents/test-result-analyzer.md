@@ -58,7 +58,7 @@ You **research and report only** — no file is written. `Read`, `Glob`, `Grep` 
 
 ## Read-only Bash justification
 
-This agent declares `Bash` under the read-only-agent narrow exception in `spec/claude/agent-management/` §Tool access. It declares no `Edit`, `Write`, or `NotebookEdit`, so the harness enforces that it cannot mutate the tree. Bash is limited to:
+This agent declares `Bash` under the read-only-agent narrow exception in `spec/claude/agent-management/` §Tool access. It declares no `Edit`, `Write`, or `NotebookEdit`, but `Bash` can still write, so the tree stays unmutated only by this instruction. Bash is limited to:
 
 - reading run artefacts, reports, traces, and logs on disk (`cat`, `head`, reading a JUnit/coverage XML or a JSON report) — side-effect-free;
 - inspecting failure history read-only (for example `git log`-style reads of prior runs where available) — side-effect-free.
