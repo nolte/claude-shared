@@ -103,6 +103,15 @@ none
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| "The `x` skill" (sentence-initial) unchecked, 15 corpus lines | diff review @ 04307a74 | fixed directly (d07ba5df) | mutation "The `review` skill runs first." in `skills/spec/SKILL.md` → `1 failed, 3 passed` | — |
+| hollow check summed over all forms | diff review @ 04307a74 | fixed directly (d07ba5df): per-form assertion for both prose forms | per-form counts {0: 0, 1: 247, 2: 108} | — |
+| a missing root goes unnoticed | diff review @ 04307a74 | fixed directly (d07ba5df) | reviewer's scratch copy without `agents/`: `4 passed` | — |
+| indented comment in the built-in list read as a name | diff review @ 04307a74 | fixed directly (d07ba5df) | code reading, `line.startswith("#")` | — |
+| refresh note lets user/project skills into the list | diff review @ 04307a74 | fixed directly (d07ba5df) | — | — |
+| guard misses forms beyond the three in AC1; replay at `247ae8de^` reports 5 lines in 3 files only | diff review @ 04307a74 | filed (operator decision 2026-11-18) | widened pattern: 326 refs, 11 unresolved, none a dead delegation | #799 |
+| built-ins referenced only in unchecked forms (`code-review` ×21) | diff review @ 04307a74 | filed | reviewer's count via `references()` | #799 |
+| wrong plugin prefix passes | diff review @ 04307a74 | filed | scratch mutation `nolte-shared:quality-gate` → `4 passed` | #799 |
+| German rewordings sidestep rather than satisfy the guard; EN counterparts pass only through the article gap | diff review @ 04307a74 | filed (needs the naming convention) | see #799 | #799 |
 
 ## Dispatch log
 
