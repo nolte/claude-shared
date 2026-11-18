@@ -5,7 +5,7 @@
 # SHA-256 with `sha256sum -c`, and only then unpacked, so an asset replaced
 # under the same tag never runs (spec/project/github-actions-best-practices/
 # §A, spec/project/continuous-integration/ §C). Both workflows and
-# `task vale:install` call this script, so CI and local installs share it.
+# `task install:vale` call this script, so CI and local installs share it.
 #
 # Usage: scripts/install_vale.sh DEST_DIR
 set -euo pipefail
@@ -36,5 +36,7 @@ curl -fsSL --retry 3 --retry-all-errors -o "$work/$asset" \
 (cd "$work" && printf '%s\n' "$checksum_line" | sha256sum -c -)
 tar -xzf "$work/$asset" -C "$work" vale
 mkdir -p "$dest"
+# Run the verified binary before it replaces anything in DEST: on another OS or
+# architecture it fails here and leaves an existing vale untouched.
+"$work/vale" --version
 install -m 0755 "$work/vale" "$dest/vale"
-"$dest/vale" --version
