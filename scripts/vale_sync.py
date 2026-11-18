@@ -32,8 +32,8 @@ def lock_path(repo: Path = REPO) -> Path:
 
 def main() -> int:
     if shutil.which("vale") is None:
-        print("vale is not on PATH; install the version pinned in .github/workflows/ci.yml "
-              "(VALE_VERSION)", file=sys.stderr)
+        print("vale is not on PATH; run `task install:vale` to install the version pinned "
+              "in .vale-version", file=sys.stderr)
         return 127
     with open(lock_path(), "w") as handle:
         fcntl.flock(handle, fcntl.LOCK_EX)  # released when the file closes

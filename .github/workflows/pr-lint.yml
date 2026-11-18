@@ -24,10 +24,6 @@ jobs:
     # title prose with Vale and needs no more than read access to the sources.
     permissions:
       contents: read
-    env:
-      # Lock-step with the workflow-level VALE_VERSION in ci.yml; the prose-style
-      # spec requires local and CI Vale runs to produce identical alerts.
-      VALE_VERSION: "3.15.2"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -41,11 +37,12 @@ jobs:
       # command, where a crafted title would be executed. The author login is
       # GitHub-controlled but travels the same way; check_prose.py skips the
       # title check only for the exact logins on its dependency-bot allowlist.
+      # Version and SHA-256 come from .vale-version, the pin ci.yml and local
+      # setup read too; the asset is verified before it is unpacked (#768).
       - name: Install Vale
         run: |
-          curl -fsSL "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
-            | sudo tar -xz -C /usr/local/bin vale
-          vale --version
+          scripts/install_vale.sh "$RUNNER_TEMP/vale"
+          echo "$RUNNER_TEMP/vale" >> "$GITHUB_PATH"
       - name: Sync Vale styles
         run: vale sync
       # spec/project/prose-style/ §"Pull-request titles and release notes":
