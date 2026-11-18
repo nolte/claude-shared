@@ -24,7 +24,7 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer, die seinen Report konsu
 - CVE-/Dependency-/Lockfile-Schwachstellen-Scanning — im Besitz von `spec/project/dependency-audit/`; dieses Audit betrifft den eigenen Code des Projekts, nicht die bekannten CVEs seiner Dependencies
 - Security-Review von *Anforderungen oder Spezifikationen* (die beabsichtigte Security-Posture) statt von implementiertem Code — ein separates Anliegen; dieses Audit liest Code, nicht die Security-Anforderungen der Spec
 - **Anwenden von Fixes** — der projektlokale Vorgänger editierte Quellcode; der Portfolio-Agent ist read-only, und der Fix-Schritt gehört einem Menschen oder einem separaten Skill, sodass das Audit single-responsibility bleibt
-- Ausführen von Third-Party-SAST-Tooling (semgrep, bandit, CodeQL) — der Agent führt LLM-getriebene Pattern-Analyse durch; dies bleibt hier außer Scope. Ein künftiger `sast-runner`-Skill kann Befunde emittieren, die der Operator diesem Agent als zusätzlichen Kontext bereitstellt — der read-only-Agent führt den Runner niemals selbst aus
+- Ausführen von Third-Party-SAST-Tooling (semgrep, bandit, CodeQL) — der Agent führt LLM-getriebene Pattern-Analyse durch; dies bleibt hier außer Scope. Ein künftiger Skill `sast-runner` kann Befunde emittieren, die der Operator diesem Agent als zusätzlichen Kontext bereitstellt — der read-only-Agent führt den Runner niemals selbst aus
 
 ## Anforderungen
 
