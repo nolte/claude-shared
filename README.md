@@ -62,6 +62,7 @@ This repository is a **plugin monorepo** shipping six plugins: **`nolte-shared`*
 | `docs-freshness-checker` | Audit MkDocs documentation for language parity, dead internal links, stale path references, ADR (Architecture Decision Record) hygiene and placeholder markers. |
 | `prose-vale-curator` | Rephrase prose until it passes Vale, preferring terms the shipped vocabularies already accept. |
 | `cicd-pipeline-reviewer` | Read-only audit of a pipeline and its workflows against the CI, CD and GitHub Actions specs. |
+| `renovate-config-author` | Author or refine a Renovate preset or repository config, validate it, and state the consumer impact. |
 
 ### `nolte-media` (image generation & media processing)
 
