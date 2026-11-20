@@ -108,6 +108,7 @@ P1 (operator, independent) ; P2 → P3
 | "only with `--copy`" too strong: a failed link falls back to a copy | diff review @ b7b53e6e | fixed directly (same sentence) | `dist/_chunks/remove.mjs` lines 2974–2984 | #803 |
 | "names the folder after the frontmatter name" imprecise (sanitised name, `--rename`) | diff review @ b7b53e6e | fixed directly ("derives … from") | `dist/_chunks/remove.mjs` line 2903 | #803 |
 | `@<ref>` parses as a ref only for a version-shaped tag or a 40-character SHA; another tag name becomes a skill filter | diff review @ b7b53e6e | filed | `isVersionPin`, `dist/_chunks/remove.mjs` lines 770–772, 895–905; unrun | follow-up |
+| Exception list omits the interactive copy choice; provenance names only `defaultInstallMode` | re-review of the index later committed as 6b1d68d3 | fixed directly (§B sentence) | `dist/_chunks/remove.mjs` lines 7124–7141, 2974–2984 | #803 |
 
 ## Dispatch log
 
