@@ -55,7 +55,7 @@ None. The rationale names a counter-dimension.
       Where: `agents/renovate-config-author.md:79` ("Call the `Skill` tool or dispatch other agents." under "You don't").
       Fix: n/a (observation). Eighteen agents under `agents/` carry the same negated sentence.
       Verify: n/a.
-- [ ] [agent-management.body-length] The body is about 4,279 estimated tokens (4-char heuristic), long for an agent; no agent body cap exists in `scripts/validate_skills.py`.
+- [ ] [agent-management.body-length] The body is about 4,718 estimated tokens (4-char heuristic), long for an agent; no agent body cap exists in `scripts/validate_skills.py`.
       Where: whole body.
       Fix: n/a (observation). The authoring and verification rules are the agent's substance; splitting them would need a supporting asset, which `agent-management` §Structure doesn't allow beside an agent file.
       Verify: n/a.
