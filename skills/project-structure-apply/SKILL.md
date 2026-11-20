@@ -18,6 +18,8 @@ dont_use_when:
     alternative: skill-agent-catalog-apply
   - situation: "You want to scaffold issue-template forms specifically"
     alternative: github-issue-templates-apply
+  - situation: "You want a Renovate preset or an existing renovate.json changed beyond the scaffolded pointer file"
+    alternative: renovate-config-author
 see_also:
   - mkdocs-structure-apply
   - github-issue-templates-apply
