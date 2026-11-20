@@ -12,8 +12,7 @@ every strand runs beside the own reviewers and overlap is merged.
 
 `frontend/package.json` depends on `react` and `vite`; `src/` holds a
 component tree and a router. `.claude/skills/` contains
-`web-design-guidelines`, `react-best-practices` (frontmatter name
-`vercel-react-best-practices`, the name the session lists), and
+`web-design-guidelines`, `vercel-react-best-practices`, and
 `playwright-cli`. `skills-lock.json` records the commits of the two
 Vercel skills; `playwright-cli` came from `playwright-cli install
 --skills`, so its version comes from `playwright-cli --version`. The
