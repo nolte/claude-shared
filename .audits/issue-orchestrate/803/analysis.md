@@ -104,5 +104,13 @@ P1 (operator, independent) ; P2 → P3
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
 | `--skill react-best-practices` selects no skill in `skills` 1.9.0 | acquire, source reading | fixed directly (P2, P3) | `filterSkills`, `dist/_chunks/remove.mjs` line 2782; unrun | #803 |
+| §B said the CLI links `.claude/skills/<name>` into `.agents/skills/<name>/` by default; with one target folder the default is a copy | diff review @ b7b53e6e | fixed directly (§B, EN, DE, copies) | `defaultInstallMode`, `dist/_chunks/remove.mjs` line 5606; `docs/api.md` line 118; unrun | #803 |
+| "only with `--copy`" too strong: a failed link falls back to a copy | diff review @ b7b53e6e | fixed directly (same sentence) | `dist/_chunks/remove.mjs` lines 2974–2984 | #803 |
+| "names the folder after the frontmatter name" imprecise (sanitised name, `--rename`) | diff review @ b7b53e6e | fixed directly ("derives … from") | `dist/_chunks/remove.mjs` line 2903 | #803 |
+| `@<ref>` parses as a ref only for a version-shaped tag or a 40-character SHA; another tag name becomes a skill filter | diff review @ b7b53e6e | filed | `isVersionPin`, `dist/_chunks/remove.mjs` lines 770–772, 895–905; unrun | follow-up |
 
 ## Dispatch log
+
+2026-11-20 P2 dispatched to nolte-shared:spec — §B and §C updated in EN and DE, copies byte-identical
+2026-11-20 P3 dispatched to nolte-claude-dev:claude-plugin-developer — step 3, examples 01 and 02 aligned; `validate_skills.py` exit 0
+2026-11-20 P1 not run — operator-owned, refused in this session
