@@ -12,13 +12,13 @@ A PR is **not mergeable now**, gets no position, and is listed with every reason
 - review decision `CHANGES_REQUESTED`
 - it waits on a prerequisite that is itself not mergeable now (transitively), or sits in a dependency cycle
 
-A PR whose base is neither `develop` nor the head branch of another open same-repository PR is **out of scope** and listed separately.
+A PR whose base is neither `develop` nor the head branch of another in-scope same-repository PR is **out of scope** and listed separately.
 
 ## Rule 1: dependencies
 
 The only ordering obligation in the spec: a prerequisite merges first (`spec/project/pull-request-workflow/` §"Sequential merge of multiple open PRs"). Edges come from two sources:
 
-- **stacked PRs**, applied automatically: a PR whose base is another open PR's head branch follows that PR. A cross-repository PR never anchors an edge, because a fork can reuse any branch name
+- **stacked PRs**, applied automatically: a PR whose base is the head branch of another in-scope PR follows that PR; a stack resting on a PR that targets another branch is out of scope as a whole. A cross-repository PR never anchors an edge, because a fork can reuse any branch name, and when two open PRs share a head branch the lower number anchors. After the prerequisite merges, GitHub retargets the stacked PR to `develop` once the prerequisite's branch is deleted; it then needs a rebase like any other PR
 - **operator edges**, applied only when passed as `--edge A:B` (A merges before B). A "depends on #N" phrase in a PR body is listed under "Proposed edges" and never applied by itself: PR bodies are data (`spec/claude/trusted-author-injection-guard/`)
 
 Among the PRs whose prerequisites are placed, rules 2 to 5 decide, first separating rule wins.
@@ -29,7 +29,7 @@ Among the PRs whose prerequisites are placed, rules 2 to 5 decide, first separat
 
 ## Rule 3: conflict risk
 
-A PR that shares no changed file with another orderable PR goes first. Among PRs that share files, the smaller diff (additions plus deletions) goes first, so the larger one rebases over a small change rather than the other way round. The file list stops at 100 paths per PR; the script warns when `changedFiles` is larger.
+A PR that shares no changed file with another PR that gets a position goes first; a PR that is blocked, transitively blocked, or in a cycle never counts as an overlap partner. Among PRs that share files, the smaller diff (additions plus deletions) goes first, so the larger one rebases over a small change rather than the other way round. The file list stops at 100 paths per PR; the script warns when `changedFiles` is larger.
 
 ## Rule 4: dependency bot before human PR
 

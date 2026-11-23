@@ -3,8 +3,9 @@
 `order` is pure and is driven with hand-built snapshots shaped like
 `gh pr list --json ...` output plus the `requiredChecks` that `collect` adds.
 `collect` runs against a fake `gh` executable placed first on PATH, which
-replays recorded output and the real exit codes (1 = a check failed,
-8 = checks pending) so the tolerated-exit-code path is exercised.
+replays stdout, stderr, and exit code per call. The measured gh 2.96.0 shapes
+are: a missing PR exits 1 with empty stdout and the error on stderr; a PR with
+no required check exits 1 with "no required checks reported" on stderr.
 """
 from __future__ import annotations
 
@@ -126,11 +127,32 @@ def test_body_mention_is_only_proposed_never_applied():
     assert result["applied_edges"] == []
 
 
-def test_operator_edge_is_applied_and_drops_from_proposals():
+def test_operator_edge_against_a_proposal_keeps_the_proposal():
     result = run(pr(1), pr(2, body="depends on #1"), edges=[(2, 1)])
     assert numbers(result) == [2, 1]
     assert result["applied_edges"] == ["#2->#1"]
     assert result["proposed_edges"] == ["#1->#2"]
+
+
+def test_confirmed_proposal_moves_to_applied_edges():
+    result = run(pr(1), pr(2, body="depends on #1"), edges=[(1, 2)])
+    assert result["applied_edges"] == ["#1->#2"]
+    assert result["proposed_edges"] == []
+
+
+def test_stack_on_a_pr_outside_develop_is_out_of_scope_as_a_whole():
+    result = run(pr(1, baseRefName="main"), pr(2, baseRefName="feat/b1"), pr(3))
+    assert numbers(result) == [3]
+    assert [r["number"] for r in result["out_of_scope"]] == [1, 2]
+    assert result["applied_edges"] == [] and result["not_mergeable"] == []
+
+
+def test_shared_head_branch_anchors_on_lowest_number_regardless_of_input_order():
+    prs = [pr(1, headRefName="feat/x"), pr(5, headRefName="feat/x", isDraft=True), pr(2, baseRefName="feat/x")]
+    for listing in (prs, list(reversed(prs))):
+        result = run(*listing)
+        assert result["applied_edges"] == ["#1->#2"]
+        assert numbers(result) == [1, 2]
 
 
 def test_edge_to_unknown_pr_is_ignored_with_warning():
@@ -167,6 +189,24 @@ def test_overlapping_prs_go_later_smaller_diff_first():
     result = run(pr(1, files=shared, additions=50), pr(2, files=shared, additions=5), pr(3))
     assert numbers(result) == [3, 2, 1]
     assert [r["rule"] for r in result["order"]] == [mo.RULES["conflict"], mo.RULES["conflict"], "last"]
+
+
+def test_pr_without_a_position_is_no_overlap_partner():
+    # #2 waits on the draft #1, so its overlap with #3 must not push #3 back.
+    shared = [{"path": "s.md"}]
+    result = run(pr(1, isDraft=True), pr(2, baseRefName="feat/b1", files=shared),
+                 pr(3, files=shared, additions=500, createdAt="2026-11-01T00:00:00Z"),
+                 pr(4, createdAt="2026-11-05T00:00:00Z"))
+    assert numbers(result) == [3, 4]
+    assert result["order"][0]["rule"] == mo.RULES["age"]
+
+
+def test_cycle_member_is_no_overlap_partner():
+    shared = [{"path": "s.md"}]
+    result = run(pr(1, files=shared), pr(2), pr(3, files=shared, additions=500, createdAt="2026-11-01T00:00:00Z"),
+                 pr(4, createdAt="2026-11-05T00:00:00Z"), edges=[(1, 2), (2, 1)])
+    assert numbers(result) == [3, 4]
+    assert result["order"][0]["rule"] == mo.RULES["age"]
 
 
 def test_bot_before_human_at_equal_rank():
@@ -244,30 +284,35 @@ FAKE_GH = """#!{python}
 import json, sys
 args = sys.argv[1:]
 if args[:2] == ["pr", "list"]:
-    print(json.dumps({prs}))
-    sys.exit(0)
-if args[:2] == ["pr", "checks"]:
-    n = args[2]
-    out, code = {checks}[n]
+    out, err, code = {prs}
     sys.stdout.write(out)
+    sys.stderr.write(err)
+    sys.exit(code)
+if args[:2] == ["pr", "checks"]:
+    out, err, code = {checks}[args[2]]
+    sys.stdout.write(out)
+    sys.stderr.write(err)
     sys.exit(code)
 sys.exit(99)
 """
 
 
 def _fake_gh(tmp_path, prs, checks):
+    """prs: the list to print, or a (stdout, stderr, code) triple; checks: number -> triple."""
+    if isinstance(prs, list):
+        prs = (json.dumps(prs), "", 0)
     gh = tmp_path / "gh"
     gh.write_text(FAKE_GH.format(python=sys.executable, prs=repr(prs), checks=repr(checks)), encoding="utf-8")
     gh.chmod(gh.stat().st_mode | stat.S_IEXEC)
     return {**os.environ, "PATH": f"{tmp_path}{os.pathsep}{os.environ['PATH']}"}
 
 
-def test_collect_tolerates_failed_pending_and_absent_checks(tmp_path):
+def test_collect_reads_checks_from_output_whatever_the_exit_code(tmp_path):
     prs = [{"number": n} for n in (1, 2, 3)]
     checks = {
-        "1": (json.dumps([{"name": "t", "bucket": "fail"}]), 1),
-        "2": (json.dumps([{"name": "t", "bucket": "pending"}]), 8),
-        "3": ("", 1),  # no required checks at all
+        "1": (json.dumps([{"name": "t", "bucket": "fail"}]), "", 1),
+        "2": (json.dumps([{"name": "t", "bucket": "pending"}]), "", 0),
+        "3": ("", "no required checks reported on the 'feat/b3' branch\n", 1),
     }
     res = _cli("collect", env=_fake_gh(tmp_path, prs, checks))
     assert res.returncode == 0, res.stderr
@@ -277,8 +322,23 @@ def test_collect_tolerates_failed_pending_and_absent_checks(tmp_path):
     assert snap["partial"] is False
 
 
-def test_collect_fails_closed_on_gh_error(tmp_path):
-    env = _fake_gh(tmp_path, [{"number": 1}], {"1": ("boom", 4)})
-    res = _cli("collect", env=env)
+@pytest.mark.parametrize(
+    "check",
+    [
+        ("", "GraphQL: Could not resolve to a PullRequest with the number of 1.\n", 1),  # measured shape
+        ("", "HTTP 401: Bad credentials\n", 1),
+        ("boom", "", 4),
+        ('{"not": "a list"}', "", 0),
+    ],
+)
+def test_collect_fails_closed_when_check_state_is_unknown(tmp_path, check):
+    res = _cli("collect", env=_fake_gh(tmp_path, [{"number": 1}], {"1": check}))
     assert res.returncode == 2
+    assert "collect failed" in res.stderr
+
+
+@pytest.mark.parametrize("listing", [("", "", 0), ("null", "", 0), ("[{}]", "", 0), ("", "rate limit\n", 1)])
+def test_collect_fails_closed_on_unusable_pr_list(tmp_path, listing):
+    res = _cli("collect", env=_fake_gh(tmp_path, listing, {}))
+    assert res.returncode == 2, res.stderr
     assert "collect failed" in res.stderr

@@ -39,6 +39,8 @@ PR_FIELDS = (
     "mergeStateStatus,mergeable,reviewDecision,files,changedFiles,additions,"
     "deletions,createdAt,body"
 )
+# stderr of `gh pr checks --required` when the PR has no required check at all.
+NO_REQUIRED_CHECKS = "no required checks reported"
 DEPENDS_RE = re.compile(r"(?i)\bdepends\s+on\s+#(\d+)\b")
 
 RULES = {
@@ -55,23 +57,46 @@ READINESS = {"CLEAN": 0, "HAS_HOOKS": 0, "BEHIND": 1}
 # --------------------------------------------------------------------------- collect
 
 
-def _gh_json(args: list[str], ok_codes: tuple[int, ...] = (0,)) -> Any:
-    proc = subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
-    if proc.returncode not in ok_codes:
-        raise RuntimeError(f"gh {' '.join(args)} failed ({proc.returncode}): {proc.stderr.strip()}")
-    return json.loads(proc.stdout or "null")
+def _gh(args: list[str]) -> subprocess.CompletedProcess:
+    return subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
+
+
+def _fail(args: list[str], proc: subprocess.CompletedProcess) -> RuntimeError:
+    return RuntimeError(f"gh {' '.join(args)} failed ({proc.returncode}): {proc.stderr.strip()}")
+
+
+def _json_list(args: list[str], proc: subprocess.CompletedProcess) -> list:
+    try:
+        data = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        raise _fail(args, proc) from None
+    if not isinstance(data, list):
+        raise _fail(args, proc)
+    return data
+
+
+def required_checks(number: int) -> list[dict[str, Any]]:
+    """Required checks of one PR. Fails closed: unknown checks must never read as none."""
+    args = ["pr", "checks", str(number), "--required", "--json", "name,bucket"]
+    proc = _gh(args)
+    # The output, not the exit code, carries the state: with --json gh may exit 0, 1, or 8
+    # while printing the list. Exit 1 with no output is either "no required checks" (stated
+    # on stderr) or a real error (auth, rate limit, PR gone), which must fail closed.
+    if proc.returncode in (0, 1, 8) and proc.stdout.strip():
+        return _json_list(args, proc)
+    if proc.returncode == 1 and NO_REQUIRED_CHECKS in proc.stderr:
+        return []
+    raise _fail(args, proc)
 
 
 def collect() -> dict[str, Any]:
-    prs = _gh_json(["pr", "list", "--state", "open", "--limit", str(LIST_LIMIT), "--json", PR_FIELDS])
+    args = ["pr", "list", "--state", "open", "--limit", str(LIST_LIMIT), "--json", PR_FIELDS]
+    proc = _gh(args)
+    if proc.returncode != 0:
+        raise _fail(args, proc)
+    prs = _json_list(args, proc)
     for pr in prs:
-        # `gh pr checks` exits 1 when a check failed and 8 while checks are pending; both
-        # still print the JSON. With no required check at all it exits 1 with empty output.
-        checks = _gh_json(
-            ["pr", "checks", str(pr["number"]), "--required", "--json", "name,bucket"],
-            ok_codes=(0, 1, 8),
-        )
-        pr["requiredChecks"] = checks or []
+        pr["requiredChecks"] = required_checks(pr["number"])
     return {"base": BASE, "partial": len(prs) >= LIST_LIMIT, "pullRequests": prs}
 
 
@@ -113,18 +138,26 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
     if snapshot.get("partial"):
         warnings.append(f"the open-PR list hit the {LIST_LIMIT}-row limit; the order may be partial")
 
-    by_head = {pr["headRefName"]: n for n, pr in prs.items() if not pr.get("isCrossRepository")}
-    out_of_scope, in_scope = [], {}
+    # In scope: base is develop, or (stacked) the head branch of an in-scope same-repository
+    # PR. Grown to a fixpoint so a stack on a PR that targets another branch stays out.
+    in_scope = {n: pr for n, pr in prs.items() if pr.get("baseRefName") == BASE}
     dep_edges: set[tuple[int, int]] = set()
-    for n, pr in prs.items():
-        base = pr.get("baseRefName")
-        if base == BASE:
-            in_scope[n] = pr
-        elif base in by_head:  # stacked: base is another open PR's head branch
-            in_scope[n] = pr
-            dep_edges.add((by_head[base], n))
-        else:
-            out_of_scope.append({"number": n, "title": pr.get("title", ""), "base": base})
+    grew = True
+    while grew:
+        by_head: dict[str, int] = {}
+        for n in sorted(in_scope):  # one head branch in two open PRs: the lowest number anchors
+            if not in_scope[n].get("isCrossRepository"):
+                by_head.setdefault(in_scope[n]["headRefName"], n)
+        grew = False
+        for n, pr in prs.items():
+            if n not in in_scope and pr.get("baseRefName") in by_head:
+                in_scope[n] = pr
+                dep_edges.add((by_head[pr["baseRefName"]], n))
+                grew = True
+    out_of_scope = [
+        {"number": n, "title": pr.get("title", ""), "base": pr.get("baseRefName")}
+        for n, pr in prs.items() if n not in in_scope
+    ]
 
     for a, b in edges or []:
         if a in in_scope and b in in_scope and a != b:
@@ -146,9 +179,9 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
         if (pr.get("changedFiles") or 0) > len(files[n]):
             warnings.append(f"#{n}: file list truncated ({len(files[n])} of {pr['changedFiles']}); overlap may be missed")
 
-    def key(n: int) -> tuple:
+    def key(n: int, pool: set[int]) -> tuple:
         pr = in_scope[n]
-        overlap = any(files[n] & files[m] for m in orderable if m != n)
+        overlap = any(files[n] & files[m] for m in pool if m != n)
         size = (pr.get("additions") or 0) + (pr.get("deletions") or 0)
         return (
             readiness(pr)[0],
@@ -173,23 +206,14 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
                 blocked[n] = ["waits on blocked prerequisite " + ", ".join(f"#{p}" for p in bad)]
                 changed = True
 
-    # Kahn's algorithm; among the PRs whose prerequisites are placed, the smallest key wins.
-
-    remaining = {n: {p for p in preds[n] if p in ready_set} for n in ready_set}
-    heap = [(key(n), n) for n in ready_set if not remaining[n]]
-    heapq.heapify(heap)
-    sequence: list[int] = []
-    while heap:
-        _, n = heapq.heappop(heap)
-        sequence.append(n)
-        for m in ready_set:
-            if n in remaining[m]:
-                remaining[m].discard(n)
-                if not remaining[m]:
-                    heapq.heappush(heap, (key(m), m))
+    sequence = _toposort(ready_set, preds, lambda n: key(n, ready_set))
     cyclic = sorted(ready_set - set(sequence))
     for n in cyclic:
         blocked[n] = ["dependency cycle"]
+    if cyclic:  # re-rank without them: overlap only counts against PRs that get a position
+        placed = set(sequence)
+        sequence = _toposort(placed, preds, lambda n: key(n, placed))
+    rank = lambda n: key(n, set(sequence))  # noqa: E731
 
     rows = []
     for i, n in enumerate(sequence):
@@ -200,7 +224,7 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
             "title": pr.get("title", ""),
             "readiness": readiness(pr)[1],
             "bot": is_bot(pr),
-            "rule": _deciding_rule(n, sequence[i + 1] if i + 1 < len(sequence) else None, key, preds),
+            "rule": _deciding_rule(n, sequence[i + 1] if i + 1 < len(sequence) else None, rank, preds),
         })
 
     not_mergeable = [
@@ -216,6 +240,24 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
         "proposed_edges": [f"#{a}->#{b}" for a, b in proposed],
         "warnings": warnings,
     }
+
+
+def _toposort(nodes: set[int], preds: dict[int, set[int]], key) -> list[int]:
+    """Kahn's algorithm; among the PRs whose prerequisites are placed, the smallest key wins.
+    Nodes on or behind a cycle never become available and are left out."""
+    remaining = {n: {p for p in preds[n] if p in nodes} for n in nodes}
+    heap = [(key(n), n) for n in nodes if not remaining[n]]
+    heapq.heapify(heap)
+    sequence: list[int] = []
+    while heap:
+        _, n = heapq.heappop(heap)
+        sequence.append(n)
+        for m in nodes:
+            if n in remaining[m]:
+                remaining[m].discard(n)
+                if not remaining[m]:
+                    heapq.heappush(heap, (key(m), m))
+    return sequence
 
 
 def _deciding_rule(n: int, nxt: int | None, key, preds: dict[int, set[int]]) -> str:
@@ -283,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "collect":
         try:
             print(json.dumps(collect(), indent=2))
-        except (RuntimeError, FileNotFoundError, json.JSONDecodeError) as exc:
+        except (RuntimeError, FileNotFoundError, KeyError, TypeError) as exc:
             print(f"collect failed: {exc}", file=sys.stderr)
             return 2
         return 0

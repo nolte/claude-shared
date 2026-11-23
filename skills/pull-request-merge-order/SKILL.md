@@ -63,11 +63,11 @@ Never continue to step 4 without this confirmation. When no PR is orderable, rep
 
 ### 4. Free the runners
 
-Invoke `pull-request-runner-sweep --current <head>`. It lists the active runs of every other open PR, asks its own confirmation, re-validates, and cancels; its hard rules (no `push`/`schedule`/`workflow_dispatch`/`release`/`merge_group` runs, no delivery workflows, no `develop`/`main`) govern the cancel. Not-mergeable PRs aren't exempt: their runs are obsolete too.
+Invoke `pull-request-runner-sweep --current <head>`. It lists the active runs of every other open PR, asks its own confirmation, re-validates, and cancels; its hard rules (no `push`/`schedule`/`workflow_dispatch`/`release`/`merge_group` runs, no delivery workflows, no `develop`/`main`) govern the cancel. Not-mergeable PRs aren't exempt: their runs are obsolete too. The sweep only lists PRs whose base is `develop`, so runs of a stacked PR stay untouched: name them in the report as not swept.
 
 ### 5. Report
 
-State the confirmed order with the deciding rule per position, the not-mergeable PRs with what unblocks each, the cancelled run ids from the sweep (for `gh run rerun <id>`), and the next action: `pull-request-merge` on the head, then re-invoke this skill after it lands, because the merge changes every other PR's readiness. The skill keeps no state; a repeated invocation recomputes from the live PRs.
+State the confirmed order with the deciding rule per position, the not-mergeable PRs with what unblocks each, the cancelled run ids from the sweep (for `gh run rerun <id>`), and the next action: `pull-request-merge` on the head, then re-invoke this skill after it lands, because the merge changes every other PR's readiness. A stacked PR whose prerequisite just merged is retargeted to `develop` by GitHub once `delete_branch_on_merge` removes the prerequisite's branch; check its base, then it needs the rebase onto the new `develop` tip like every other PR (spec §"Sequential merge of multiple open PRs"). The skill keeps no state; a repeated invocation recomputes from the live PRs.
 
 ## Examples
 
@@ -75,7 +75,7 @@ State the confirmed order with the deciding rule per position, the not-mergeable
 
 ## Gotchas
 
-- `gh pr checks --required` exits 1 when a check failed and 8 while checks are pending; `collect` treats both as data. Don't re-run it by hand to "fix" the exit code.
+- `gh pr checks --required --json` signals through its output, not its exit code: exit 1 with no output is either "no required checks reported" (stderr) or a real error. `collect` accepts only the former and otherwise fails with exit 2, so an unknown check state never reads as "no required checks".
 - `mergeStateStatus` is computed lazily by GitHub and can read `UNKNOWN` right after a push; the script ranks it as pending. Re-run `collect` after a minute instead of guessing.
 - `files` in `gh pr list` stops at 100 paths per PR; the script warns when `changedFiles` is larger, because an overlap beyond that page goes unseen.
 - A stacked PR (base = another open PR's head branch) is ordered after its prerequisite. A fork's branch name never creates that edge.
