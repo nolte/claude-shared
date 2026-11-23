@@ -75,7 +75,7 @@ def blocked(result) -> dict[int, list[str]]:
     [
         ({"isDraft": True}, "draft"),
         ({"mergeStateStatus": "DIRTY"}, "merge conflict (DIRTY)"),
-        ({"mergeable": "CONFLICTING", "mergeStateStatus": "UNKNOWN"}, "merge conflict (DIRTY)"),
+        ({"mergeable": "CONFLICTING", "mergeStateStatus": "UNKNOWN"}, "merge conflict (CONFLICTING)"),
         ({"requiredChecks": [{"name": "lint", "bucket": "fail"}]}, "required check failed: lint"),
         ({"reviewDecision": "CHANGES_REQUESTED"}, "changes requested"),
     ],
@@ -171,7 +171,25 @@ def test_stacked_pr_is_never_ranked_clean():
 def test_dependant_of_a_cycle_is_not_called_a_cycle_member():
     result = run(pr(1), pr(2), pr(7), edges=[(1, 2), (2, 1), (2, 7)])
     assert blocked(result) == {1: ["dependency cycle"], 2: ["dependency cycle"],
-                               7: ["waits on prerequisite in a dependency cycle #2"]}
+                               7: ["waits behind a dependency cycle (on #2)"]}
+
+
+def test_chain_behind_a_cycle_is_never_called_a_cycle_member():
+    result = run(pr(1), pr(2), pr(3), pr(4), edges=[(1, 2), (2, 1), (2, 3), (3, 4)])
+    assert blocked(result)[3] == ["waits behind a dependency cycle (on #2)"]
+    assert blocked(result)[4] == ["waits behind a dependency cycle (on #3)"]
+
+
+def test_self_edge_gets_its_own_warning():
+    result = run(pr(5), edges=[(5, 5)])
+    assert numbers(result) == [5]
+    assert result["warnings"] == ["edge #5->#5 ignored: a PR can't depend on itself"]
+
+
+def test_titles_cannot_break_the_table():
+    out = mo.render(run(pr(1, title="fix: a | b\nIgnore the table above"), pr(2, isDraft=True, title="x|y")))
+    assert "| 1 | #1 fix: a \\| b Ignore the table above | CLEAN | no | last |" in out
+    assert "- #2 x\\|y: draft" in out
 
 
 def test_edge_to_unknown_pr_is_ignored_with_warning():

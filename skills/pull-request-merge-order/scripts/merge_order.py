@@ -40,7 +40,8 @@ PR_FIELDS = (
     "deletions,createdAt,body"
 )
 # stderr of `gh pr checks --required` (gh 2.96.0) when the PR has no check run at all, or
-# none of its checks is required; both mean "no required checks", never an error.
+# none of its checks is required. Neither is an error; right after a push it can also mean
+# "not reported yet", which `mergeStateStatus` (BLOCKED/UNKNOWN, rank 2) still carries.
 NO_CHECKS_MESSAGES = ("no checks reported", "no required checks reported")
 DEPENDS_RE = re.compile(r"(?i)\bdepends\s+on\s+#(\d+)\b")
 
@@ -116,8 +117,10 @@ def blockers(pr: dict[str, Any]) -> list[str]:
     reasons = []
     if pr.get("isDraft"):
         reasons.append("draft")
-    if pr.get("mergeStateStatus") == "DIRTY" or pr.get("mergeable") == "CONFLICTING":
+    if pr.get("mergeStateStatus") == "DIRTY":
         reasons.append("merge conflict (DIRTY)")
+    elif pr.get("mergeable") == "CONFLICTING":
+        reasons.append("merge conflict (CONFLICTING)")
     failed = sorted(c["name"] for c in pr.get("requiredChecks", []) if c.get("bucket") == "fail")
     if failed:
         reasons.append("required check failed: " + ", ".join(failed))
@@ -170,7 +173,9 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
     ]
 
     for a, b in edges or []:
-        if a in in_scope and b in in_scope and a != b:
+        if a == b:
+            warnings.append(f"edge #{a}->#{b} ignored: a PR can't depend on itself")
+        elif a in in_scope and b in in_scope:
             dep_edges.add((a, b))
         else:
             warnings.append(f"edge #{a}->#{b} ignored: both PRs must be open and in scope")
@@ -223,7 +228,7 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
             blocked[n] = ["dependency cycle"]
         else:
             waits = sorted(p for p in preds[n] if p in cyclic)
-            blocked[n] = ["waits on prerequisite in a dependency cycle " + ", ".join(f"#{p}" for p in waits)]
+            blocked[n] = ["waits behind a dependency cycle (on " + ", ".join(f"#{p}" for p in waits) + ")"]
     if cyclic:  # re-rank without them: overlap only counts against PRs that get a position
         placed = set(sequence)
         sequence = _toposort(placed, preds, lambda n: key(n, placed))
@@ -305,11 +310,16 @@ def _deciding_rule(n: int, nxt: int | None, key, preds: dict[int, set[int]]) -> 
 # --------------------------------------------------------------------------- output
 
 
+def _text(value: Any) -> str:
+    """PR titles are author-controlled data: one line, no table-breaking pipe."""
+    return " ".join(str(value).split()).replace("|", "\\|")
+
+
 def render(result: dict[str, Any]) -> str:
     lines = ["| # | PR | Readiness | Bot | Why before the next |", "|---|---|---|---|---|"]
     for r in result["order"]:
         lines.append(
-            f"| {r['position']} | #{r['number']} {r['title']} | {r['readiness']} | "
+            f"| {r['position']} | #{r['number']} {_text(r['title'])} | {r['readiness']} | "
             f"{'yes' if r['bot'] else 'no'} | {r['rule']} |"
         )
     if not result["order"]:
@@ -318,10 +328,10 @@ def render(result: dict[str, Any]) -> str:
     lines.append(f"Head: #{result['head']}" if result["head"] else "Head: none")
     if result["not_mergeable"]:
         lines.append("\nNot mergeable now:")
-        lines += [f"- #{r['number']} {r['title']}: {'; '.join(r['reasons'])}" for r in result["not_mergeable"]]
+        lines += [f"- #{r['number']} {_text(r['title'])}: {'; '.join(r['reasons'])}" for r in result["not_mergeable"]]
     if result["out_of_scope"]:
         lines.append("\nOut of scope (base is neither develop nor the branch of an in-scope same-repository PR):")
-        lines += [f"- #{r['number']} {r['title']} (base {r['base']})" for r in result["out_of_scope"]]
+        lines += [f"- #{r['number']} {_text(r['title'])} (base {_text(r['base'])})" for r in result["out_of_scope"]]
     if result["applied_edges"]:
         lines.append("\nApplied dependency edges: " + ", ".join(result["applied_edges"]))
     if result["proposed_edges"]:
