@@ -103,10 +103,7 @@ def run_vale(text: str, runner=subprocess.run) -> list[dict]:
     try:
         path = Path(tmpdir, "prose.md")
         path.write_text(text, encoding="utf-8")
-        # Vale emits UTF-8 JSON; decode explicitly and replace stray bytes so
-        # non-UTF-8 output can't crash the check with a bare UnicodeDecodeError.
-        proc = runner([vale, "--output=JSON", str(path)], cwd=REPO, capture_output=True, text=True,
-                      encoding="utf-8", errors="replace")
+        proc = runner([vale, "--output=JSON", str(path)], cwd=REPO, capture_output=True, text=True)
         try:
             data = json.loads(proc.stdout or "{}")
         except json.JSONDecodeError as exc:
@@ -126,7 +123,7 @@ def run_vale(text: str, runner=subprocess.run) -> list[dict]:
 
 def _release_body(tag: str, runner) -> str:
     proc = runner(["gh", "release", "view", tag, "--json", "body", "--jq", ".body"],
-                  cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace")
+                  cwd=REPO, capture_output=True, text=True)
     if proc.returncode != 0:
         raise CheckUnavailable(
             f"gh could not read release {tag}: {proc.stderr.strip()[:200]} "
@@ -167,7 +164,7 @@ def main(argv: list[str] | None = None, runner=subprocess.run) -> int:
         if args.file:
             try:
                 body = Path(args.file).read_text(encoding="utf-8")
-            except (OSError, UnicodeDecodeError) as exc:
+            except OSError as exc:
                 raise CheckUnavailable(f"cannot read {args.file}: {exc}") from exc
         else:
             body = _release_body(args.release_notes, runner)

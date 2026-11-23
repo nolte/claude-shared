@@ -82,22 +82,6 @@ class Finding:
         return f"{self.severity:11s} {self.target}  [{self.rule}] {self.message}"
 
 
-class UnreadableFile(Exception):
-    """A file the checks read is not valid UTF-8; reported as `mission.unreadable`."""
-
-    def __init__(self, path: Path, exc: UnicodeDecodeError):
-        self.target = path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else path.as_posix()
-        super().__init__(f"not valid UTF-8 ({exc.reason} at byte {exc.start})")
-
-
-def _read(path: Path) -> str:
-    """Read `path` as UTF-8, naming the file instead of a bare decode traceback."""
-    try:
-        return path.read_text(encoding="utf-8")
-    except UnicodeDecodeError as exc:
-        raise UnreadableFile(path, exc) from exc
-
-
 def _split(text: str) -> tuple[str, str] | None:
     """Return (frontmatter, body) or None when no `---` fence opens the file."""
     if not text.startswith("---"):
@@ -140,7 +124,7 @@ def _feature_index() -> dict[str, str | None]:
     if not FEATURES_DIR.is_dir():
         return index
     for path in sorted(FEATURES_DIR.glob("*.md")):
-        split = _split(_read(path))
+        split = _split(path.read_text(encoding="utf-8"))
         if split is None:
             continue
         fm = split[0]
@@ -185,7 +169,7 @@ def check_frontmatter_values(data: dict, target: str) -> list[Finding]:
                                 "`mission_statement` must be a non-empty string"))
 
     outcomes = data.get("relevant_outcomes")
-    goals_ids = _outcome_ids(_read(GOALS_PATH)) if GOALS_PATH.exists() else None
+    goals_ids = _outcome_ids(GOALS_PATH.read_text(encoding="utf-8")) if GOALS_PATH.exists() else None
     if not isinstance(outcomes, list) or not outcomes:
         findings.append(Finding("Critical", target, "mission.relevant-outcomes-empty",
                                 "`relevant_outcomes` must be a non-empty list of `O-<n>` IDs"))
@@ -200,7 +184,7 @@ def check_frontmatter_values(data: dict, target: str) -> list[Finding]:
                                         f"outcome in project/goals.md"))
 
     audiences = data.get("audiences")
-    aud_ids = _audience_ids(_read(AUDIENCES_PATH)) if AUDIENCES_PATH.exists() else None
+    aud_ids = _audience_ids(AUDIENCES_PATH.read_text(encoding="utf-8")) if AUDIENCES_PATH.exists() else None
     if not isinstance(audiences, list) or not audiences:
         findings.append(Finding("Critical", target, "mission.audiences-empty",
                                 "`audiences` must be a non-empty list of audience identifiers"))
@@ -324,12 +308,7 @@ def check_mission_text(text: str, target: str) -> list[Finding]:
         return findings + [Finding("Critical", target, "mission.frontmatter-not-mapping",
                                    "frontmatter is not a YAML mapping")]
 
-    try:
-        findings += check_frontmatter_values(data, target)
-    except UnreadableFile as exc:
-        # A cross-referenced file (goals, audiences, features) can't be decoded:
-        # fail closed on it rather than skipping the resolution it backs.
-        findings.append(Finding("Critical", exc.target, "mission.unreadable", str(exc)))
+    findings += check_frontmatter_values(data, target)
     findings += check_body(body, target)
     return findings
 
@@ -449,17 +428,14 @@ def _committed_version(path: Path, ref: str) -> str | None:
         rel = path.resolve().relative_to(REPO).as_posix()
     except ValueError:
         return None
-    proc = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO, capture_output=True,
-                          encoding="utf-8", errors="replace")
+    proc = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO, capture_output=True, text=True)
     return proc.stdout if proc.returncode == 0 else None
 
 
 def check_mission(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else path.as_posix()
     try:
-        text = _read(path)
-    except UnreadableFile as exc:
-        return [Finding("Critical", rel, "mission.unreadable", str(exc))]
+        text = path.read_text(encoding="utf-8")
     except OSError as exc:  # pragma: no cover
         return [Finding("Critical", rel, "mission.unreadable", str(exc))]
     findings = check_mission_text(text, rel)

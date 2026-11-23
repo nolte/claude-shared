@@ -195,7 +195,8 @@ def test_non_utf8_mapped_data_file_is_a_failure_not_a_crash(tmp_path, capsys):
 
 
 @pytest.mark.parametrize(
-    "config", [b"mappings: \xff\n", b"- widgets/*.yaml\n", b"mappings:\n  - widgets/*.yaml\n"]
+    "config",
+    [b"mappings: \xff\n", b"- widgets/*.yaml\n", b"mappings:\n  - widgets/*.yaml\n", b"mappings: []\n", b'mappings: ""\n'],
 )
 def test_unusable_schemas_config_is_a_failure_not_a_crash(tmp_path, capsys, config):
     write_schema(tmp_path, VALID_SCHEMA)

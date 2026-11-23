@@ -279,7 +279,9 @@ def main(argv: list[str] | None = None) -> int:
             config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
         except (yaml.YAMLError, UnicodeDecodeError, OSError) as exc:
             failures.append(f"{CONFIG_NAME}: not parseable — {exc}")
-        mappings = (config.get("mappings") or {}) if isinstance(config, dict) else None
+        mappings = config.get("mappings") if isinstance(config, dict) else None
+        if mappings is None and isinstance(config, dict):
+            mappings = {}  # `mappings:` left empty binds nothing
         if not isinstance(mappings, dict):
             failures.append(f"{CONFIG_NAME}: `mappings` must be a mapping of glob to schema path")
             mappings = {}

@@ -30,7 +30,7 @@ RENOVATE_ENTRY = (
 def fake_vale(errors=(), stdout=None, returncode=None):
     calls = []
 
-    def runner(args, cwd=None, capture_output=None, text=None, **decoding):
+    def runner(args, cwd=None, capture_output=None, text=None):
         calls.append({"args": list(args), "text": pathlib.Path(args[-1]).read_text(encoding="utf-8")})
         report = {args[-1]: [{"Severity": "error", "Check": c, "Message": "m", "Match": "x", "Line": 1} for c in errors]}
         out = stdout if stdout is not None else json.dumps(report if errors else {})
@@ -154,28 +154,6 @@ def test_unparseable_vale_output_is_an_error_not_a_pass(monkeypatch, vale_on_pat
     monkeypatch.delenv("PR_AUTHOR", raising=False)
     runner = fake_vale(stdout="E100 [vocab] Runtime error", returncode=1)
     assert check_prose.main(["--title"], runner=runner) == 2
-
-
-
-def test_non_utf8_vale_output_is_decoded_not_a_traceback(monkeypatch, tmp_path, capsys):
-    # #812: a stand-in Vale on the real subprocess path emits an error alert whose
-    # message holds a non-UTF-8 byte; the check must still parse it and fail (1).
-    vale = tmp_path / "vale"
-    vale.write_bytes(b'#!/bin/sh\nprintf \'{"%s":[{"Severity":"error","Check":"X.Y",'
-                     b'"Message":"caf\\351","Match":"x","Line":1}]}\' "$2"\nexit 1\n')
-    vale.chmod(0o755)
-    monkeypatch.setattr(check_prose.shutil, "which", lambda name: str(vale))
-    monkeypatch.setenv("PR_TITLE", "fix(ci): anything")
-    monkeypatch.delenv("PR_AUTHOR", raising=False)
-    assert check_prose.main(["--title"]) == 1
-    assert "X.Y: caf\ufffd" in capsys.readouterr().out
-
-
-def test_non_utf8_release_notes_file_is_an_error_not_a_traceback(tmp_path, vale_on_path, capsys):
-    notes = tmp_path / "notes.md"
-    notes.write_bytes(b"caf\xe9\n")
-    assert check_prose.main(["--file", str(notes)], runner=fake_vale()) == 2
-    assert f"cannot read {notes}" in capsys.readouterr().err
 
 
 @pytest.mark.skipif(shutil.which("vale") is None, reason="needs the vale binary; `task test` sets STRICT_SKIPS=1, so this skip fails the gate")

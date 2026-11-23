@@ -52,19 +52,6 @@ def _display(path: Path) -> str:
     except ValueError:
         return path.as_posix()
 
-
-class UnreadableFile(Exception):
-    """A checked file is not valid UTF-8; `main` reports it and exits 2."""
-
-
-def _read(path: Path) -> str:
-    """Read `path` as UTF-8, naming the file instead of a bare decode traceback."""
-    try:
-        return path.read_text(encoding="utf-8")
-    except UnicodeDecodeError as exc:
-        raise UnreadableFile(f"{_display(path)} is not valid UTF-8 ({exc.reason} at byte {exc.start})") from exc
-
-
 # Recorded in every skill-review plan's `## Scope` so a later re-review can
 # detect validator drift (`spec/claude/skill-review/` §"Checks derived from
 # external skill-structure validation", #588). Bump the minor version when a
@@ -901,7 +888,7 @@ def _agent_tools_in(agents_dir: Path) -> dict[str, object]:
     if key not in _AGENT_TOOLS_CACHE:
         index: dict[str, object] = {}
         for f in sorted(agents_dir.glob("*.md")) if agents_dir.is_dir() else []:
-            fm = parse_frontmatter(_read(f)) or {}
+            fm = parse_frontmatter(f.read_text(encoding="utf-8")) or {}
             index[f.stem] = fm.get("tools")
         _AGENT_TOOLS_CACHE[key] = index
     return _AGENT_TOOLS_CACHE[key]
@@ -938,7 +925,7 @@ def check_skill_tool_enforcement_claim(
 
 def check_skill(path: Path) -> list[Finding]:
     rel = _display(path)
-    text = _read(path)
+    text = path.read_text(encoding="utf-8")
     fm = parse_frontmatter(text)
     if fm is None:
         return [Finding("Critical", rel, "skill-management.frontmatter-missing", "no YAML frontmatter")]
@@ -1149,7 +1136,7 @@ def check_spec_fallback_backlog() -> list[Finding]:
 
 def check_agent(path: Path) -> list[Finding]:
     rel = _display(path)
-    text = _read(path)
+    text = path.read_text(encoding="utf-8")
     fm = parse_frontmatter(text)
     if fm is None:
         return [Finding("Critical", rel, "agent-management.frontmatter-missing", "no YAML frontmatter")]
@@ -1241,7 +1228,7 @@ def check_agent_description_budget(agents_dir: Path) -> list[Finding]:
     if baseline is None:
         return []
     concat = "".join(
-        ((parse_frontmatter(_read(md)) or {}).get("description") or "")
+        ((parse_frontmatter(md.read_text(encoding="utf-8")) or {}).get("description") or "")
         for md in sorted(agents_dir.glob("*.md"))
     )
     ceiling = int(baseline * (1 + AGENT_DESC_BUDGET_HEADROOM))
@@ -1298,42 +1285,6 @@ def _enclosing_agents_dir(p: Path, rel_parts: tuple[str, ...]) -> Path | None:
     return None
 
 
-def _collect_findings(targets: list[str], root: Path, paths: list[Path],
-                      file_agent_trees: dict[Path, Path]) -> list[Finding]:
-    """Run every per-artifact and per-tree check; raises `UnreadableFile`."""
-    all_findings: list[Finding] = []
-    for path in paths:
-        # Classify by path segment, not a root-anchored prefix, so a skill or
-        # agent living under an in-repo plugin root (plugins/<name>/skills/...,
-        # plugins/<name>/agents/...) is validated exactly like the root plugin's.
-        if path.name == "SKILL.md" and path.parent.parent.name == "skills":
-            all_findings.extend(check_skill(path))
-        elif path.suffix == ".md" and path.parent.name == "agents":
-            all_findings.extend(check_agent(path))
-
-    # Phantom-agent leak scan: the per-file glob above only visits top-level
-    # `agents/*.md`, so nested companion markdown would slip through. Run the
-    # recursive tree check over every agents/ tree in scope — the root plugin's
-    # and each in-repo plugin's (plugins/<name>/agents/).
-    for t in targets:
-        p = root / t
-        if p.is_dir() and p.name == "agents":
-            all_findings.extend(check_agent_tree(p))
-            all_findings.extend(check_agent_description_budget(p))
-            file_agent_trees.pop(p.resolve(), None)
-    # Per-file invocation (the consumer pre-commit hook): scan each agents/ tree
-    # that holds a passed file once, unless the tree itself was a target above.
-    # The description budget stays a directory-target (hub) check.
-    for agents_dir in file_agent_trees.values():
-        all_findings.extend(check_agent_tree(agents_dir))
-
-    # Drain the spec-fallback backlog (#592) and the research-plan-implement adoption backlog.
-    all_findings.extend(check_spec_fallback_backlog())
-    all_findings.extend(check_rpi_backlog(
-        sum(1 for p in paths if p.name == "SKILL.md")))
-    return all_findings
-
-
 def main() -> int:
     if sys.argv[1:] == ["--version"]:
         print(f"validate_skills.py {VALIDATOR_VERSION}")
@@ -1377,11 +1328,36 @@ def main() -> int:
             if agents_dir is not None:
                 file_agent_trees.setdefault(agents_dir.resolve(), agents_dir)
 
-    try:
-        all_findings = _collect_findings(targets, root, paths, file_agent_trees)
-    except UnreadableFile as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
-        return 2
+    all_findings: list[Finding] = []
+    for path in paths:
+        # Classify by path segment, not a root-anchored prefix, so a skill or
+        # agent living under an in-repo plugin root (plugins/<name>/skills/...,
+        # plugins/<name>/agents/...) is validated exactly like the root plugin's.
+        if path.name == "SKILL.md" and path.parent.parent.name == "skills":
+            all_findings.extend(check_skill(path))
+        elif path.suffix == ".md" and path.parent.name == "agents":
+            all_findings.extend(check_agent(path))
+
+    # Phantom-agent leak scan: the per-file glob above only visits top-level
+    # `agents/*.md`, so nested companion markdown would slip through. Run the
+    # recursive tree check over every agents/ tree in scope — the root plugin's
+    # and each in-repo plugin's (plugins/<name>/agents/).
+    for t in targets:
+        p = root / t
+        if p.is_dir() and p.name == "agents":
+            all_findings.extend(check_agent_tree(p))
+            all_findings.extend(check_agent_description_budget(p))
+            file_agent_trees.pop(p.resolve(), None)
+    # Per-file invocation (the consumer pre-commit hook): scan each agents/ tree
+    # that holds a passed file once, unless the tree itself was a target above.
+    # The description budget stays a directory-target (hub) check.
+    for agents_dir in file_agent_trees.values():
+        all_findings.extend(check_agent_tree(agents_dir))
+
+    # Drain the spec-fallback backlog (#592) and the research-plan-implement adoption backlog.
+    all_findings.extend(check_spec_fallback_backlog())
+    all_findings.extend(check_rpi_backlog(
+        sum(1 for p in paths if p.name == "SKILL.md")))
 
     if not all_findings:
         print(f"validate_skills: {len(paths)} artifacts checked, no findings")

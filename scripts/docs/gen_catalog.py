@@ -354,16 +354,9 @@ def _repo_prefix(source: SourceRoot) -> str:
     return "" if rel in ("", ".") else f"{rel}/"
 
 
-def _read_text(path: Path) -> str:
-    """Read ``path`` as UTF-8; a decode failure becomes a ``CatalogError`` naming the file."""
-    try:
-        return path.read_text(encoding="utf-8")
-    except UnicodeDecodeError as exc:
-        raise CatalogError(f"{path}: not valid UTF-8 ({exc.reason} at byte {exc.start})") from exc
-
-
 def load_sources() -> list[SourceRoot]:
-    data = yaml.safe_load(_read_text(SOURCES_FILE)) or {}
+    with SOURCES_FILE.open("r", encoding="utf-8") as fh:
+        data = yaml.safe_load(fh) or {}
     sources_raw = data.get("sources") or []
     if not sources_raw:
         raise CatalogError(f"{SOURCES_FILE}: no sources configured")
@@ -392,7 +385,8 @@ def load_sources() -> list[SourceRoot]:
 
 
 def load_languages() -> list[str]:
-    raw = _read_text(MKDOCS_FILE)
+    with MKDOCS_FILE.open("r", encoding="utf-8") as fh:
+        raw = fh.read()
     locales = re.findall(r"^\s*-\s*locale:\s*([a-zA-Z][\w-]*)", raw, re.MULTILINE)
     if not locales:
         raise CatalogError(
@@ -667,7 +661,7 @@ def discover_skills(source: SourceRoot, languages: list[str]) -> list[Artifact]:
         if not skill_md.is_file():
             continue
         label = f"{source.name}:{source.skills_path}/{entry.name}/SKILL.md"
-        text = _read_text(skill_md)
+        text = skill_md.read_text(encoding="utf-8")
         meta, body = parse_frontmatter(text, label)
         name = meta.get("name")
         if not name:
@@ -712,7 +706,7 @@ def discover_agents(source: SourceRoot, languages: list[str]) -> list[Artifact]:
         if entry.suffix != ".md" or not entry.is_file():
             continue
         label = f"{source.name}:{source.agents_path}/{entry.name}"
-        text = _read_text(entry)
+        text = entry.read_text(encoding="utf-8")
         meta, body = parse_frontmatter(text, label)
         name = meta.get("name")
         if not name:
@@ -1132,8 +1126,7 @@ def write_page(path: Path, content: str) -> None:
     requirement R8, mirroring the verified claude-home-assistant#6 pattern).
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    # A generated file that isn't valid UTF-8 is simply stale: overwrite it.
-    if path.exists() and path.read_bytes() == content.encode("utf-8"):
+    if path.exists() and path.read_text(encoding="utf-8") == content:
         return
     path.write_text(content, encoding="utf-8")
 
