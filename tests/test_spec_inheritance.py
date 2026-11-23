@@ -299,28 +299,6 @@ def test_hub_itself_passes(tmp_path):
     assert csi.main(["--repo", str(repo)]) == 0
 
 
-def test_unreadable_plugin_manifest_counts_as_absent(tmp_path):
-    """A non-UTF-8 plugin.json reads like a corrupt one: no plugin name, no crash (#812)."""
-    manifest = tmp_path / ".claude-plugin" / "plugin.json"
-    manifest.parent.mkdir()
-    manifest.write_bytes(b"\xff\xfe{}")
-    assert csi.own_plugin_name(tmp_path) is None
-
-
-def test_plugin_manifest_without_object_root_counts_as_absent(tmp_path):
-    manifest = tmp_path / ".claude-plugin" / "plugin.json"
-    manifest.parent.mkdir()
-    manifest.write_text("[]", encoding="utf-8")
-    assert csi.own_plugin_name(tmp_path) is None
-
-
-@pytest.mark.parametrize("content", [b"\xff\xfe x: 1", b"- 1\n"])
-def test_unreadable_hub_config_falls_back_to_english(tmp_path, content):
-    """A non-UTF-8 .spec-config.yml or one whose root isn't a mapping reads like a broken one (#812)."""
-    (tmp_path / ".spec-config.yml").write_bytes(content)
-    assert csi.hub_canonical_lang(tmp_path) == "en"
-
-
 def test_non_utf8_spec_file_exits_2_not_a_traceback(tmp_path, capsys):
     hub = make_hub(tmp_path)
     consumer = tmp_path / "consumer"
@@ -350,19 +328,6 @@ def test_non_utf8_error_names_the_file(tmp_path, capsys):
     assert str(bad) in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("content", ["canonical_language:\n", "canonical_language: 42\n"])
-def test_hub_language_that_isnt_a_string_falls_back_to_english(tmp_path, content):
-    (tmp_path / ".spec-config.yml").write_text(content, encoding="utf-8")
-    assert csi.hub_canonical_lang(tmp_path) == "en"
-
-
-def test_plugin_name_that_isnt_a_string_counts_as_absent(tmp_path):
-    manifest = tmp_path / ".claude-plugin" / "plugin.json"
-    manifest.parent.mkdir()
-    manifest.write_text('{"name": 42}', encoding="utf-8")
-    assert csi.own_plugin_name(tmp_path) is None
-
-
 def test_unreadable_hub_config_exits_2_instead_of_checking_in_english(tmp_path, capsys):
     """A hub config that can't be read must not silently fall back to "en" (#812 review)."""
     if os.geteuid() == 0:
@@ -378,3 +343,20 @@ def test_unreadable_hub_config_exits_2_instead_of_checking_in_english(tmp_path, 
     finally:
         cfg.chmod(0o644)
     assert "can't be read" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("which", ["plugin", "hub"])
+def test_non_utf8_manifest_or_hub_config_exits_2_instead_of_a_silent_default(tmp_path, capsys, which):
+    """Neither a silent None (cyclic check off) nor a silent "en" (#812 review)."""
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    write_config(consumer, inherits=[{"source": "nolte-shared", "ref": "v0.1.9"}])
+    make_spec(consumer / "spec", "project/mine", scope="local")
+    if which == "plugin":
+        bad = consumer / ".claude-plugin" / "plugin.json"
+        bad.parent.mkdir()
+    else:
+        bad = hub / ".spec-config.yml"
+    bad.write_bytes(b"\xff\xfe{}")
+    assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 2
+    assert str(bad) in capsys.readouterr().err

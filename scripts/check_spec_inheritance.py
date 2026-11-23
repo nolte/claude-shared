@@ -168,11 +168,9 @@ def own_plugin_name(repo: Path) -> str | None:
     manifest = repo / ".claude-plugin" / "plugin.json"
     if manifest.is_file():
         try:
-            data = json.loads(_read(manifest))
-        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+            return json.loads(_read(manifest)).get("name")
+        except (json.JSONDecodeError, OSError):
             return None
-        name = data.get("name") if isinstance(data, dict) else None
-        return name if isinstance(name, str) else None
     return None
 
 
@@ -190,11 +188,9 @@ def hub_canonical_lang(hub_spec_root: Path) -> str:
     if cfg.is_file():
         try:
             data = yaml.safe_load(_read(cfg)) or {}
-        except (yaml.YAMLError, UnicodeDecodeError):
-            return "en"
-        lang = data.get("canonical_language") if isinstance(data, dict) else None
-        if isinstance(lang, str) and lang:
-            return lang
+            return data.get("canonical_language", "en")
+        except yaml.YAMLError:
+            pass
     return "en"
 
 
