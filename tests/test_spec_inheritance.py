@@ -295,3 +295,11 @@ def test_hub_itself_passes(tmp_path):
     """The real hub repo (this checkout) has no inherits and clean headers."""
     repo = Path(__file__).resolve().parents[1]
     assert csi.main(["--repo", str(repo)]) == 0
+
+
+def test_unreadable_plugin_manifest_counts_as_absent(tmp_path):
+    """A non-UTF-8 plugin.json reads like a corrupt one: no plugin name, no crash (#812)."""
+    manifest = tmp_path / ".claude-plugin" / "plugin.json"
+    manifest.parent.mkdir()
+    manifest.write_bytes(b"\xff\xfe{}")
+    assert csi.own_plugin_name(tmp_path) is None

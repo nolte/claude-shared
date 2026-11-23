@@ -35,16 +35,21 @@ BOT_LOGINS = frozenset({"app/renovate", "renovate[bot]", "renovate"})
 # `gh pr list --limit` maximum this skill requests; a full page means the list may be partial.
 LIST_LIMIT = 200
 PR_FIELDS = (
-    "number,title,isDraft,headRefName,baseRefName,isCrossRepository,author,"
+    "number,title,isDraft,baseRefName,isCrossRepository,author,"
     "mergeStateStatus,mergeable,reviewDecision,files,changedFiles,additions,"
     "deletions,createdAt,body"
 )
 # stderr of `gh pr checks --required` (gh 2.96.0) when the PR has no check run at all, or
 # none of its checks is required. Neither is an error; right after a push it can also mean
-# "not reported yet", which `mergeStateStatus` (BLOCKED/UNKNOWN, rank 2) still carries.
+# "not reported yet": `mergeStateStatus` UNKNOWN then ranks as pending, BLOCKED as not
+# mergeable with a hint to re-run `collect` (see `blockers`).
 NO_CHECKS_MESSAGES = ("no checks reported", "no required checks reported")
-# "depends on #12", "Depends on #12, #13 and #14", "Depends-on: #12" (trailer form).
-DEPENDS_RE = re.compile(r"(?i)\bdepends[\s-]+on:?\s*(#\d+(?:\s*(?:,|and|&)\s*#\d+)*)")
+# "depends on #12", "Depends on #12, #13 and #14", "Depends on #12, #13, and #14",
+# "Depends on #12 and on #13", "depends on PR #12", "Depends-on: #12" (trailer form).
+# Best effort: a phrase outside these forms yields no proposal.
+_DEP_ITEM = r"(?:PR\s*)?#\d+"
+_DEP_SEP = r"\s*(?:,\s*(?:and\b)?|&|\band\b)\s*(?:on\s+)?"
+DEPENDS_RE = re.compile(rf"(?i)\bdepends[\s-]+on:?\s*({_DEP_ITEM}(?:{_DEP_SEP}{_DEP_ITEM})*)")
 
 RULES = {
     "dependency": "dependency: prerequisite merges first",
@@ -86,7 +91,11 @@ def required_checks(number: int) -> list[dict[str, Any]]:
     # while printing the list. Exit 1 with no output is either "no required checks" (stated
     # on stderr) or a real error (auth, rate limit, PR gone), which must fail closed.
     if proc.returncode in (0, 1, 8) and proc.stdout.strip():
-        return _json_list(args, proc)
+        checks = _json_list(args, proc)
+        # `order` reads name and bucket per check; any other element is an unknown state.
+        if not all(isinstance(c, dict) for c in checks):
+            raise _fail(args, proc)
+        return checks
     if proc.returncode == 1 and any(m in proc.stderr for m in NO_CHECKS_MESSAGES):
         return []
     raise _fail(args, proc)
@@ -130,6 +139,13 @@ def blockers(pr: dict[str, Any]) -> list[str]:
         reasons.append("changes requested")
     elif pr.get("reviewDecision") == "REVIEW_REQUIRED":
         reasons.append("required review missing")
+    # BLOCKED with nothing above and no required check still running: GitHub blocks for a
+    # reason the snapshot doesn't show (a ruleset, a missing signature, ...). It must not lead.
+    checks = pr.get("requiredChecks", [])
+    if (not reasons and pr.get("mergeStateStatus") == "BLOCKED"
+            and not any(c.get("bucket") in ("pending", "cancel") for c in checks)):
+        reasons.append("blocked, cause unknown" if checks
+                       else "blocked, cause unknown (no required check reported yet; re-run collect)")
     return reasons
 
 
@@ -380,9 +396,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
-        raw = sys.stdin.read() if args.snapshot == "-" else open(args.snapshot, encoding="utf-8").read()
+        if args.snapshot == "-":
+            raw = sys.stdin.read()
+        else:
+            with open(args.snapshot, encoding="utf-8") as fh:
+                raw = fh.read()
         snapshot = json.loads(raw)
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         print(f"cannot read snapshot: {exc}", file=sys.stderr)
         return 2
     try:

@@ -165,7 +165,7 @@ def own_plugin_name(repo: Path) -> str | None:
     if manifest.is_file():
         try:
             return json.loads(_read(manifest)).get("name")
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
             return None
     return None
 

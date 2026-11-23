@@ -105,5 +105,9 @@ none
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| `scripts/check_spec_inheritance.py:168` `own_plugin_name` raises `UnicodeDecodeError` on a non-UTF-8 `.claude-plugin/plugin.json` instead of returning None like a corrupt one | class sweep F3 | fixed directly (+ `test_unreadable_plugin_manifest_counts_as_absent`) | venv python: `own_plugin_name(<dir with \xff\xfe manifest>)` → `UnicodeDecodeError`; after fix → `None`; new test fails without fix (1 failed), passes with (1 passed) | none |
 
 ## Dispatch log
+
+2026-11-23 P1–P4 dispatched to nolte-engineering:fullstack-developer — all four implemented uncommitted; reported 61 passed, ruff clean, 9 new cases fail against the old script; deviation: element check placed in `required_checks()` (real `proc` for `_fail`), same exit 2. Re-verified by orchestrator: `pytest tests/test_merge_order.py` → 61 passed; regex probes and a 20k-repetition adversarial body (0.004 s).
+2026-11-23 verify: `SKIP=markdownlint pre-commit run --files <changed>` → exit 0; markdownlint-cli@0.50.1 with hook args → exit 0; `task test` → 1751 passed, 21 skipped, exit 0.
