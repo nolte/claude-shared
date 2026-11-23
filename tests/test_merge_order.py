@@ -16,6 +16,7 @@ import re
 import stat
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -174,11 +175,24 @@ def test_own_blocker_and_prerequisite_in_a_cycle_are_both_listed():
         ("depends on PR #3", ["#3->#5"]),
         ("DEPENDS ON pr #1, PR #2", ["#1->#5", "#2->#5"]),
         ("This PR depends on #5 itself and #99 elsewhere", []),
+        ("Depends on #1 and the rest", ["#1->#5"]),
+        ("Depends on #1 andrew #2", ["#1->#5"]),
+        ("Depends on #1, and on #2", ["#1->#5", "#2->#5"]),
+        ("depend on #1", []),
+        ("Depends on #\u0661\u0662", []),  # non-ASCII digits are not a PR number
     ],
 )
 def test_body_dependency_forms_are_proposed(body, expected):
     result = run(pr(1), pr(2), pr(3), pr(5, body=body))
     assert result["proposed_edges"] == expected
+
+
+@pytest.mark.parametrize("body", ["Depends on #1," + " " * 60000 + "x", "Depends on #1" + ", and on" * 20000 + "x"])
+def test_dependency_phrase_scan_stays_linear_on_hostile_bodies(body):
+    # PR bodies are untrusted; the quadratic form took ~119 s on the first body.
+    start = time.monotonic()
+    assert mo._mentions(body) == {1}
+    assert time.monotonic() - start < 1.0
 
 
 def test_body_mention_is_only_proposed_never_applied():
@@ -427,6 +441,8 @@ def test_collect_reads_checks_from_output_whatever_the_exit_code(tmp_path):
         ("boom", "", 4),
         ('{"not": "a list"}', "", 0),
         ('[1, "x"]', "", 0),
+        ("[{}]", "", 0),
+        ('[{"name": "t", "bucket": "weird"}]', "", 0),
     ],
 )
 def test_collect_fails_closed_when_check_state_is_unknown(tmp_path, check):

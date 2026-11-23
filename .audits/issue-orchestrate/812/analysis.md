@@ -106,6 +106,11 @@ none
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
 | `scripts/check_spec_inheritance.py:168` `own_plugin_name` raises `UnicodeDecodeError` on a non-UTF-8 `.claude-plugin/plugin.json` instead of returning None like a corrupt one | class sweep F3 | fixed directly (+ `test_unreadable_plugin_manifest_counts_as_absent`) | venv python: `own_plugin_name(<dir with \xff\xfe manifest>)` → `UnicodeDecodeError`; after fix → `None`; new test fails without fix (1 failed), passes with (1 passed) | none |
+| SCR-001 quadratic backtracking in `_DEP_SEP` (adjacent `,\s*` and `\s*`), regression vs develop; untrusted PR body | diff review @ f144dd46 (python-code-reviewer, security brief) | fixed directly: whitespace moved into the `and` group + `test_dependency_phrase_scan_stays_linear_on_hostile_bodies` | `'depends on #1,'+' '*60000+'x'`: 118.7 s (15k: 6.7 s, 30k: 28.0 s) vs develop 0.002 s; after fix 60k 0.004 s, 600k 0.042 s; timing test fails with the old separator (1 failed) | none |
+| SCR-002 `\d` matches non-ASCII digits (`#\u0661\u0662` → proposal #12) | diff review @ f144dd46 | fixed directly: `(?a)` on both patterns + test case | `_mentions('depends on #\u0661\u0662')` → `{12}` before, `[]` proposal after | none |
+| SCR-003 `collect` accepted `[{}]` / unknown bucket as check elements | diff review @ f144dd46 | fixed directly: require `name` str and bucket in `CHECK_BUCKETS` + 2 test cases | fake gh `('[{}]', "", 0)` → exit 0 before; exit 2 after (tests pass) | none |
+| SCR-004 `own_plugin_name` `AttributeError` on a JSON root that isn't an object | diff review @ f144dd46 (same class as sweep fix) | fixed directly: `isinstance(data, dict)` + `test_plugin_manifest_without_object_root_counts_as_absent` | venv python, `plugin.json` = `[]` → `AttributeError: 'list' object has no attribute 'get'` | none |
+| SCR-005 missing negative cases for the body regex | diff review @ f144dd46 | fixed directly: 5 cases added (`and the rest`, `andrew`, `, and on`, `depend on`, non-ASCII digits) | all 70 merge-order tests pass | none |
 
 ## Dispatch log
 

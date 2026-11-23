@@ -303,3 +303,10 @@ def test_unreadable_plugin_manifest_counts_as_absent(tmp_path):
     manifest.parent.mkdir()
     manifest.write_bytes(b"\xff\xfe{}")
     assert csi.own_plugin_name(tmp_path) is None
+
+
+def test_plugin_manifest_without_object_root_counts_as_absent(tmp_path):
+    manifest = tmp_path / ".claude-plugin" / "plugin.json"
+    manifest.parent.mkdir()
+    manifest.write_text("[]", encoding="utf-8")
+    assert csi.own_plugin_name(tmp_path) is None

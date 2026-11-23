@@ -164,9 +164,10 @@ def own_plugin_name(repo: Path) -> str | None:
     manifest = repo / ".claude-plugin" / "plugin.json"
     if manifest.is_file():
         try:
-            return json.loads(_read(manifest)).get("name")
+            data = json.loads(_read(manifest))
         except (json.JSONDecodeError, UnicodeDecodeError, OSError):
             return None
+        return data.get("name") if isinstance(data, dict) else None
     return None
 
 

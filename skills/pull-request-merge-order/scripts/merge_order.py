@@ -44,12 +44,16 @@ PR_FIELDS = (
 # "not reported yet": `mergeStateStatus` UNKNOWN then ranks as pending, BLOCKED as not
 # mergeable with a hint to re-run `collect` (see `blockers`).
 NO_CHECKS_MESSAGES = ("no checks reported", "no required checks reported")
+# Every bucket `gh pr checks --json bucket` emits (gh 2.96.0).
+CHECK_BUCKETS = frozenset({"pass", "fail", "pending", "skipping", "cancel"})
 # "depends on #12", "Depends on #12, #13 and #14", "Depends on #12, #13, and #14",
 # "Depends on #12 and on #13", "depends on PR #12", "Depends-on: #12" (trailer form).
 # Best effort: a phrase outside these forms yields no proposal.
 _DEP_ITEM = r"(?:PR\s*)?#\d+"
-_DEP_SEP = r"\s*(?:,\s*(?:and\b)?|&|\band\b)\s*(?:on\s+)?"
-DEPENDS_RE = re.compile(rf"(?i)\bdepends[\s-]+on:?\s*({_DEP_ITEM}(?:{_DEP_SEP}{_DEP_ITEM})*)")
+# The optional whitespace before "and" sits inside the group, so no two \s* runs are adjacent:
+# a long whitespace run in an untrusted body must stay linear (no quadratic backtracking).
+_DEP_SEP = r"\s*(?:,(?:\s*and\b)?|&|\band\b)\s*(?:on\s+)?"
+DEPENDS_RE = re.compile(rf"(?ia)\bdepends[\s-]+on:?\s*({_DEP_ITEM}(?:{_DEP_SEP}{_DEP_ITEM})*)")
 
 RULES = {
     "dependency": "dependency: prerequisite merges first",
@@ -92,8 +96,9 @@ def required_checks(number: int) -> list[dict[str, Any]]:
     # on stderr) or a real error (auth, rate limit, PR gone), which must fail closed.
     if proc.returncode in (0, 1, 8) and proc.stdout.strip():
         checks = _json_list(args, proc)
-        # `order` reads name and bucket per check; any other element is an unknown state.
-        if not all(isinstance(c, dict) for c in checks):
+        # `order` reads name and bucket per check; any other shape is an unknown state.
+        if not all(isinstance(c, dict) and isinstance(c.get("name"), str)
+                   and c.get("bucket") in CHECK_BUCKETS for c in checks):
             raise _fail(args, proc)
         return checks
     if proc.returncode == 1 and any(m in proc.stderr for m in NO_CHECKS_MESSAGES):
@@ -274,7 +279,7 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
 
 
 def _mentions(body: str) -> set[int]:
-    return {int(x) for group in DEPENDS_RE.findall(body) for x in re.findall(r"#(\d+)", group)}
+    return {int(x) for group in DEPENDS_RE.findall(body) for x in re.findall(r"(?a)#(\d+)", group)}
 
 
 def _reach(n: int, adj: dict[int, set[int]]) -> set[int]:
