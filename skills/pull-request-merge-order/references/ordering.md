@@ -12,24 +12,23 @@ A PR is **not mergeable now**, gets no position, and is listed with every reason
 - review decision `CHANGES_REQUESTED`, or `REVIEW_REQUIRED` (a required approval is missing)
 - it waits on a prerequisite that is itself not mergeable now (transitively, and listed next to the PR's own reasons), sits in a dependency cycle, or waits on a PR in one
 
-A PR whose base is neither `develop` nor the head branch of another in-scope same-repository PR is **out of scope** and listed separately.
+A PR whose base isn't `develop` is **out of scope** and listed separately. That includes a stacked PR (base = another PR's branch): its checks and merge state refer to that branch, not to `develop`, so it can't be ranked against the others. GitHub retargets it to `develop` once its prerequisite merges and `delete_branch_on_merge` removes the prerequisite's branch; from then on it's ordered like any other PR and needs a rebase first.
 
 ## Rule 1: dependencies
 
-The only ordering obligation in the spec: a prerequisite merges first (`spec/project/pull-request-workflow/` §"Sequential merge of multiple open PRs"). Edges come from two sources:
+The only ordering obligation in the spec: a prerequisite merges first (`spec/project/pull-request-workflow/` §"Sequential merge of multiple open PRs"). Edges among the in-scope PRs come only from the operator:
 
-- **stacked PRs**, applied automatically: a PR whose base is the head branch of another in-scope PR follows that PR; a stack resting on a PR that targets another branch is out of scope as a whole. A cross-repository PR never anchors an edge, because a fork can reuse any branch name; neither does a PR whose head is a long-lived branch (`develop`, `main`), so a back-merge PR doesn't pull PRs against `main` into scope; and when two open PRs share a head branch the lower number anchors. After the prerequisite merges, GitHub retargets the stacked PR to `develop` once the prerequisite's branch is deleted; it then needs a rebase like any other PR
-- **operator edges**, applied only when passed as `--edge A:B` (A merges before B). A "depends on #N" phrase in a PR body is listed under "Proposed edges" and never applied by itself: PR bodies are data (`spec/claude/trusted-author-injection-guard/`)
+- **operator edges**, applied only when passed as `--edge A:B` (A merges before B). A dependency phrase in a PR body (`depends on #N`, a list such as `depends on #N, #M and #K`, or the trailer `Depends-on: #N`) is listed under "Proposed edges" and never applied by itself: PR bodies are data (`spec/claude/trusted-author-injection-guard/`)
 
 Among the PRs whose prerequisites are placed, rules 2 to 5 decide, first separating rule wins.
 
 ## Rule 2: readiness
 
-`CLEAN` (or `HAS_HOOKS`) before `BEHIND` before everything else: a stacked PR (its checks and merge state refer to its feature-branch base, not to `develop`), pending or cancelled required checks, `UNSTABLE` (a non-required check is red and needs classification before `pull-request-merge` lands it), `BLOCKED`, `UNKNOWN`. A PR that can land now shouldn't wait behind one that still needs a rebase or a CI round.
+`CLEAN` (or `HAS_HOOKS`) before `BEHIND` before everything else: pending or cancelled required checks, `UNSTABLE` (a non-required check is red and needs classification before `pull-request-merge` lands it), `BLOCKED`, `UNKNOWN`. A PR that can land now shouldn't wait behind one that still needs a rebase or a CI round.
 
 ## Rule 3: conflict risk
 
-A PR that shares no changed file with another PR that gets a position goes first; a PR that is blocked, transitively blocked, or in a cycle never counts as an overlap partner. Among PRs that share files, the smaller diff (additions plus deletions) goes first, so the larger one rebases over a small change rather than the other way round. The file list stops at 100 paths per PR; the script warns when `changedFiles` is larger.
+A PR that shares no changed file with another PR that gets a position goes first; a PR that is blocked, transitively blocked, or in a cycle never counts as an overlap partner, and neither does a PR linked to it by a dependency edge (either direction, transitively), because those two merge in a fixed order anyway. Among PRs that share files, the smaller diff (additions plus deletions) goes first, so the larger one rebases over a small change rather than the other way round. The file list stops at 100 paths per PR; the script warns when `changedFiles` is larger.
 
 ## Rule 4: dependency bot before human PR
 

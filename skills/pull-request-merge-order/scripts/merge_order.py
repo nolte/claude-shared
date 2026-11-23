@@ -29,9 +29,6 @@ import sys
 from typing import Any
 
 BASE = "develop"
-# Long-lived branches per spec/project/branching-model/: never a stack anchor, so a back-merge
-# PR (head main, base develop) can't pull PRs against main into the develop order.
-LONG_LIVED = frozenset({"develop", "main"})
 # Same allowlist as skills/backlog-delivery-orchestrate/scripts/merge-train.sh
 # (TRAIN_BOT_LOGINS default); tests/test_merge_order.py asserts the two stay equal.
 BOT_LOGINS = frozenset({"app/renovate", "renovate[bot]", "renovate"})
@@ -46,7 +43,8 @@ PR_FIELDS = (
 # none of its checks is required. Neither is an error; right after a push it can also mean
 # "not reported yet", which `mergeStateStatus` (BLOCKED/UNKNOWN, rank 2) still carries.
 NO_CHECKS_MESSAGES = ("no checks reported", "no required checks reported")
-DEPENDS_RE = re.compile(r"(?i)\bdepends\s+on\s+#(\d+)\b")
+# "depends on #12", "Depends on #12, #13 and #14", "Depends-on: #12" (trailer form).
+DEPENDS_RE = re.compile(r"(?i)\bdepends[\s-]+on:?\s*(#\d+(?:\s*(?:,|and|&)\s*#\d+)*)")
 
 RULES = {
     "dependency": "dependency: prerequisite merges first",
@@ -100,10 +98,11 @@ def collect() -> dict[str, Any]:
     if proc.returncode != 0:
         raise _fail(args, proc)
     prs = _json_list(args, proc)
-    in_scope, _ = scope({pr["number"]: pr for pr in prs})
+    if not all(isinstance(pr, dict) and isinstance(pr.get("number"), int) for pr in prs):
+        raise _fail(args, proc)
     for pr in prs:
         # Out-of-scope PRs never get a position, so their check lookup can't fail the run.
-        pr["requiredChecks"] = required_checks(pr["number"]) if pr["number"] in in_scope else []
+        pr["requiredChecks"] = required_checks(pr["number"]) if pr.get("baseRefName") == BASE else []
     return {"base": BASE, "partial": len(prs) >= LIST_LIMIT, "pullRequests": prs}
 
 
@@ -134,31 +133,8 @@ def blockers(pr: dict[str, Any]) -> list[str]:
     return reasons
 
 
-def scope(prs: dict[int, dict[str, Any]]) -> tuple[dict[int, dict[str, Any]], set[tuple[int, int]]]:
-    """In scope: base is develop, or (stacked) the head branch of an in-scope same-repository
-    PR, grown to a fixpoint so a stack on a PR that targets another branch stays out. Edges
-    are built from the final set; when two open PRs share a head branch the lowest anchors."""
-    in_scope = {n: pr for n, pr in prs.items() if pr.get("baseRefName") == BASE}
-    while True:
-        heads = {pr["headRefName"] for pr in in_scope.values()
-                 if not pr.get("isCrossRepository") and pr["headRefName"] not in LONG_LIVED}
-        new = {n: pr for n, pr in prs.items() if n not in in_scope and pr.get("baseRefName") in heads}
-        if not new:
-            break
-        in_scope.update(new)
-    by_head: dict[str, int] = {}
-    for n in sorted(in_scope):
-        if not in_scope[n].get("isCrossRepository") and in_scope[n]["headRefName"] not in LONG_LIVED:
-            by_head.setdefault(in_scope[n]["headRefName"], n)
-    edges = {(by_head[pr["baseRefName"]], n) for n, pr in in_scope.items() if pr.get("baseRefName") != BASE}
-    return in_scope, edges
-
-
 def readiness(pr: dict[str, Any]) -> tuple[int, str]:
     state = pr.get("mergeStateStatus") or "UNKNOWN"
-    if pr.get("baseRefName") != BASE:
-        # Its checks and merge state refer to the feature-branch base, not to develop.
-        return 2, f"stacked on {pr.get('baseRefName')}; checks against develop not run yet"
     if any(c.get("bucket") in ("pending", "cancel") for c in pr.get("requiredChecks", [])):
         return 2, f"{state}, required checks pending or cancelled"
     if state in READINESS:
@@ -172,7 +148,10 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
     if snapshot.get("partial"):
         warnings.append(f"the open-PR list hit the {LIST_LIMIT}-row limit; the order may be partial")
 
-    in_scope, dep_edges = scope(prs)
+    # Only PRs against develop are ordered. A stacked PR (base = another PR's branch) is out of
+    # scope until GitHub retargets it to develop after its prerequisite merges.
+    in_scope = {n: pr for n, pr in prs.items() if pr.get("baseRefName") == BASE}
+    dep_edges: set[tuple[int, int]] = set()
     out_of_scope = [
         {"number": n, "title": pr.get("title", ""), "base": pr.get("baseRefName")}
         for n, pr in prs.items() if n not in in_scope
@@ -187,8 +166,8 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
             warnings.append(f"edge #{a}->#{b} ignored: both PRs must be open and in scope")
 
     proposed = sorted(
-        {(int(m), n) for n, pr in in_scope.items() for m in DEPENDS_RE.findall(pr.get("body") or "")
-         if int(m) in in_scope and int(m) != n} - dep_edges
+        {(m, n) for n, pr in in_scope.items() for m in _mentions(pr.get("body") or "")
+         if m in in_scope and m != n} - dep_edges
     )
 
     blocked = {n: blockers(pr) for n, pr in in_scope.items()}
@@ -200,9 +179,18 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
         if (pr.get("changedFiles") or 0) > len(files[n]):
             warnings.append(f"#{n}: file list truncated ({len(files[n])} of {pr['changedFiles']}); overlap may be missed")
 
+    preds: dict[int, set[int]] = {n: set() for n in in_scope}
+    succs: dict[int, set[int]] = {n: set() for n in in_scope}
+    for a, b in dep_edges:
+        preds[b].add(a)
+        succs[a].add(b)
+    # PRs linked by a dependency (either direction, transitively) merge in a fixed order, so
+    # their shared files are no conflict risk between them.
+    linked = {n: _reach(n, preds) | _reach(n, succs) for n in in_scope}
+
     def key(n: int, pool: set[int]) -> tuple:
         pr = in_scope[n]
-        overlap = any(files[n] & files[m] for m in pool if m != n)
+        overlap = any(files[n] & files[m] for m in pool if m != n and m not in linked[n])
         size = (pr.get("additions") or 0) + (pr.get("deletions") or 0)
         return (
             readiness(pr)[0],
@@ -212,9 +200,6 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
             n,
         )
 
-    preds: dict[int, set[int]] = {n: set() for n in in_scope}
-    for a, b in dep_edges:
-        preds[b].add(a)
     # A blocked prerequisite keeps its dependants (transitively) out of the order.
     ready_set = set(orderable)
     changed = True
@@ -226,10 +211,6 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
                 ready_set.discard(n)
                 blocked[n] = ["waits on blocked prerequisite " + ", ".join(f"#{p}" for p in bad)]
                 changed = True
-    for n in sorted(set(in_scope) - orderable):  # own blockers: add the wait too, so all reasons show
-        bad = sorted(p for p in preds[n] if p not in ready_set)
-        if bad:
-            blocked[n].append("waits on blocked prerequisite " + ", ".join(f"#{p}" for p in bad))
 
     sequence = _toposort(ready_set, preds, lambda n: key(n, ready_set))
     cyclic = sorted(ready_set - set(sequence))
@@ -243,6 +224,11 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
         placed = set(sequence)
         sequence = _toposort(placed, preds, lambda n: key(n, placed))
     rank = lambda n: key(n, set(sequence))  # noqa: E731
+    placed = set(sequence)
+    for n in sorted(set(in_scope) - orderable):  # own blockers: add the wait too, so all reasons show
+        bad = sorted(p for p in preds[n] if p not in placed)
+        if bad:
+            blocked[n].append("waits on blocked prerequisite " + ", ".join(f"#{p}" for p in bad))
 
     rows = []
     for i, n in enumerate(sequence):
@@ -269,6 +255,21 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
         "proposed_edges": [f"#{a}->#{b}" for a, b in proposed],
         "warnings": warnings,
     }
+
+
+def _mentions(body: str) -> set[int]:
+    return {int(x) for group in DEPENDS_RE.findall(body) for x in re.findall(r"#(\d+)", group)}
+
+
+def _reach(n: int, adj: dict[int, set[int]]) -> set[int]:
+    """Every PR reachable from `n` along `adj`, excluding `n` unless it lies on a cycle."""
+    stack, seen = list(adj[n]), set()
+    while stack:
+        m = stack.pop()
+        if m not in seen:
+            seen.add(m)
+            stack.extend(adj[m])
+    return seen
 
 
 def _on_cycle(n: int, preds: dict[int, set[int]], nodes: set[int]) -> bool:
@@ -339,9 +340,9 @@ def render(result: dict[str, Any]) -> str:
     lines.append(f"Head: #{result['head']}" if result["head"] else "Head: none")
     if result["not_mergeable"]:
         lines.append("\nNot mergeable now:")
-        lines += [f"- #{r['number']} {_text(r['title'])}: {'; '.join(r['reasons'])}" for r in result["not_mergeable"]]
+        lines += [f"- #{r['number']} {_text(r['title'])}: {_text('; '.join(r['reasons']))}" for r in result["not_mergeable"]]
     if result["out_of_scope"]:
-        lines.append("\nOut of scope (base is neither develop nor the branch of an in-scope same-repository PR):")
+        lines.append("\nOut of scope (base isn't develop; a stacked PR enters once it is retargeted to develop):")
         lines += [f"- #{r['number']} {_text(r['title'])} (base {_text(r['base'])})" for r in result["out_of_scope"]]
     if result["applied_edges"]:
         lines.append("\nApplied dependency edges: " + ", ".join(result["applied_edges"]))

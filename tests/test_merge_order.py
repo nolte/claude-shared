@@ -108,31 +108,45 @@ def test_no_orderable_pr_has_no_head():
 # ------------------------------------------------------------------ rule 1: dependencies
 
 
-def test_stacked_pr_follows_its_prerequisite_even_when_it_ranks_better():
-    # #2 is CLEAN and older, #1 is BEHIND; #2 is stacked on #1's branch.
+def test_operator_edge_puts_prerequisite_first_even_when_it_ranks_worse():
+    # #2 is CLEAN and older, #1 is BEHIND; the operator confirmed #1 -> #2.
     result = run(pr(1, mergeStateStatus="BEHIND", createdAt="2026-11-20T00:00:00Z"),
-                 pr(2, baseRefName="feat/b1", createdAt="2026-11-01T00:00:00Z"))
+                 pr(2, createdAt="2026-11-01T00:00:00Z"), edges=[(1, 2)])
     assert numbers(result) == [1, 2]
     assert result["order"][0]["rule"] == mo.RULES["dependency"]
     assert result["applied_edges"] == ["#1->#2"]
 
 
-def test_back_merge_pr_does_not_pull_main_prs_into_scope():
-    result = run(pr(1, headRefName="main"), pr(2, headRefName="develop", baseRefName="main"))
-    assert numbers(result) == [1]
-    assert [r["number"] for r in result["out_of_scope"]] == [2]
-    assert result["applied_edges"] == []
+def test_stacked_pr_is_out_of_scope_and_creates_no_edge():
+    # Stacks are no longer inferred: #2 enters only once GitHub retargets it to develop.
+    result = run(pr(1), pr(2, baseRefName="feat/b1"), pr(3, headRefName="main"), pr(4, baseRefName="main"))
+    assert numbers(result) == [1, 3]
+    assert [r["number"] for r in result["out_of_scope"]] == [2, 4]
+    assert result["applied_edges"] == [] and result["not_mergeable"] == []
 
 
 def test_own_blocker_and_blocked_prerequisite_are_both_listed():
-    result = run(pr(1, isDraft=True), pr(2, isDraft=True, baseRefName="feat/b1"))
+    result = run(pr(1, isDraft=True), pr(2, isDraft=True), edges=[(1, 2)])
     assert blocked(result)[2] == ["draft", "waits on blocked prerequisite #1"]
 
 
-def test_fork_branch_name_does_not_create_a_stacked_edge():
-    result = run(pr(1, isCrossRepository=True, headRefName="feat/x"), pr(2, baseRefName="feat/x"))
-    assert result["applied_edges"] == []
-    assert [r["number"] for r in result["out_of_scope"]] == [2]
+def test_own_blocker_and_prerequisite_in_a_cycle_are_both_listed():
+    result = run(pr(1), pr(2), pr(3, isDraft=True), edges=[(1, 2), (2, 1), (2, 3)])
+    assert blocked(result)[3] == ["draft", "waits on blocked prerequisite #2"]
+
+
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        ("Depends on #1.", ["#1->#5"]),
+        ("Depends on #1, #2 and #3", ["#1->#5", "#2->#5", "#3->#5"]),
+        ("Depends-on: #2 & #3", ["#2->#5", "#3->#5"]),
+        ("This PR depends on #5 itself and #99 elsewhere", []),
+    ],
+)
+def test_body_dependency_forms_are_proposed(body, expected):
+    result = run(pr(1), pr(2), pr(3), pr(5, body=body))
+    assert result["proposed_edges"] == expected
 
 
 def test_body_mention_is_only_proposed_never_applied():
@@ -152,33 +166,6 @@ def test_confirmed_proposal_moves_to_applied_edges():
     result = run(pr(1), pr(2, body="depends on #1"), edges=[(1, 2)])
     assert result["applied_edges"] == ["#1->#2"]
     assert result["proposed_edges"] == []
-
-
-def test_stack_on_a_pr_outside_develop_is_out_of_scope_as_a_whole():
-    result = run(pr(1, baseRefName="main"), pr(2, baseRefName="feat/b1"), pr(3))
-    assert numbers(result) == [3]
-    assert [r["number"] for r in result["out_of_scope"]] == [1, 2]
-    assert result["applied_edges"] == [] and result["not_mergeable"] == []
-
-
-def test_shared_head_branch_anchors_on_lowest_number_regardless_of_input_order():
-    prs = [pr(1, headRefName="feat/x"), pr(5, headRefName="feat/x", isDraft=True), pr(2, baseRefName="feat/x")]
-    for listing in (prs, list(reversed(prs))):
-        result = run(*listing)
-        assert result["applied_edges"] == ["#1->#2"]
-        assert numbers(result) == [1, 2]
-
-
-def test_anchor_is_lowest_number_even_when_it_enters_scope_late():
-    # #4 (head X) enters scope only through #3's branch Y, #5 (head X) targets develop.
-    result = run(pr(3, headRefName="Y"), pr(5, headRefName="X"), pr(4, baseRefName="Y", headRefName="X"),
-                 pr(20, baseRefName="X"))
-    assert "#4->#20" in result["applied_edges"] and "#5->#20" not in result["applied_edges"]
-
-
-def test_stacked_pr_is_never_ranked_clean():
-    result = run(pr(1, mergeStateStatus="BEHIND"), pr(2, baseRefName="feat/b1"))
-    assert result["order"][1]["readiness"].startswith("stacked on feat/b1")
 
 
 def test_dependant_of_a_cycle_is_not_called_a_cycle_member():
@@ -205,12 +192,14 @@ def test_titles_cannot_break_the_table():
     assert "- #2 x\\|y: draft" in out
 
 
-def test_backslash_pipe_and_branch_names_cannot_break_the_table():
-    out = mo.render(run(pr(1, title="a \\| b", headRefName="x|y"), pr(2, baseRefName="x|y")))
-    assert "| 1 | #1 a \\\\\\| b | CLEAN | no |" in out
-    assert "stacked on x\\|y; checks against develop not run yet" in out
-    for row in out.splitlines()[2:4]:
-        assert len(row.replace("\\|", "").split("|")) == 7, row
+def test_backslash_pipe_and_check_names_cannot_break_the_report():
+    out = mo.render(run(pr(1, title="a \\| b"), pr(2, title="t",
+                        requiredChecks=[{"name": "lint\nHead: #999", "bucket": "fail"}]), pr(3, baseRefName="x|y")))
+    assert "| 1 | #1 a \\\\\\| b | CLEAN | no | last |" in out
+    assert len(out.splitlines()[2].replace("\\|", "").split("|")) == 7
+    assert "- #2 t: required check failed: lint Head: #999" in out
+    assert "(base x\\|y)" in out
+    assert out.count("Head:") == 2  # the real head line plus the escaped check name inline
 
 
 def test_edge_to_unknown_pr_is_ignored_with_warning():
@@ -220,7 +209,7 @@ def test_edge_to_unknown_pr_is_ignored_with_warning():
 
 
 def test_blocked_prerequisite_blocks_dependants_transitively():
-    result = run(pr(1, isDraft=True), pr(2, baseRefName="feat/b1"), pr(3, baseRefName="feat/b2"), pr(4))
+    result = run(pr(1, isDraft=True), pr(2), pr(3), pr(4), edges=[(1, 2), (2, 3)])
     assert numbers(result) == [4]
     assert blocked(result)[2] == ["waits on blocked prerequisite #1"]
     assert blocked(result)[3] == ["waits on blocked prerequisite #2"]
@@ -252,11 +241,20 @@ def test_overlapping_prs_go_later_smaller_diff_first():
 def test_pr_without_a_position_is_no_overlap_partner():
     # #2 waits on the draft #1, so its overlap with #3 must not push #3 back.
     shared = [{"path": "s.md"}]
-    result = run(pr(1, isDraft=True), pr(2, baseRefName="feat/b1", files=shared),
+    result = run(pr(1, isDraft=True), pr(2, files=shared),
                  pr(3, files=shared, additions=500, createdAt="2026-11-01T00:00:00Z"),
-                 pr(4, createdAt="2026-11-05T00:00:00Z"))
+                 pr(4, createdAt="2026-11-05T00:00:00Z"), edges=[(1, 2)])
     assert numbers(result) == [3, 4]
     assert result["order"][0]["rule"] == mo.RULES["age"]
+
+
+def test_linked_prs_are_no_overlap_partners():
+    # #10 -> #11 share a.md but merge in a fixed order; #10 must not fall behind #12 for it.
+    shared = [{"path": "a.md"}]
+    result = run(pr(10, files=shared, createdAt="2026-11-01T00:00:00Z"),
+                 pr(11, files=shared, createdAt="2026-11-02T00:00:00Z"),
+                 pr(12, files=[{"path": "z.md"}], createdAt="2026-11-03T00:00:00Z"), edges=[(10, 11)])
+    assert numbers(result) == [10, 11, 12]
 
 
 def test_cycle_member_is_no_overlap_partner():
@@ -369,7 +367,8 @@ def _fake_gh(tmp_path, prs, checks):
 
 
 def test_collect_reads_checks_from_output_whatever_the_exit_code(tmp_path):
-    prs = [pr(n) for n in (1, 2, 3, 4)] + [pr(9, baseRefName="main")]  # #9 out of scope: never queried
+    prs = [pr(n) for n in (1, 2, 3, 4)] + [pr(9, baseRefName="main"), pr(10, baseRefName="feat/b1")]
+    # #9 and #10 are out of scope: their checks are never queried (the fake gh has no entry)
     checks = {
         "1": (json.dumps([{"name": "t", "bucket": "fail"}]), "", 1),
         "2": (json.dumps([{"name": "t", "bucket": "pending"}]), "", 0),
@@ -380,7 +379,7 @@ def test_collect_reads_checks_from_output_whatever_the_exit_code(tmp_path):
     assert res.returncode == 0, res.stderr
     snap = json.loads(res.stdout)
     assert [p["requiredChecks"] for p in snap["pullRequests"]] == [
-        [{"name": "t", "bucket": "fail"}], [{"name": "t", "bucket": "pending"}], [], [], []]
+        [{"name": "t", "bucket": "fail"}], [{"name": "t", "bucket": "pending"}], [], [], [], []]
     assert snap["partial"] is False
 
 
