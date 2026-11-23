@@ -30,7 +30,7 @@ Operationalises `spec/frontend/webview-ui-optimization/<canonical_language>.md` 
 
 This skill ships in the `nolte-engineering` plugin, which does **not** carry a `spec/` tree — so the fallback is a copy of the spec bundled with the skill itself. When the spec isn't present in the target repository, read the bundled copy at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/spec/webview-ui-optimization.md` (canonical English) or `…/webview-ui-optimization.de.md` (German). Never invent rules that don't appear in the spec.
 
-For a thorough audit that adds third-party skills (Vercel web-design-guidelines and react-best-practices, Anthropic frontend-design, playwright-cli) on top of this rule set, use `frontend-audit`; this skill stays the place to patch findings.
+For a thorough audit that adds third-party skills (Vercel web-design-guidelines and vercel-react-best-practices, Anthropic frontend-design, playwright-cli) on top of this rule set, use `frontend-audit`; this skill stays the place to patch findings.
 
 ## German trigger phrases
 
