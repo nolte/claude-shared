@@ -179,6 +179,7 @@ def test_own_blocker_and_prerequisite_in_a_cycle_are_both_listed():
         ("Depends on #1 andrew #2", ["#1->#5"]),
         ("Depends on #1, and on #2", ["#1->#5", "#2->#5"]),
         ("depend on #1", []),
+        ("Depends on #1234567890", []),  # longer than any PR number
         ("Depends on #\u0661\u0662", []),  # non-ASCII digits are not a PR number
     ],
 )
@@ -187,7 +188,8 @@ def test_body_dependency_forms_are_proposed(body, expected):
     assert result["proposed_edges"] == expected
 
 
-@pytest.mark.parametrize("body", ["Depends on #1," + " " * 60000 + "x", "Depends on #1" + ", and on" * 20000 + "x"])
+@pytest.mark.parametrize("body", ["Depends on #1," + " " * 60000 + "x", "Depends on #1" + ", and on" * 20000 + "x",
+                                  "Depends on #1, #" + "1" * 5000])
 def test_dependency_phrase_scan_stays_linear_on_hostile_bodies(body):
     # PR bodies are untrusted; the quadratic form took ~119 s on the first body.
     start = time.monotonic()

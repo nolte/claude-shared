@@ -111,6 +111,9 @@ none
 | SCR-003 `collect` accepted `[{}]` / unknown bucket as check elements | diff review @ f144dd46 | fixed directly: require `name` str and bucket in `CHECK_BUCKETS` + 2 test cases | fake gh `('[{}]', "", 0)` → exit 0 before; exit 2 after (tests pass) | none |
 | SCR-004 `own_plugin_name` `AttributeError` on a JSON root that isn't an object | diff review @ f144dd46 (same class as sweep fix) | fixed directly: `isinstance(data, dict)` + `test_plugin_manifest_without_object_root_counts_as_absent` | venv python, `plugin.json` = `[]` → `AttributeError: 'list' object has no attribute 'get'` | none |
 | SCR-005 missing negative cases for the body regex | diff review @ f144dd46 | fixed directly: 5 cases added (`and the rest`, `andrew`, `, and on`, `depend on`, non-ASCII digits) | all 70 merge-order tests pass | none |
+| `_mentions` `int()` on an unbounded digit run raises `ValueError` past 4300 digits; `order` crashes rc=1 for all PRs (pre-existing on develop) | diff review @ 80b75ea2 (general-purpose, measured) | fixed directly: PR numbers bounded to 1–9 digits + 2 test cases | snapshot body `'Depends on #'+'1'*5000` → rc=1 `ValueError: Exceeds the limit (4300 digits)`; after fix rc=0; 200k digits 0.0017 s | none |
+| SKILL.md description doesn't name "blocked, cause unknown" | diff review @ 80b75ea2 | dismissed: the description lists examples for routing, 978/1024 chars; the full list lives in `references/ordering.md` Rule 0 | `sed -n 3p SKILL.md \| wc -c` → 978 | none |
+| `(?a)` makes `\s` ASCII-only (NBSP no longer separates) | diff review @ 80b75ea2 | dismissed: covered by the documented best-effort clause | — | none |
 
 ## Dispatch log
 

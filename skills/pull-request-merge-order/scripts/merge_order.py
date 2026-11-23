@@ -49,7 +49,8 @@ CHECK_BUCKETS = frozenset({"pass", "fail", "pending", "skipping", "cancel"})
 # "depends on #12", "Depends on #12, #13 and #14", "Depends on #12, #13, and #14",
 # "Depends on #12 and on #13", "depends on PR #12", "Depends-on: #12" (trailer form).
 # Best effort: a phrase outside these forms yields no proposal.
-_DEP_ITEM = r"(?:PR\s*)?#\d+"
+# At most 9 digits: a PR number, and int() never meets Python's 4300-digit limit on a hostile body.
+_DEP_ITEM = r"(?:PR\s*)?#\d{1,9}(?!\d)"
 # The optional whitespace before "and" sits inside the group, so no two \s* runs are adjacent:
 # a long whitespace run in an untrusted body must stay linear (no quadratic backtracking).
 _DEP_SEP = r"\s*(?:,(?:\s*and\b)?|&|\band\b)\s*(?:on\s+)?"
@@ -279,7 +280,7 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
 
 
 def _mentions(body: str) -> set[int]:
-    return {int(x) for group in DEPENDS_RE.findall(body) for x in re.findall(r"(?a)#(\d+)", group)}
+    return {int(x) for group in DEPENDS_RE.findall(body) for x in re.findall(r"(?a)#(\d{1,9})(?!\d)", group)}
 
 
 def _reach(n: int, adj: dict[int, set[int]]) -> set[int]:
