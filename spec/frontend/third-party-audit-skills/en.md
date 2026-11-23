@@ -30,7 +30,7 @@ Readers: authors of the `frontend-audit` skill and of the reviewer agents it dis
 - Re-deriving or restating the third-party rule sets in this repository
 - Patching findings; the audit is read-only
 - Holding third-party rules to this repository's research-source thresholds (`spec/claude/research-triangulate/`); third-party findings are attributed findings, not rules of this corpus
-- Frameworks other than React for the code-performance strand; `react-best-practices` is the only third-party code-performance skill in scope
+- Frameworks other than React for the code-performance strand; `vercel-react-best-practices` is the only third-party code-performance skill in scope
 
 ## Requirements
 
@@ -47,8 +47,8 @@ The audit uses exactly these third-party skills. Each row is normative for its t
 
 - **MUST** decide applicability from the audited module's own manifests and sources (package manifest, framework and bundler configuration, component tree), the same detection `source-code-review` uses for a browser surface; a `package.json` alone isn't a web UI
 - **MUST** run each applicable, available skill exactly once per audit over the audit scope
-- **MUST NOT** run a skill outside its strand: `react-best-practices` findings belong to the code strand, `web-design-guidelines` and `frontend-design` findings to the static UI strand, `playwright-cli` evidence to the rendered UI strand
-- **MUST** treat the server-side rule categories of `react-best-practices` (server-side performance, React Server Components, server actions) as not applicable when the module ships a client-side-rendered application without a server runtime, drop findings in those categories—rule IDs with the `server-` prefix and any finding about React Server Components or server actions—and record the number dropped in the report header
+- **MUST NOT** run a skill outside its strand: `vercel-react-best-practices` findings belong to the code strand, `web-design-guidelines` and `frontend-design` findings to the static UI strand, `playwright-cli` evidence to the rendered UI strand
+- **MUST** treat the server-side rule categories of `vercel-react-best-practices` (server-side performance, React Server Components, server actions) as not applicable when the module ships a client-side-rendered application without a server runtime, drop findings in those categories—rule IDs with the `server-` prefix and any finding about React Server Components or server actions—and record the number dropped in the report header
 
 ### B. Install contract
 
@@ -111,9 +111,9 @@ Third-party findings keep their text and their rule reference; the audit maps th
 |---|---|---|---|
 | `web-design-guidelines` | any rule outside Content & Copy and copy-level Typography | Warning | `fullstack-developer`; accessibility conformance questions to `webview-ui-expert` |
 | `web-design-guidelines` | Content & Copy; Typography rules about characters and quotation marks | Info | `frontend-usability-optimizer` |
-| `react-best-practices` | CRITICAL, HIGH | Warning | `fullstack-developer` |
-| `react-best-practices` | MEDIUM-HIGH, MEDIUM | Suggestion | `fullstack-developer` |
-| `react-best-practices` | LOW-MEDIUM, LOW | Info | `fullstack-developer` |
+| `vercel-react-best-practices` | CRITICAL, HIGH | Warning | `fullstack-developer` |
+| `vercel-react-best-practices` | MEDIUM-HIGH, MEDIUM | Suggestion | `fullstack-developer` |
+| `vercel-react-best-practices` | LOW-MEDIUM, LOW | Info | `fullstack-developer` |
 | `frontend-design` | any | Info | `frontend-usability-optimizer` |
 | `playwright-cli` | rendered evidence attached to a finding | the finding's own severity | the finding's own routing |
 

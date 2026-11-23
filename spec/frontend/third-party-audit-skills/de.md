@@ -30,7 +30,7 @@ Leser: Autorinnen und Autoren des Skills `frontend-audit` und der Reviewer-Agent
 - Die Drittanbieter-Regelwerke in diesem Repository nachbilden oder wiederholen
 - Befunde patchen; das Audit ist read-only
 - Drittanbieter-Regeln an den Quellen-Schwellen dieses Repositorys messen (`spec/claude/research-triangulate/`); Drittanbieter-Befunde sind attribuierte Befunde, keine Regeln dieses Korpus
-- Andere Frameworks als React für den Code-Performance-Strang; `react-best-practices` ist der einzige Drittanbieter-Skill für Code-Performance im Scope
+- Andere Frameworks als React für den Code-Performance-Strang; `vercel-react-best-practices` ist der einzige Drittanbieter-Skill für Code-Performance im Scope
 
 ## Anforderungen
 
@@ -47,8 +47,8 @@ Das Audit nutzt genau diese Drittanbieter-Skills. Jede Zeile ist für Auslöser 
 
 - **MUSS** die Anwendbarkeit aus den eigenen Manifesten und Quellen des geprüften Moduls ableiten (Paketmanifest, Framework- und Bundler-Konfiguration, Component-Baum), mit derselben Erkennung, die `source-code-review` für eine Browser-Oberfläche nutzt; ein `package.json` allein ist keine Web-UI
 - **MUSS** jeden anwendbaren, verfügbaren Skill genau einmal je Audit über den Audit-Scope ausführen
-- **DARF NICHT** einen Skill außerhalb seines Strangs ausführen: `react-best-practices`-Befunde gehören zum Code-Strang, `web-design-guidelines`- und `frontend-design`-Befunde zum statischen UI-Strang, `playwright-cli`-Evidenz zum gerenderten UI-Strang
-- **MUSS** die serverseitigen Regelkategorien von `react-best-practices` (serverseitige Performance, React Server Components, Server Actions) als nicht anwendbar behandeln, wenn das Modul eine clientseitig gerenderte Anwendung ohne Server-Runtime ausliefert, Befunde dieser Kategorien streichen — Regel-IDs mit dem Präfix `server-` und jeden Befund zu React Server Components oder Server Actions — und die Zahl der gestrichenen Befunde im Report-Header festhalten
+- **DARF NICHT** einen Skill außerhalb seines Strangs ausführen: `vercel-react-best-practices`-Befunde gehören zum Code-Strang, `web-design-guidelines`- und `frontend-design`-Befunde zum statischen UI-Strang, `playwright-cli`-Evidenz zum gerenderten UI-Strang
+- **MUSS** die serverseitigen Regelkategorien von `vercel-react-best-practices` (serverseitige Performance, React Server Components, Server Actions) als nicht anwendbar behandeln, wenn das Modul eine clientseitig gerenderte Anwendung ohne Server-Runtime ausliefert, Befunde dieser Kategorien streichen — Regel-IDs mit dem Präfix `server-` und jeden Befund zu React Server Components oder Server Actions — und die Zahl der gestrichenen Befunde im Report-Header festhalten
 
 ### B. Installationsvertrag
 
@@ -111,9 +111,9 @@ Drittanbieter-Befunde behalten ihren Text und ihre Regelreferenz; das Audit ordn
 |---|---|---|---|
 | `web-design-guidelines` | jede Regel außerhalb von Content & Copy und Typography auf Textebene | Warning | `fullstack-developer`; Fragen zur Barrierefreiheits-Konformität an `webview-ui-expert` |
 | `web-design-guidelines` | Content & Copy; Typography-Regeln zu Zeichen und Anführungszeichen | Info | `frontend-usability-optimizer` |
-| `react-best-practices` | CRITICAL, HIGH | Warning | `fullstack-developer` |
-| `react-best-practices` | MEDIUM-HIGH, MEDIUM | Suggestion | `fullstack-developer` |
-| `react-best-practices` | LOW-MEDIUM, LOW | Info | `fullstack-developer` |
+| `vercel-react-best-practices` | CRITICAL, HIGH | Warning | `fullstack-developer` |
+| `vercel-react-best-practices` | MEDIUM-HIGH, MEDIUM | Suggestion | `fullstack-developer` |
+| `vercel-react-best-practices` | LOW-MEDIUM, LOW | Info | `fullstack-developer` |
 | `frontend-design` | jede | Info | `frontend-usability-optimizer` |
 | `playwright-cli` | gerenderte Evidenz zu einem Befund | Severity des Befunds | Routing des Befunds |
 
