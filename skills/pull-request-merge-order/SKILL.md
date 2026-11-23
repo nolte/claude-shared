@@ -1,6 +1,6 @@
 ---
 name: pull-request-merge-order
-description: Orders the pull requests open against `develop` into a justified, deterministic merge sequence and frees the runners for the head. A bundled script ranks them (stacked-PR dependencies first, then readiness, file-overlap conflict risk, dependency bots before human PRs, age), separates drafts, conflicts, red required checks, and requested changes as not mergeable now, and names the deciding rule per row. After operator confirmation it hands the head to `pull-request-runner-sweep`, which cancels the runs of every other PR. Never merges. Invoke when the user asks "in which order should the open PRs merge", "which PR merges next", "order the open PRs and free the runners", or equivalent German-language requests. Don't use to merge the head (use `pull-request-merge`), to cancel runs for an already known current PR (use `pull-request-runner-sweep`), or to work off a backlog end to end (use `backlog-delivery-orchestrate`).
+description: Orders the pull requests open against `develop` into a justified, deterministic merge sequence and frees the runners for the head. A bundled script ranks them (stacked-PR dependencies first, then readiness, file-overlap conflict risk, dependency bots before human PRs, age), separates drafts, conflicts, red required checks, and requested changes or missing required reviews as not mergeable now, and names the deciding rule per row. After operator confirmation it hands the head to `pull-request-runner-sweep`, which cancels the runs of every other PR. Never merges. Invoke when the user asks "in which order should the open PRs merge", "which PR merges next", "order the open PRs and free the runners", or equivalent German-language requests. Don't use to merge the head (use `pull-request-merge`), to cancel runs for an already known current PR (use `pull-request-runner-sweep`), or to work off a backlog end to end (use `backlog-delivery-orchestrate`).
 tags: [pull-request, triage]
 phase: quality
 summary: "Ranks the open PRs into a justified merge order and cancels the runs of every PR that isn't next."
@@ -57,9 +57,9 @@ Run `python3 "${CLAUDE_PLUGIN_ROOT}/skills/pull-request-merge-order/scripts/merg
 Ask the operator to confirm the order or correct it. A correction is fed back to the script, never applied by reordering the table by hand:
 
 - a dependency the operator confirms (including one listed under "Proposed edges") → re-run step 2 with `--edge A:B` (A merges before B)
-- a different head from the ordered table, without a dependency reason → accept it as the operator's free choice (spec §"Sequential merge of multiple open PRs") and record it in the report
+- a different head from the ordered table whose prerequisites are all merged (no applied edge from an open PR into it), without a dependency reason → accept it as the operator's free choice (spec §"Sequential merge of multiple open PRs") and record it in the report
 
-Never continue to step 4 without this confirmation. When the script reports no head, report the not-mergeable list and stop: there is no head to protect. With a head but no other open PR, skip step 4: there are no rival runs.
+Never continue to step 4 without this confirmation. When the script reports no head, report the not-mergeable list and stop: there is no head to protect. With a head but no other open PR against `develop`, skip step 4: the sweep only covers PRs against `develop` and needs at least two.
 
 ### 4. Free the runners
 

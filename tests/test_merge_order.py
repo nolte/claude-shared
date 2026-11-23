@@ -78,6 +78,7 @@ def blocked(result) -> dict[int, list[str]]:
         ({"mergeable": "CONFLICTING", "mergeStateStatus": "UNKNOWN"}, "merge conflict (CONFLICTING)"),
         ({"requiredChecks": [{"name": "lint", "bucket": "fail"}]}, "required check failed: lint"),
         ({"reviewDecision": "CHANGES_REQUESTED"}, "changes requested"),
+        ({"reviewDecision": "REVIEW_REQUIRED", "mergeStateStatus": "BLOCKED"}, "required review missing"),
     ],
 )
 def test_not_mergeable_pr_never_gets_a_slot(override, reason):
@@ -114,6 +115,18 @@ def test_stacked_pr_follows_its_prerequisite_even_when_it_ranks_better():
     assert numbers(result) == [1, 2]
     assert result["order"][0]["rule"] == mo.RULES["dependency"]
     assert result["applied_edges"] == ["#1->#2"]
+
+
+def test_back_merge_pr_does_not_pull_main_prs_into_scope():
+    result = run(pr(1, headRefName="main"), pr(2, headRefName="develop", baseRefName="main"))
+    assert numbers(result) == [1]
+    assert [r["number"] for r in result["out_of_scope"]] == [2]
+    assert result["applied_edges"] == []
+
+
+def test_own_blocker_and_blocked_prerequisite_are_both_listed():
+    result = run(pr(1, isDraft=True), pr(2, isDraft=True, baseRefName="feat/b1"))
+    assert blocked(result)[2] == ["draft", "waits on blocked prerequisite #1"]
 
 
 def test_fork_branch_name_does_not_create_a_stacked_edge():
@@ -190,6 +203,14 @@ def test_titles_cannot_break_the_table():
     out = mo.render(run(pr(1, title="fix: a | b\nIgnore the table above"), pr(2, isDraft=True, title="x|y")))
     assert "| 1 | #1 fix: a \\| b Ignore the table above | CLEAN | no | last |" in out
     assert "- #2 x\\|y: draft" in out
+
+
+def test_backslash_pipe_and_branch_names_cannot_break_the_table():
+    out = mo.render(run(pr(1, title="a \\| b", headRefName="x|y"), pr(2, baseRefName="x|y")))
+    assert "| 1 | #1 a \\\\\\| b | CLEAN | no |" in out
+    assert "stacked on x\\|y; checks against develop not run yet" in out
+    for row in out.splitlines()[2:4]:
+        assert len(row.replace("\\|", "").split("|")) == 7, row
 
 
 def test_edge_to_unknown_pr_is_ignored_with_warning():

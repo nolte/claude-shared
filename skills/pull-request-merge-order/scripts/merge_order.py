@@ -29,6 +29,9 @@ import sys
 from typing import Any
 
 BASE = "develop"
+# Long-lived branches per spec/project/branching-model/: never a stack anchor, so a back-merge
+# PR (head main, base develop) can't pull PRs against main into the develop order.
+LONG_LIVED = frozenset({"develop", "main"})
 # Same allowlist as skills/backlog-delivery-orchestrate/scripts/merge-train.sh
 # (TRAIN_BOT_LOGINS default); tests/test_merge_order.py asserts the two stay equal.
 BOT_LOGINS = frozenset({"app/renovate", "renovate[bot]", "renovate"})
@@ -126,6 +129,8 @@ def blockers(pr: dict[str, Any]) -> list[str]:
         reasons.append("required check failed: " + ", ".join(failed))
     if pr.get("reviewDecision") == "CHANGES_REQUESTED":
         reasons.append("changes requested")
+    elif pr.get("reviewDecision") == "REVIEW_REQUIRED":
+        reasons.append("required review missing")
     return reasons
 
 
@@ -135,14 +140,15 @@ def scope(prs: dict[int, dict[str, Any]]) -> tuple[dict[int, dict[str, Any]], se
     are built from the final set; when two open PRs share a head branch the lowest anchors."""
     in_scope = {n: pr for n, pr in prs.items() if pr.get("baseRefName") == BASE}
     while True:
-        heads = {pr["headRefName"] for pr in in_scope.values() if not pr.get("isCrossRepository")}
+        heads = {pr["headRefName"] for pr in in_scope.values()
+                 if not pr.get("isCrossRepository") and pr["headRefName"] not in LONG_LIVED}
         new = {n: pr for n, pr in prs.items() if n not in in_scope and pr.get("baseRefName") in heads}
         if not new:
             break
         in_scope.update(new)
     by_head: dict[str, int] = {}
     for n in sorted(in_scope):
-        if not in_scope[n].get("isCrossRepository"):
+        if not in_scope[n].get("isCrossRepository") and in_scope[n]["headRefName"] not in LONG_LIVED:
             by_head.setdefault(in_scope[n]["headRefName"], n)
     edges = {(by_head[pr["baseRefName"]], n) for n, pr in in_scope.items() if pr.get("baseRefName") != BASE}
     return in_scope, edges
@@ -220,6 +226,10 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
                 ready_set.discard(n)
                 blocked[n] = ["waits on blocked prerequisite " + ", ".join(f"#{p}" for p in bad)]
                 changed = True
+    for n in sorted(set(in_scope) - orderable):  # own blockers: add the wait too, so all reasons show
+        bad = sorted(p for p in preds[n] if p not in ready_set)
+        if bad:
+            blocked[n].append("waits on blocked prerequisite " + ", ".join(f"#{p}" for p in bad))
 
     sequence = _toposort(ready_set, preds, lambda n: key(n, ready_set))
     cyclic = sorted(ready_set - set(sequence))
@@ -311,15 +321,16 @@ def _deciding_rule(n: int, nxt: int | None, key, preds: dict[int, set[int]]) -> 
 
 
 def _text(value: Any) -> str:
-    """PR titles are author-controlled data: one line, no table-breaking pipe."""
-    return " ".join(str(value).split()).replace("|", "\\|")
+    """Titles and branch names are author-controlled data: one line, no table-breaking pipe
+    (backslashes first, so `\\|` in a title can't turn back into a cell separator)."""
+    return " ".join(str(value).split()).replace("\\", "\\\\").replace("|", "\\|")
 
 
 def render(result: dict[str, Any]) -> str:
     lines = ["| # | PR | Readiness | Bot | Why before the next |", "|---|---|---|---|---|"]
     for r in result["order"]:
         lines.append(
-            f"| {r['position']} | #{r['number']} {_text(r['title'])} | {r['readiness']} | "
+            f"| {r['position']} | #{r['number']} {_text(r['title'])} | {_text(r['readiness'])} | "
             f"{'yes' if r['bot'] else 'no'} | {r['rule']} |"
         )
     if not result["order"]:
