@@ -5,7 +5,8 @@
 `collect` runs against a fake `gh` executable placed first on PATH, which
 replays stdout, stderr, and exit code per call. The measured gh 2.96.0 shapes
 are: a missing PR exits 1 with empty stdout and the error on stderr; a PR with
-no required check exits 1 with "no required checks reported" on stderr.
+no check run, or none required, exits 1 with "no checks reported" or "no required
+checks reported" on stderr (both strings are in the 2.96.0 binary).
 """
 from __future__ import annotations
 
@@ -155,6 +156,24 @@ def test_shared_head_branch_anchors_on_lowest_number_regardless_of_input_order()
         assert numbers(result) == [1, 2]
 
 
+def test_anchor_is_lowest_number_even_when_it_enters_scope_late():
+    # #4 (head X) enters scope only through #3's branch Y, #5 (head X) targets develop.
+    result = run(pr(3, headRefName="Y"), pr(5, headRefName="X"), pr(4, baseRefName="Y", headRefName="X"),
+                 pr(20, baseRefName="X"))
+    assert "#4->#20" in result["applied_edges"] and "#5->#20" not in result["applied_edges"]
+
+
+def test_stacked_pr_is_never_ranked_clean():
+    result = run(pr(1, mergeStateStatus="BEHIND"), pr(2, baseRefName="feat/b1"))
+    assert result["order"][1]["readiness"].startswith("stacked on feat/b1")
+
+
+def test_dependant_of_a_cycle_is_not_called_a_cycle_member():
+    result = run(pr(1), pr(2), pr(7), edges=[(1, 2), (2, 1), (2, 7)])
+    assert blocked(result) == {1: ["dependency cycle"], 2: ["dependency cycle"],
+                               7: ["waits on prerequisite in a dependency cycle #2"]}
+
+
 def test_edge_to_unknown_pr_is_ignored_with_warning():
     result = run(pr(1), edges=[(1, 99)])
     assert numbers(result) == [1]
@@ -278,6 +297,9 @@ def test_cli_rejects_unreadable_snapshot_and_bad_edge(tmp_path):
     assert _cli("order", str(tmp_path / "missing.json")).returncode == 2
     assert _cli("order", "-", stdin="{not json").returncode == 2
     assert _cli("order", "-", "--edge", "1-2", stdin="{}").returncode == 2
+    for malformed in ("[]", '{"pullRequests": null}', '{"pullRequests": [{"title": "no number"}]}'):
+        res = _cli("order", "-", stdin=malformed)
+        assert res.returncode == 2 and "malformed snapshot" in res.stderr
 
 
 FAKE_GH = """#!{python}
@@ -308,17 +330,18 @@ def _fake_gh(tmp_path, prs, checks):
 
 
 def test_collect_reads_checks_from_output_whatever_the_exit_code(tmp_path):
-    prs = [{"number": n} for n in (1, 2, 3)]
+    prs = [pr(n) for n in (1, 2, 3, 4)] + [pr(9, baseRefName="main")]  # #9 out of scope: never queried
     checks = {
         "1": (json.dumps([{"name": "t", "bucket": "fail"}]), "", 1),
         "2": (json.dumps([{"name": "t", "bucket": "pending"}]), "", 0),
         "3": ("", "no required checks reported on the 'feat/b3' branch\n", 1),
+        "4": ("", "no checks reported on the 'feat/b4' branch\n", 1),
     }
     res = _cli("collect", env=_fake_gh(tmp_path, prs, checks))
     assert res.returncode == 0, res.stderr
     snap = json.loads(res.stdout)
     assert [p["requiredChecks"] for p in snap["pullRequests"]] == [
-        [{"name": "t", "bucket": "fail"}], [{"name": "t", "bucket": "pending"}], []]
+        [{"name": "t", "bucket": "fail"}], [{"name": "t", "bucket": "pending"}], [], [], []]
     assert snap["partial"] is False
 
 
@@ -332,7 +355,7 @@ def test_collect_reads_checks_from_output_whatever_the_exit_code(tmp_path):
     ],
 )
 def test_collect_fails_closed_when_check_state_is_unknown(tmp_path, check):
-    res = _cli("collect", env=_fake_gh(tmp_path, [{"number": 1}], {"1": check}))
+    res = _cli("collect", env=_fake_gh(tmp_path, [pr(1)], {"1": check}))
     assert res.returncode == 2
     assert "collect failed" in res.stderr
 

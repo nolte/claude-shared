@@ -10,7 +10,7 @@ A PR is **not mergeable now**, gets no position, and is listed with every reason
 - merge conflict (`mergeStateStatus` `DIRTY` or `mergeable` `CONFLICTING`)
 - a **required** check concluded as failed (`gh pr checks --required` bucket `fail`). A `cancel` bucket isn't a failure (`spec/project/pull-request-workflow/` §"Serial pull-request flow"); it ranks as pending until re-run
 - review decision `CHANGES_REQUESTED`
-- it waits on a prerequisite that is itself not mergeable now (transitively), or sits in a dependency cycle
+- it waits on a prerequisite that is itself not mergeable now (transitively), sits in a dependency cycle, or waits on a PR in one
 
 A PR whose base is neither `develop` nor the head branch of another in-scope same-repository PR is **out of scope** and listed separately.
 
@@ -25,7 +25,7 @@ Among the PRs whose prerequisites are placed, rules 2 to 5 decide, first separat
 
 ## Rule 2: readiness
 
-`CLEAN` (or `HAS_HOOKS`) before `BEHIND` before everything else: pending or cancelled required checks, `UNSTABLE` (a non-required check is red and needs classification before `pull-request-merge` lands it), `BLOCKED`, `UNKNOWN`. A PR that can land now shouldn't wait behind one that still needs a rebase or a CI round.
+`CLEAN` (or `HAS_HOOKS`) before `BEHIND` before everything else: a stacked PR (its checks and merge state refer to its feature-branch base, not to `develop`), pending or cancelled required checks, `UNSTABLE` (a non-required check is red and needs classification before `pull-request-merge` lands it), `BLOCKED`, `UNKNOWN`. A PR that can land now shouldn't wait behind one that still needs a rebase or a CI round.
 
 ## Rule 3: conflict risk
 
@@ -47,4 +47,4 @@ Oldest `createdAt` first, then lowest PR number. The order is therefore fully de
 
 ## Operator override
 
-Outside rule 1 the order is the operator's free choice. When the operator picks a different head without a dependency reason, accept it, record it in the report, and pass that head to `pull-request-runner-sweep --current <N>`.
+Outside rule 1 the order among the PRs in the ordered table is the operator's free choice. When the operator picks a different head from that table without a dependency reason, accept it, record it in the report, and pass that head to `pull-request-runner-sweep --current <N>`.

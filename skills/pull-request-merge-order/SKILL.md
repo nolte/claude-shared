@@ -57,7 +57,7 @@ Run `python3 "${CLAUDE_PLUGIN_ROOT}/skills/pull-request-merge-order/scripts/merg
 Ask the operator to confirm the order or correct it. A correction is fed back to the script, never applied by reordering the table by hand:
 
 - a dependency the operator confirms (including one listed under "Proposed edges") → re-run step 2 with `--edge A:B` (A merges before B)
-- a different head without a dependency reason → accept it as the operator's free choice (spec §"Sequential merge of multiple open PRs") and record it in the report
+- a different head from the ordered table, without a dependency reason → accept it as the operator's free choice (spec §"Sequential merge of multiple open PRs") and record it in the report
 
 Never continue to step 4 without this confirmation. When no PR is orderable, report the not-mergeable list and stop: there is no head to protect.
 
@@ -75,7 +75,7 @@ State the confirmed order with the deciding rule per position, the not-mergeable
 
 ## Gotchas
 
-- `gh pr checks --required --json` signals through its output, not its exit code: exit 1 with no output is either "no required checks reported" (stderr) or a real error. `collect` accepts only the former and otherwise fails with exit 2, so an unknown check state never reads as "no required checks".
+- `gh pr checks --required --json` signals through its output, not its exit code: exit 1 with no output is either "no checks reported" / "no required checks reported" (stderr) or a real error. `collect` accepts only the former and otherwise fails with exit 2, so an unknown check state never reads as "no required checks".
 - `mergeStateStatus` is computed lazily by GitHub and can read `UNKNOWN` right after a push; the script ranks it as pending. Re-run `collect` after a minute instead of guessing.
 - `files` in `gh pr list` stops at 100 paths per PR; the script warns when `changedFiles` is larger, because an overlap beyond that page goes unseen.
 - A stacked PR (base = another open PR's head branch) is ordered after its prerequisite. A fork's branch name never creates that edge.
