@@ -834,3 +834,16 @@ def test_override_precondition_excludes_every_plugin_of_this_repository():
             capture_output=True, text=True, check=True).stdout.strip()
         assert Path(toplevel).resolve() == v.REPO.resolve(), root
         assert (Path(toplevel) / "spec").is_dir(), root
+
+
+def test_non_utf8_skill_is_reported_by_path_and_exits_2(monkeypatch, tmp_path, capsys):
+    # #812: a SKILL.md that isn't valid UTF-8 must name the file and fail with the
+    # documented internal-error code, not die with a bare UnicodeDecodeError.
+    skill = tmp_path / "skills" / "foo" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_bytes(b"---\nname: foo\ndescription: caf\xe9\n---\nbody\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["validate_skills.py", "skills/foo/"])
+    assert v.main() == 2
+    err = capsys.readouterr().err
+    assert err.startswith("ERROR: skills/foo/SKILL.md is not valid UTF-8")

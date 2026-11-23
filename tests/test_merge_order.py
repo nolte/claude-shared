@@ -470,3 +470,8 @@ def test_collect_fails_closed_on_unusable_pr_list(tmp_path, listing):
     res = _cli("collect", env=_fake_gh(tmp_path, listing, {}))
     assert res.returncode == 2, res.stderr
     assert "collect failed" in res.stderr
+
+
+def test_non_breaking_space_still_separates_a_dependency_phrase():
+    assert mo._mentions("Depends on #12") == {12}
+    assert mo._mentions("Depends on #1, and #2") == {1, 2}

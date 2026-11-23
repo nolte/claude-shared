@@ -12,6 +12,8 @@ import sys
 import textwrap
 from pathlib import Path
 
+import pytest
+
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
@@ -190,3 +192,27 @@ def test_non_utf8_mapped_data_file_is_a_failure_not_a_crash(tmp_path, capsys):
     assert run(tmp_path) == 1
     captured = capsys.readouterr()
     assert "widgets/w.yaml: not parseable" in captured.out + captured.err
+
+
+@pytest.mark.parametrize(
+    "config", [b"mappings: \xff\n", b"- widgets/*.yaml\n", b"mappings:\n  - widgets/*.yaml\n"]
+)
+def test_unusable_schemas_config_is_a_failure_not_a_crash(tmp_path, capsys, config):
+    write_schema(tmp_path, VALID_SCHEMA)
+    (tmp_path / ".schemas-config.yaml").write_bytes(config)
+    assert run(tmp_path) == 1
+    captured = capsys.readouterr()
+    assert ".schemas-config.yaml" in captured.out + captured.err
+
+
+def test_null_mappings_still_pass(tmp_path):
+    write_schema(tmp_path, VALID_SCHEMA)
+    (tmp_path / ".schemas-config.yaml").write_text("mappings:\n", encoding="utf-8")
+    assert run(tmp_path) == 0
+
+
+def test_unreadable_schema_is_a_failure_not_a_crash(tmp_path):
+    path = tmp_path / "schemas" / "widget-v1.0.schema.yaml"
+    path.parent.mkdir(parents=True)
+    path.symlink_to(tmp_path / "missing.yaml")
+    assert run(tmp_path) == 1

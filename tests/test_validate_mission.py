@@ -266,3 +266,23 @@ def test_750_historical_flip_a30d346_passes():
 ])
 def test_750_marker_and_sentence_edge_cases(sentence, expected):
     assert v._names_subsequent_sprint(sentence) is expected
+
+
+def test_non_utf8_mission_file_is_a_named_critical(tmp_path):
+    # #812: a mission file that isn't valid UTF-8 fails as `mission.unreadable`,
+    # naming the file, instead of a bare UnicodeDecodeError traceback.
+    mission = tmp_path / "mission.md"
+    mission.write_bytes(b"---\nmission_statement: caf\xe9\n---\n")
+    findings = v.check_mission(mission)
+    assert [(f.target, f.rule) for f in findings] == [(mission.as_posix(), "mission.unreadable")]
+    assert "not valid UTF-8" in findings[0].message
+
+
+def test_non_utf8_goals_file_is_a_named_critical(monkeypatch, tmp_path):
+    goals = tmp_path / "goals.md"
+    goals.write_bytes(b"O-1 caf\xe9\n")
+    monkeypatch.setattr(v, "GOALS_PATH", goals)
+    monkeypatch.setattr(v, "AUDIENCES_PATH", tmp_path / "absent-audiences.md")
+    monkeypatch.setattr(v, "FEATURES_DIR", tmp_path / "absent-features")
+    findings = v.check_mission_text(_GOOD, "project/mission.md")
+    assert [(f.target, f.rule) for f in findings] == [(goals.as_posix(), "mission.unreadable")]
