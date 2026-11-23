@@ -14,6 +14,7 @@ dont_use_when:
     alternative: pull-request-create
 see_also:
   - pull-request-create
+  - pull-request-merge-order
   - workflow-health-triage
 examples:
   - prompt: "Merge the open PR"

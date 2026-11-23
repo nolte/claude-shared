@@ -13,7 +13,10 @@ dont_use_when:
     alternative: workflow-health-triage
   - situation: "You want to merge the current PR"
     alternative: pull-request-merge
+  - situation: "You need a justified merge order of all open PRs, not just the current one"
+    alternative: pull-request-merge-order
 see_also:
+  - pull-request-merge-order
   - pull-request-merge
   - workflow-health-triage
   - cicd-pipeline-design
