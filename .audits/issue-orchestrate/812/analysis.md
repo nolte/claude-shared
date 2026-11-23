@@ -114,6 +114,9 @@ none
 | `_mentions` `int()` on an unbounded digit run raises `ValueError` past 4300 digits; `order` crashes rc=1 for all PRs (pre-existing on develop) | diff review @ 80b75ea2 (general-purpose, measured) | fixed directly: PR numbers bounded to 1–9 digits + 2 test cases | snapshot body `'Depends on #'+'1'*5000` → rc=1 `ValueError: Exceeds the limit (4300 digits)`; after fix rc=0; 200k digits 0.0017 s | none |
 | SKILL.md description doesn't name "blocked, cause unknown" | diff review @ 80b75ea2 | dismissed: the description lists examples for routing, 978/1024 chars; the full list lives in `references/ordering.md` Rule 0 | `sed -n 3p SKILL.md \| wc -c` → 978 | none |
 | `(?a)` makes `\s` ASCII-only (NBSP no longer separates) | diff review @ 80b75ea2 | dismissed: covered by the documented best-effort clause | — | none |
+| case `("Depends on #1234567890", [])` is hollow (passes against 80b75ea2 because out-of-scope numbers never propose) | diff review @ 94c72a0a (general-purpose, measured) | fixed directly: replaced by `test_pr_number_longer_than_nine_digits_ends_the_list` asserting `_mentions` | new test against `merge_order.py` from 80b75ea2 → 1 failed; current → 72 passed | none |
+| a >9-digit item mid-list ends the list (`#1, #1234567890 and #3` → {1}) | diff review @ 94c72a0a | dismissed: consistent with how any non-item ends the list (`#2b`, `foo`); documented best effort; now pinned by the test above | probe → {1} | none |
+| no finding on normal bodies, linearity (≤25 ms at 200k), CLI on 5000-digit body (rc=0) | diff review @ 94c72a0a | — | measured by reviewer | none |
 
 ## Dispatch log
 

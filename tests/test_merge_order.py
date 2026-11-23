@@ -179,7 +179,6 @@ def test_own_blocker_and_prerequisite_in_a_cycle_are_both_listed():
         ("Depends on #1 andrew #2", ["#1->#5"]),
         ("Depends on #1, and on #2", ["#1->#5", "#2->#5"]),
         ("depend on #1", []),
-        ("Depends on #1234567890", []),  # longer than any PR number
         ("Depends on #\u0661\u0662", []),  # non-ASCII digits are not a PR number
     ],
 )
@@ -195,6 +194,12 @@ def test_dependency_phrase_scan_stays_linear_on_hostile_bodies(body):
     start = time.monotonic()
     assert mo._mentions(body) == {1}
     assert time.monotonic() - start < 1.0
+
+
+def test_pr_number_longer_than_nine_digits_ends_the_list():
+    # A PR number has at most nine digits; a longer run is no item and ends the list (best effort).
+    assert mo._mentions("Depends on #1234567890") == set()
+    assert mo._mentions("Depends on #1, #1234567890 and #3") == {1}
 
 
 def test_body_mention_is_only_proposed_never_applied():
