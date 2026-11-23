@@ -146,12 +146,14 @@ def blockers(pr: dict[str, Any]) -> list[str]:
     elif pr.get("reviewDecision") == "REVIEW_REQUIRED":
         reasons.append("required review missing")
     # BLOCKED with nothing above and no required check still running: GitHub blocks for a
-    # reason the snapshot doesn't show (a ruleset, a missing signature, ...). It must not lead.
-    checks = pr.get("requiredChecks", [])
+    # reason the snapshot doesn't show (a ruleset, a missing signature, or a required check
+    # that hasn't registered yet: `gh pr checks --required` lists only reported checks, so a
+    # partial list looks complete right after a push). It must not lead.
     if (not reasons and pr.get("mergeStateStatus") == "BLOCKED"
-            and not any(c.get("bucket") in ("pending", "cancel") for c in checks)):
-        reasons.append("blocked, cause unknown" if checks
-                       else "blocked, cause unknown (no required check reported yet; re-run collect)")
+            and not any(c.get("bucket") in ("pending", "cancel") for c in pr.get("requiredChecks", []))):
+        hint = ("required checks not collected; run collect" if "requiredChecks" not in pr
+                else "a required check may not be reported yet; re-run collect")
+        reasons.append(f"blocked, cause unknown ({hint})")
     return reasons
 
 

@@ -185,9 +185,10 @@ def hub_canonical_lang(hub_spec_root: Path) -> str:
     if cfg.is_file():
         try:
             data = yaml.safe_load(_read(cfg)) or {}
+        except (yaml.YAMLError, UnicodeDecodeError, OSError):
+            return "en"
+        if isinstance(data, dict):
             return data.get("canonical_language", "en")
-        except yaml.YAMLError:
-            pass
     return "en"
 
 
@@ -362,6 +363,9 @@ def main(argv: list[str] | None = None) -> int:
         findings = run(repo, hub_spec_root)
     except yaml.YAMLError as exc:
         print(f"Critical    spec/.spec-config.yml  [internal] unparseable YAML: {exc}", file=sys.stderr)
+        return 2
+    except UnicodeDecodeError as exc:
+        print(f"Critical    spec/  [internal] a file isn't valid UTF-8: {exc}", file=sys.stderr)
         return 2
 
     by_severity = {"Critical": 0, "Warning": 0, "Suggestion": 0, "Info": 0}

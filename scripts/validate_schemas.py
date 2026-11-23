@@ -247,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
         rel = schema_path.relative_to(root)
         try:
             schema = yaml.safe_load(schema_path.read_text(encoding="utf-8"))
-        except yaml.YAMLError as exc:
+        except (yaml.YAMLError, UnicodeDecodeError) as exc:
             failures.append(f"{rel}: not parseable as YAML — {exc}")
             continue
         if not isinstance(schema, dict):
@@ -321,7 +321,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         try:
             data = yaml.safe_load(data_file.read_text(encoding="utf-8"))
-        except yaml.YAMLError as exc:
+        except (yaml.YAMLError, UnicodeDecodeError) as exc:
             failures.append(f"{rel_data}: not parseable — {exc}")
             continue
         validator = Draft202012Validator(loaded[schema_file])

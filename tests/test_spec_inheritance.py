@@ -11,6 +11,7 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
@@ -310,3 +311,20 @@ def test_plugin_manifest_without_object_root_counts_as_absent(tmp_path):
     manifest.parent.mkdir()
     manifest.write_text("[]", encoding="utf-8")
     assert csi.own_plugin_name(tmp_path) is None
+
+
+@pytest.mark.parametrize("content", [b"\xff\xfe x: 1", b"- 1\n"])
+def test_unreadable_hub_config_falls_back_to_english(tmp_path, content):
+    """A non-UTF-8 .spec-config.yml or one whose root isn't a mapping reads like a broken one (#812)."""
+    (tmp_path / ".spec-config.yml").write_bytes(content)
+    assert csi.hub_canonical_lang(tmp_path) == "en"
+
+
+def test_non_utf8_spec_file_exits_2_not_a_traceback(tmp_path, capsys):
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    write_config(consumer, inherits=[{"source": "nolte-shared", "ref": "v0.1.9"}])
+    make_spec(consumer / "spec", "project/mine", scope="local")
+    (consumer / "spec" / "project" / "mine" / "en.md").write_bytes(b"# Mine\n\n\xff\n")
+    assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 2
+    assert "isn't valid UTF-8" in capsys.readouterr().err

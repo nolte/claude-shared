@@ -91,13 +91,19 @@ def test_not_mergeable_pr_never_gets_a_slot(override, reason):
 @pytest.mark.parametrize(
     ("checks", "reason"),
     [
-        (GREEN, "blocked, cause unknown"),
-        ([{"name": "a", "bucket": "skipping"}], "blocked, cause unknown"),
-        ([], "blocked, cause unknown (no required check reported yet; re-run collect)"),
+        # A partial list (only the fast checks registered so far) looks like a complete one.
+        (GREEN, "blocked, cause unknown (a required check may not be reported yet; re-run collect)"),
+        ([{"name": "a", "bucket": "skipping"}],
+         "blocked, cause unknown (a required check may not be reported yet; re-run collect)"),
+        ([], "blocked, cause unknown (a required check may not be reported yet; re-run collect)"),
+        (None, "blocked, cause unknown (required checks not collected; run collect)"),
     ],
 )
 def test_blocked_without_known_cause_is_not_mergeable(checks, reason):
-    result = run(pr(1, mergeStateStatus="BLOCKED", requiredChecks=checks), pr(2, mergeStateStatus="BEHIND"))
+    blocked_pr = pr(1, mergeStateStatus="BLOCKED", requiredChecks=checks)
+    if checks is None:
+        del blocked_pr["requiredChecks"]
+    result = run(blocked_pr, pr(2, mergeStateStatus="BEHIND"))
     assert numbers(result) == [2]
     assert blocked(result) == {1: [reason]}
 
@@ -193,7 +199,8 @@ def test_dependency_phrase_scan_stays_linear_on_hostile_bodies(body):
     # PR bodies are untrusted; the quadratic form took ~119 s on the first body.
     start = time.monotonic()
     assert mo._mentions(body) == {1}
-    assert time.monotonic() - start < 1.0
+    # Linear takes milliseconds, the quadratic form ~119 s; 10 s leaves room for a busy runner.
+    assert time.monotonic() - start < 10.0
 
 
 def test_pr_number_longer_than_nine_digits_ends_the_list():
