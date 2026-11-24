@@ -87,7 +87,11 @@ class Finding:
 # --- parsing helpers -------------------------------------------------------
 
 def _read(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        # The bare error names neither the file nor the tree; carry the path in the reason.
+        raise UnicodeDecodeError(exc.encoding, exc.object, exc.start, exc.end, f"{exc.reason} in {path}") from None
 
 
 def portfolio_scope(text: str) -> str:
@@ -325,6 +329,9 @@ def run(repo: Path, hub_spec_root: Path | None) -> list[Finding]:
         return [Finding("Warning", str(cfg_path), "no-config",
                         "no spec/.spec-config.yml; nothing to check")]
     config = yaml.safe_load(_read(cfg_path)) or {}
+    if not isinstance(config, dict):
+        return [Finding("Critical", str(cfg_path), "malformed-config",
+                        "spec/.spec-config.yml must be a mapping")]
     canonical_lang = config.get("canonical_language", "en")
     spec_root = repo / config.get("spec_root", "spec")
     local = collect_specs(spec_root, canonical_lang)
@@ -361,6 +368,12 @@ def main(argv: list[str] | None = None) -> int:
         findings = run(repo, hub_spec_root)
     except yaml.YAMLError as exc:
         print(f"Critical    spec/.spec-config.yml  [internal] unparseable YAML: {exc}", file=sys.stderr)
+        return 2
+    except UnicodeDecodeError as exc:
+        print(f"Critical    [internal] a file isn't valid UTF-8: {exc}", file=sys.stderr)
+        return 2
+    except OSError as exc:
+        print(f"Critical    [internal] a file can't be read: {exc}", file=sys.stderr)
         return 2
 
     by_severity = {"Critical": 0, "Warning": 0, "Suggestion": 0, "Info": 0}

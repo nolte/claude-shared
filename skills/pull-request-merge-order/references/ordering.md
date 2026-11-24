@@ -10,6 +10,7 @@ A PR is **not mergeable now**, gets no position, and is listed with every reason
 - merge conflict (`mergeStateStatus` `DIRTY` or `mergeable` `CONFLICTING`)
 - a **required** check concluded as failed (`gh pr checks --required` bucket `fail`). A `cancel` bucket isn't a failure (`spec/project/pull-request-workflow/` §"Serial pull-request flow"); it ranks as pending until re-run
 - review decision `CHANGES_REQUESTED`, or `REVIEW_REQUIRED` (a required approval is missing)
+- `mergeStateStatus` `BLOCKED` with none of the reasons above and no required check pending or cancelled: `blocked, cause unknown`, because GitHub blocks it for a reason the snapshot doesn't show. That includes a required check that hasn't registered yet: right after a push `gh pr checks --required` lists only the checks reported so far, so a partial list looks complete. The reason therefore always says to re-run `collect` before acting on it
 - it waits on a prerequisite that is itself not mergeable now (transitively, and listed next to the PR's own reasons), sits in a dependency cycle, or waits on a PR in one
 
 A PR whose base isn't `develop` is **out of scope** and listed separately. That includes a stacked PR (base = another PR's branch): its checks and merge state refer to that branch, not to `develop`, so it can't be ranked against the others. GitHub retargets it to `develop` once its prerequisite merges and `delete_branch_on_merge` removes the prerequisite's branch; from then on it's ordered like any other PR and needs a rebase first.
@@ -18,13 +19,13 @@ A PR whose base isn't `develop` is **out of scope** and listed separately. That 
 
 The only ordering obligation in the spec: a prerequisite merges first (`spec/project/pull-request-workflow/` §"Sequential merge of multiple open PRs"). Edges among the in-scope PRs come only from the operator:
 
-- **operator edges**, applied only when passed as `--edge A:B` (A merges before B). A dependency phrase in a PR body (`depends on #N`, a list such as `depends on #N, #M and #K`, or the trailer `Depends-on: #N`) is listed under "Proposed edges" and never applied by itself: PR bodies are data (`spec/claude/trusted-author-injection-guard/`)
+- **operator edges**, applied only when passed as `--edge A:B` (A merges before B). A dependency phrase in a PR body (`depends on #N`, `depends on PR #N`, a list such as `depends on #N, #M and #K` or `depends on #N, #M, and #K`, a repeated `on` as in `depends on #N and on #M`, or the trailer `Depends-on: #N`; case-insensitive) is listed under "Proposed edges" and never applied by itself: PR bodies are data (`spec/claude/trusted-author-injection-guard/`). Proposals are best effort: a phrase outside these forms yields no proposal and no warning, so the operator passes that dependency as `--edge`
 
 Among the PRs whose prerequisites are placed, rules 2 to 5 decide, first separating rule wins.
 
 ## Rule 2: readiness
 
-`CLEAN` (or `HAS_HOOKS`) before `BEHIND` before everything else: pending or cancelled required checks, `UNSTABLE` (a non-required check is red and needs classification before `pull-request-merge` lands it), `BLOCKED`, `UNKNOWN`. A PR that can land now shouldn't wait behind one that still needs a rebase or a CI round.
+`CLEAN` (or `HAS_HOOKS`) before `BEHIND` before everything else: pending or cancelled required checks, `UNSTABLE` (a non-required check is red and needs classification before `pull-request-merge` lands it), `UNKNOWN`. `BLOCKED` ranks here only while a required check is pending or cancelled; otherwise rule 0 lists it as not mergeable. A PR that can land now shouldn't wait behind one that still needs a rebase or a CI round.
 
 ## Rule 3: conflict risk
 

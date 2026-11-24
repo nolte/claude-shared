@@ -16,6 +16,7 @@ import re
 import stat
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -36,7 +37,6 @@ def pr(number: int, **kw) -> dict:
         "number": number,
         "title": f"pr {number}",
         "isDraft": False,
-        "headRefName": f"feat/b{number}",
         "baseRefName": "develop",
         "isCrossRepository": False,
         "author": {"login": "nolte"},
@@ -88,6 +88,41 @@ def test_not_mergeable_pr_never_gets_a_slot(override, reason):
     assert blocked(result) == {1: [reason]}
 
 
+@pytest.mark.parametrize(
+    ("checks", "reason"),
+    [
+        # A partial list (only the fast checks registered so far) looks like a complete one.
+        (GREEN, "blocked, cause unknown (a required check may not be reported yet; re-run collect)"),
+        ([{"name": "a", "bucket": "skipping"}],
+         "blocked, cause unknown (a required check may not be reported yet; re-run collect)"),
+        ([], "blocked, cause unknown (a required check may not be reported yet; re-run collect)"),
+        (None, "blocked, cause unknown (required checks not collected; run collect)"),
+    ],
+)
+def test_blocked_without_known_cause_is_not_mergeable(checks, reason):
+    blocked_pr = pr(1, mergeStateStatus="BLOCKED", requiredChecks=checks)
+    if checks is None:
+        del blocked_pr["requiredChecks"]
+    result = run(blocked_pr, pr(2, mergeStateStatus="BEHIND"))
+    assert numbers(result) == [2]
+    assert blocked(result) == {1: [reason]}
+
+
+@pytest.mark.parametrize("bucket", ["pending", "cancel"])
+def test_blocked_with_running_required_check_ranks_as_pending(bucket):
+    result = run(pr(1, mergeStateStatus="BLOCKED", requiredChecks=[{"name": "t", "bucket": bucket}]),
+                 pr(2, mergeStateStatus="BEHIND"))
+    assert numbers(result) == [2, 1]
+    assert result["order"][1]["readiness"] == "BLOCKED, required checks pending or cancelled"
+    assert result["not_mergeable"] == []
+
+
+def test_unknown_merge_state_without_checks_still_ranks_as_pending():
+    result = run(pr(1, mergeStateStatus="UNKNOWN", requiredChecks=[]), pr(2, mergeStateStatus="BEHIND"))
+    assert numbers(result) == [2, 1]
+    assert result["order"][1]["readiness"] == "UNKNOWN"
+
+
 def test_cancelled_or_skipped_required_check_is_not_a_failure():
     result = run(pr(1, requiredChecks=[{"name": "a", "bucket": "cancel"}, {"name": "b", "bucket": "skipping"}]))
     assert numbers(result) == [1]
@@ -119,7 +154,7 @@ def test_operator_edge_puts_prerequisite_first_even_when_it_ranks_worse():
 
 def test_stacked_pr_is_out_of_scope_and_creates_no_edge():
     # Stacks are no longer inferred: #2 enters only once GitHub retargets it to develop.
-    result = run(pr(1), pr(2, baseRefName="feat/b1"), pr(3, headRefName="main"), pr(4, baseRefName="main"))
+    result = run(pr(1), pr(2, baseRefName="feat/b1"), pr(3), pr(4, baseRefName="main"))
     assert numbers(result) == [1, 3]
     assert [r["number"] for r in result["out_of_scope"]] == [2, 4]
     assert result["applied_edges"] == [] and result["not_mergeable"] == []
@@ -141,12 +176,37 @@ def test_own_blocker_and_prerequisite_in_a_cycle_are_both_listed():
         ("Depends on #1.", ["#1->#5"]),
         ("Depends on #1, #2 and #3", ["#1->#5", "#2->#5", "#3->#5"]),
         ("Depends-on: #2 & #3", ["#2->#5", "#3->#5"]),
+        ("Depends on #1, #2, and #3", ["#1->#5", "#2->#5", "#3->#5"]),
+        ("Depends on #1 and on #2", ["#1->#5", "#2->#5"]),
+        ("depends on PR #3", ["#3->#5"]),
+        ("DEPENDS ON pr #1, PR #2", ["#1->#5", "#2->#5"]),
         ("This PR depends on #5 itself and #99 elsewhere", []),
+        ("Depends on #1 and the rest", ["#1->#5"]),
+        ("Depends on #1 andrew #2", ["#1->#5"]),
+        ("Depends on #1, and on #2", ["#1->#5", "#2->#5"]),
+        ("depend on #1", []),
+        ("Depends on #\u0661\u0662", []),  # non-ASCII digits are not a PR number
     ],
 )
 def test_body_dependency_forms_are_proposed(body, expected):
     result = run(pr(1), pr(2), pr(3), pr(5, body=body))
     assert result["proposed_edges"] == expected
+
+
+@pytest.mark.parametrize("body", ["Depends on #1," + " " * 60000 + "x", "Depends on #1" + ", and on" * 20000 + "x",
+                                  "Depends on #1, #" + "1" * 5000])
+def test_dependency_phrase_scan_stays_linear_on_hostile_bodies(body):
+    # PR bodies are untrusted; the quadratic form took ~119 s on the first body.
+    start = time.monotonic()
+    assert mo._mentions(body) == {1}
+    # Linear takes milliseconds, the quadratic form ~119 s; 10 s leaves room for a busy runner.
+    assert time.monotonic() - start < 10.0
+
+
+def test_pr_number_longer_than_nine_digits_ends_the_list():
+    # A PR number has at most nine digits; a longer run is no item and ends the list (best effort).
+    assert mo._mentions("Depends on #1234567890") == set()
+    assert mo._mentions("Depends on #1, #1234567890 and #3") == {1}
 
 
 def test_body_mention_is_only_proposed_never_applied():
@@ -334,6 +394,10 @@ def test_cli_rejects_unreadable_snapshot_and_bad_edge(tmp_path):
     assert _cli("order", str(tmp_path / "missing.json")).returncode == 2
     assert _cli("order", "-", stdin="{not json").returncode == 2
     assert _cli("order", "-", "--edge", "1-2", stdin="{}").returncode == 2
+    not_utf8 = tmp_path / "latin1.json"
+    not_utf8.write_bytes(b"\xff\xfe{}")
+    res = _cli("order", str(not_utf8))
+    assert res.returncode == 2 and "cannot read snapshot" in res.stderr
     for malformed in ("[]", '{"pullRequests": null}', '{"pullRequests": [{"title": "no number"}]}'):
         res = _cli("order", "-", stdin=malformed)
         assert res.returncode == 2 and "malformed snapshot" in res.stderr
@@ -390,6 +454,9 @@ def test_collect_reads_checks_from_output_whatever_the_exit_code(tmp_path):
         ("", "HTTP 401: Bad credentials\n", 1),
         ("boom", "", 4),
         ('{"not": "a list"}', "", 0),
+        ('[1, "x"]', "", 0),
+        ("[{}]", "", 0),
+        ('[{"name": "t", "bucket": "weird"}]', "", 0),
     ],
 )
 def test_collect_fails_closed_when_check_state_is_unknown(tmp_path, check):
@@ -403,3 +470,8 @@ def test_collect_fails_closed_on_unusable_pr_list(tmp_path, listing):
     res = _cli("collect", env=_fake_gh(tmp_path, listing, {}))
     assert res.returncode == 2, res.stderr
     assert "collect failed" in res.stderr
+
+
+def test_non_breaking_space_still_separates_a_dependency_phrase():
+    assert mo._mentions("Depends on #12") == {12}
+    assert mo._mentions("Depends on #1, and #2") == {1, 2}

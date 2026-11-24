@@ -247,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
         rel = schema_path.relative_to(root)
         try:
             schema = yaml.safe_load(schema_path.read_text(encoding="utf-8"))
-        except yaml.YAMLError as exc:
+        except (yaml.YAMLError, UnicodeDecodeError, OSError) as exc:
             failures.append(f"{rel}: not parseable as YAML — {exc}")
             continue
         if not isinstance(schema, dict):
@@ -273,9 +273,19 @@ def main(argv: list[str] | None = None) -> int:
     bindings: list[tuple[Path, Path]] = []  # (data_file, schema_file)
 
     config_path = root / CONFIG_NAME
+    config: object = {}
     if config_path.exists():
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-        for pattern, schema_ref in (config.get("mappings", {}) or {}).items():
+        try:
+            config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        except (yaml.YAMLError, UnicodeDecodeError, OSError) as exc:
+            failures.append(f"{CONFIG_NAME}: not parseable — {exc}")
+        mappings = config.get("mappings") if isinstance(config, dict) else None
+        if mappings is None and isinstance(config, dict):
+            mappings = {}  # `mappings:` left empty binds nothing
+        if not isinstance(mappings, dict):
+            failures.append(f"{CONFIG_NAME}: `mappings` must be a mapping of glob to schema path")
+            mappings = {}
+        for pattern, schema_ref in mappings.items():
             schema_file = (root / schema_ref).resolve()
             for data_file in root.glob(pattern):
                 if not _excluded(data_file, root):
@@ -321,7 +331,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         try:
             data = yaml.safe_load(data_file.read_text(encoding="utf-8"))
-        except yaml.YAMLError as exc:
+        except (yaml.YAMLError, UnicodeDecodeError, OSError) as exc:
             failures.append(f"{rel_data}: not parseable — {exc}")
             continue
         validator = Draft202012Validator(loaded[schema_file])

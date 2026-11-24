@@ -35,16 +35,27 @@ BOT_LOGINS = frozenset({"app/renovate", "renovate[bot]", "renovate"})
 # `gh pr list --limit` maximum this skill requests; a full page means the list may be partial.
 LIST_LIMIT = 200
 PR_FIELDS = (
-    "number,title,isDraft,headRefName,baseRefName,isCrossRepository,author,"
+    "number,title,isDraft,baseRefName,isCrossRepository,author,"
     "mergeStateStatus,mergeable,reviewDecision,files,changedFiles,additions,"
     "deletions,createdAt,body"
 )
 # stderr of `gh pr checks --required` (gh 2.96.0) when the PR has no check run at all, or
 # none of its checks is required. Neither is an error; right after a push it can also mean
-# "not reported yet", which `mergeStateStatus` (BLOCKED/UNKNOWN, rank 2) still carries.
+# "not reported yet": `mergeStateStatus` UNKNOWN then ranks as pending, BLOCKED as not
+# mergeable with a hint to re-run `collect` (see `blockers`).
 NO_CHECKS_MESSAGES = ("no checks reported", "no required checks reported")
-# "depends on #12", "Depends on #12, #13 and #14", "Depends-on: #12" (trailer form).
-DEPENDS_RE = re.compile(r"(?i)\bdepends[\s-]+on:?\s*(#\d+(?:\s*(?:,|and|&)\s*#\d+)*)")
+# Every bucket `gh pr checks --json bucket` emits (gh 2.96.0).
+CHECK_BUCKETS = frozenset({"pass", "fail", "pending", "skipping", "cancel"})
+# "depends on #12", "Depends on #12, #13 and #14", "Depends on #12, #13, and #14",
+# "Depends on #12 and on #13", "depends on PR #12", "Depends-on: #12" (trailer form).
+# Best effort: a phrase outside these forms yields no proposal.
+# At most 9 ASCII digits: a PR number, and int() never meets Python's 4300-digit limit on a hostile
+# body. `[0-9]`, not `\d`, so other scripts' digits don't count while `\s` keeps matching NBSP.
+_DEP_ITEM = r"(?:PR\s*)?#[0-9]{1,9}(?![0-9])"
+# The optional whitespace before "and" sits inside the group, so no two \s* runs are adjacent:
+# a long whitespace run in an untrusted body must stay linear (no quadratic backtracking).
+_DEP_SEP = r"\s*(?:,(?:\s*and\b)?|&|\band\b)\s*(?:on\s+)?"
+DEPENDS_RE = re.compile(rf"(?i)\bdepends[\s-]+on:?\s*({_DEP_ITEM}(?:{_DEP_SEP}{_DEP_ITEM})*)")
 
 RULES = {
     "dependency": "dependency: prerequisite merges first",
@@ -61,7 +72,8 @@ READINESS = {"CLEAN": 0, "HAS_HOOKS": 0, "BEHIND": 1}
 
 
 def _gh(args: list[str]) -> subprocess.CompletedProcess:
-    return subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
+    # gh prints UTF-8; decode explicitly so a stray byte (or a non-UTF-8 locale) can't crash collect.
+    return subprocess.run(["gh", *args], capture_output=True, encoding="utf-8", errors="replace", check=False)
 
 
 def _fail(args: list[str], proc: subprocess.CompletedProcess) -> RuntimeError:
@@ -86,7 +98,12 @@ def required_checks(number: int) -> list[dict[str, Any]]:
     # while printing the list. Exit 1 with no output is either "no required checks" (stated
     # on stderr) or a real error (auth, rate limit, PR gone), which must fail closed.
     if proc.returncode in (0, 1, 8) and proc.stdout.strip():
-        return _json_list(args, proc)
+        checks = _json_list(args, proc)
+        # `order` reads name and bucket per check; any other shape is an unknown state.
+        if not all(isinstance(c, dict) and isinstance(c.get("name"), str)
+                   and c.get("bucket") in CHECK_BUCKETS for c in checks):
+            raise _fail(args, proc)
+        return checks
     if proc.returncode == 1 and any(m in proc.stderr for m in NO_CHECKS_MESSAGES):
         return []
     raise _fail(args, proc)
@@ -130,6 +147,15 @@ def blockers(pr: dict[str, Any]) -> list[str]:
         reasons.append("changes requested")
     elif pr.get("reviewDecision") == "REVIEW_REQUIRED":
         reasons.append("required review missing")
+    # BLOCKED with nothing above and no required check still running: GitHub blocks for a
+    # reason the snapshot doesn't show (a ruleset, a missing signature, or a required check
+    # that hasn't registered yet: `gh pr checks --required` lists only reported checks, so a
+    # partial list looks complete right after a push). It must not lead.
+    if (not reasons and pr.get("mergeStateStatus") == "BLOCKED"
+            and not any(c.get("bucket") in ("pending", "cancel") for c in pr.get("requiredChecks", []))):
+        hint = ("required checks not collected; run collect" if "requiredChecks" not in pr
+                else "a required check may not be reported yet; re-run collect")
+        reasons.append(f"blocked, cause unknown ({hint})")
     return reasons
 
 
@@ -258,7 +284,7 @@ def order(snapshot: dict[str, Any], edges: list[tuple[int, int]] | None = None) 
 
 
 def _mentions(body: str) -> set[int]:
-    return {int(x) for group in DEPENDS_RE.findall(body) for x in re.findall(r"#(\d+)", group)}
+    return {int(x) for group in DEPENDS_RE.findall(body) for x in re.findall(r"#([0-9]{1,9})(?![0-9])", group)}
 
 
 def _reach(n: int, adj: dict[int, set[int]]) -> set[int]:
@@ -380,9 +406,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
-        raw = sys.stdin.read() if args.snapshot == "-" else open(args.snapshot, encoding="utf-8").read()
+        if args.snapshot == "-":
+            raw = sys.stdin.read()
+        else:
+            with open(args.snapshot, encoding="utf-8") as fh:
+                raw = fh.read()
         snapshot = json.loads(raw)
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         print(f"cannot read snapshot: {exc}", file=sys.stderr)
         return 2
     try:

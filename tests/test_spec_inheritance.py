@@ -8,9 +8,11 @@ integration" is verifiable without a real installed plugin.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
@@ -295,3 +297,66 @@ def test_hub_itself_passes(tmp_path):
     """The real hub repo (this checkout) has no inherits and clean headers."""
     repo = Path(__file__).resolve().parents[1]
     assert csi.main(["--repo", str(repo)]) == 0
+
+
+def test_non_utf8_spec_file_exits_2_not_a_traceback(tmp_path, capsys):
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    write_config(consumer, inherits=[{"source": "nolte-shared", "ref": "v0.1.9"}])
+    make_spec(consumer / "spec", "project/mine", scope="local")
+    (consumer / "spec" / "project" / "mine" / "en.md").write_bytes(b"# Mine\n\n\xff\n")
+    assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 2
+    assert "isn't valid UTF-8" in capsys.readouterr().err
+
+
+def test_non_mapping_consumer_config_is_a_critical_finding_not_a_traceback(tmp_path):
+    consumer = tmp_path / "consumer"
+    (consumer / "spec").mkdir(parents=True)
+    (consumer / "spec" / ".spec-config.yml").write_text("- inherits\n", encoding="utf-8")
+    assert codes(csi.run(consumer, None)) == {"malformed-config"}
+    assert csi.main(["--repo", str(consumer)]) == 1
+
+
+def test_non_utf8_error_names_the_file(tmp_path, capsys):
+    hub = make_hub(tmp_path)
+    bad = hub / "project" / "repo-only" / "en.md"
+    bad.write_bytes(b"# Repo only\n\n\xff\n")
+    consumer = tmp_path / "consumer"
+    write_config(consumer, inherits=[{"source": "nolte-shared", "ref": "v0.1.9"}])
+    make_spec(consumer / "spec", "project/mine", scope="local")
+    assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 2
+    assert str(bad) in capsys.readouterr().err
+
+
+def test_unreadable_hub_config_exits_2_instead_of_checking_in_english(tmp_path, capsys):
+    """A hub config that can't be read must not silently fall back to "en" (#812 review)."""
+    if os.geteuid() == 0:
+        pytest.skip("root reads a mode-000 file")
+    hub = make_hub(tmp_path)
+    cfg = hub / ".spec-config.yml"
+    cfg.chmod(0)
+    consumer = tmp_path / "consumer"
+    write_config(consumer, inherits=[{"source": "nolte-shared", "ref": "v0.1.9"}])
+    make_spec(consumer / "spec", "project/mine", scope="local")
+    try:
+        assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 2
+    finally:
+        cfg.chmod(0o644)
+    assert "can't be read" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("which", ["plugin", "hub"])
+def test_non_utf8_manifest_or_hub_config_exits_2_instead_of_a_silent_default(tmp_path, capsys, which):
+    """Neither a silent None (cyclic check off) nor a silent "en" (#812 review)."""
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    write_config(consumer, inherits=[{"source": "nolte-shared", "ref": "v0.1.9"}])
+    make_spec(consumer / "spec", "project/mine", scope="local")
+    if which == "plugin":
+        bad = consumer / ".claude-plugin" / "plugin.json"
+        bad.parent.mkdir()
+    else:
+        bad = hub / ".spec-config.yml"
+    bad.write_bytes(b"\xff\xfe{}")
+    assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 2
+    assert str(bad) in capsys.readouterr().err
