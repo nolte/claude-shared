@@ -16,10 +16,10 @@ Exit codes:
   0  the mission passes (0 files = pass)
   1  at least one error (`Critical`-grade per `review-plan` §Severity scale);
      an unreadable or non-UTF-8 input file (the mission, goals.md, AUDIENCES.md,
-     a feature file, or the committed mission version) is such a `Critical`
-     finding (`mission.unreadable`); an undecodable goals.md, AUDIENCES.md, or
-     feature file doesn't stop the other checks
-  2  path not found, unrecoverable internal error, or failed self-test
+     or a feature file) or a non-UTF-8 committed mission version is such a
+     `Critical` finding (`mission.unreadable`); an unreadable goals.md,
+     AUDIENCES.md, or feature file doesn't stop the other checks
+  2  path not found, or failed self-test
 
 Usage:
   python scripts/validate_mission.py                    # checks project/mission.md
@@ -128,18 +128,25 @@ def _undecodable(target: str, source: str, exc: UnicodeDecodeError) -> Finding:
     return Finding("Critical", target, "mission.unreadable", f"{source} is not valid UTF-8 ({exc})")
 
 
-def _read_ids(path: Path, parse, target: str, findings: list[Finding]) -> set[str] | None:
-    """IDs parsed from `path`, or None when it is absent or undecodable.
+def _unreadable(target: str, source: str, exc: OSError | UnicodeDecodeError) -> Finding:
+    """The Critical finding for an input that can't be read or decoded, naming `source`."""
+    if isinstance(exc, UnicodeDecodeError):
+        return _undecodable(target, source, exc)
+    return Finding("Critical", target, "mission.unreadable", f"{source} can't be read ({exc})")
 
-    An undecodable file resolves nothing (like an absent one) and appends a
+
+def _read_ids(path: Path, parse, target: str, findings: list[Finding]) -> set[str] | None:
+    """IDs parsed from `path`, or None when it is absent, unreadable, or undecodable.
+
+    An unreadable or undecodable file resolves nothing (like an absent one) and appends a
     `mission.unreadable` finding naming it, so the caller's other checks still run.
     """
     if not path.exists():
         return None
     try:
         return parse(path.read_text(encoding="utf-8"))
-    except UnicodeDecodeError as exc:
-        findings.append(_undecodable(target, _display(path), exc))
+    except (OSError, UnicodeDecodeError) as exc:
+        findings.append(_unreadable(target, _display(path), exc))
         return None
 
 
@@ -148,8 +155,8 @@ def _feature_index(target: str) -> tuple[dict[str, str | None], list[Finding]]:
 
     Read from project/features/*.md frontmatter so `verifies_via` can be resolved
     to both an existing feature file and the acceptance identifier it names. A
-    feature file that isn't valid UTF-8 yields a `mission.unreadable` finding
-    naming it; the other feature files are still indexed.
+    feature file that can't be read or isn't valid UTF-8 yields a
+    `mission.unreadable` finding naming it; the other feature files are still indexed.
     """
     index: dict[str, str | None] = {}
     findings: list[Finding] = []
@@ -158,8 +165,8 @@ def _feature_index(target: str) -> tuple[dict[str, str | None], list[Finding]]:
     for path in sorted(FEATURES_DIR.glob("*.md")):
         try:
             text = path.read_text(encoding="utf-8")
-        except UnicodeDecodeError as exc:
-            findings.append(_undecodable(target, _display(path), exc))
+        except (OSError, UnicodeDecodeError) as exc:
+            findings.append(_unreadable(target, _display(path), exc))
             continue
         split = _split(text)
         if split is None:

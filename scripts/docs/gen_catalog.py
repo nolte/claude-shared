@@ -364,7 +364,10 @@ def _repo_prefix(source: SourceRoot) -> str:
 
 
 def load_sources() -> list[SourceRoot]:
-    data = yaml.safe_load(_read_utf8(SOURCES_FILE)) or {}
+    try:
+        data = yaml.safe_load(_read_utf8(SOURCES_FILE)) or {}
+    except yaml.YAMLError as exc:
+        raise CatalogError(f"{SOURCES_FILE}: invalid YAML ({exc})") from exc
     sources_raw = data.get("sources") or []
     if not sources_raw:
         raise CatalogError(f"{SOURCES_FILE}: no sources configured")
@@ -1124,7 +1127,7 @@ def group_by_phase_then_plugin(
 
 def write_page(path: Path, content: str) -> None:
     """Write ``content`` to ``path``, skipping the write when the file already
-    holds identical bytes.
+    holds identical text.
 
     Preserving the mtime of unchanged pages keeps the generator **idempotent**:
     when the ``on_pre_build`` hook regenerates the catalog inside the watched

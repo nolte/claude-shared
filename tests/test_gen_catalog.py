@@ -98,6 +98,15 @@ def test_undecodable_sources_file_raises_catalog_error_naming_path(
     assert str(gen_catalog.SOURCES_FILE) in str(exc.value)
 
 
+def test_invalid_yaml_sources_file_raises_catalog_error_naming_path(
+    isolated_config: Path,
+) -> None:
+    gen_catalog.SOURCES_FILE.write_text("sources: [unclosed\n", encoding="utf-8")
+    with pytest.raises(gen_catalog.CatalogError, match="invalid YAML") as exc:
+        gen_catalog.load_sources()
+    assert str(gen_catalog.SOURCES_FILE) in str(exc.value)
+
+
 def test_undecodable_mkdocs_file_raises_catalog_error_naming_path(
     isolated_config: Path,
 ) -> None:

@@ -284,6 +284,24 @@ def _unreadable(findings):
     return [f for f in findings if f.rule == "mission.unreadable" and f.severity == "Critical"]
 
 
+def test_814_unreadable_goals_and_feature_are_findings_not_tracebacks(monkeypatch, tmp_path):
+    # An OSError (here: a directory where a file is expected) is reported like a
+    # decode error, and the other checks still run.
+    _hermetic(monkeypatch, tmp_path)
+    goals = tmp_path / "goals.md"
+    goals.mkdir()
+    monkeypatch.setattr(v, "GOALS_PATH", goals)
+    features = tmp_path / "features"
+    (features / "0001-dir.md").mkdir(parents=True)
+    monkeypatch.setattr(v, "FEATURES_DIR", features)
+    text = _GOOD.replace('"A does X for the B audience."', '""')
+    findings = v.check_mission_text(text, "m")
+    messages = [f.message for f in _unreadable(findings)]
+    assert any(str(goals) in m for m in messages)
+    assert any(str(features / "0001-dir.md") in m for m in messages)
+    assert "mission.mission-statement-empty" in _rules(findings)
+
+
 def test_814_undecodable_mission_file_is_critical_and_exits_1(monkeypatch, tmp_path):
     _hermetic(monkeypatch, tmp_path)
     mission = tmp_path / "mission.md"
@@ -359,9 +377,10 @@ def test_814_undecodable_committed_version_is_critical(monkeypatch, tmp_path):
 
     def fake_run(cmd, *args, **kwargs):
         if cmd[:2] == ["git", "show"]:
-            if kwargs.get("text") or kwargs.get("encoding"):
-                # what a text-mode run does on a UTF-8 locale: the decode raises
-                _UNDECODABLE.decode("utf-8")
+            # Only an explicit strict UTF-8 decode is locale-independent; anything
+            # else would decode by locale, so the fake refuses it.
+            assert kwargs.get("text") and kwargs.get("encoding") == "utf-8" and "errors" not in kwargs
+            _UNDECODABLE.decode("utf-8")
             return subprocess.CompletedProcess(cmd, 0, stdout=_UNDECODABLE, stderr=b"")
         return real_run(cmd, *args, **kwargs)
 

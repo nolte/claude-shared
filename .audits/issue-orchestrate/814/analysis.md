@@ -128,6 +128,15 @@ P1 ; P2 ; P3 ; P4 — unabhängig (disjunkte Dateien), sequenziell dispatcht, da
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| W1 unlesbares (OSError) goals.md/AUDIENCES.md/Feature → Traceback, Docstring versprach Befund; Exit-2-Zeile nannte nicht umgesetzten „internal error" | diff review @ 98d13bdb | fixed directly: `(OSError, UnicodeDecodeError)` an beiden Lesestellen, Docstring korrigiert | goals.md als Verzeichnis → Traceback; Test `test_814_unreadable_goals_and_feature_are_findings_not_tracebacks` rot gegen 98d13bdb | — |
+| W2 Geschwister-Test erkennt „abbrechen nach erster kaputter Datei" nicht (Sortierung) | diff review @ 98d13bdb | fixed directly: gültiger Nachbar sortiert jetzt nach der kaputten Datei | Mutante `break` nach erstem unreadable → Test rot | — |
+| S1 undekodierbarer Agent doppelt gemeldet (check_agent + Budget) | diff review @ 98d13bdb | fixed directly: Budget überspringt die Datei, check_agent meldet sie | Test `test_description_budget_skips_undecodable_agent` rot gegen 98d13bdb | — |
+| S2 Tool-Claim-Meldung nennt bei undekodierbarem Agent nicht das Encoding | diff review @ 98d13bdb | dismissed: Prüfung bleibt fail-closed (Critical), der Agent selbst wird im Hub-Lauf als `agent-management.unreadable` gemeldet; nur Meldungstext | — | — |
+| S3 YAML-Fehler in catalog-sources.yml ohne Dateiname (String statt Stream) | diff review @ 98d13bdb | fixed directly: `yaml.YAMLError` → `CatalogError` mit Pfad | Test `test_invalid_yaml_sources_file_raises_catalog_error_naming_path` rot gegen 98d13bdb | — |
+| S4a git-show-Fake prüft `encoding="utf-8"` nicht | diff review @ 98d13bdb | fixed directly: Fake verlangt strikte UTF-8-Kwargs | Mutante ohne `encoding` → Test rot | — |
+| S4b doppeltes try/except in `_feature_index`/`_read_ids` | diff review @ 98d13bdb | dismissed: zwei Stellen mit unterschiedlicher Rückgabe; gemeinsamer Befund-Konstruktor `_unreadable` reicht | — | — |
+| S4c write_page-Docstring „identical bytes" | diff review @ 98d13bdb | fixed directly: „identical text" | — | — |
+| Info: Latin-1-committete Mission kann per PR nie nach UTF-8 umgestellt werden (Base-Version undekodierbar → Critical) | diff review @ 98d13bdb | dismissed als Regression (vorher Traceback, ebenso blockierend); in Risk / rollout notes genannt | — | — |
 
 ## Dispatch log
 - 2026-11-25 P1 dispatched to nolte-engineering:fullstack-developer — 6 Tests rot→grün, validate_skills-Ausgabe auf Repo byte-identisch; VALIDATOR_VERSION 1.1.0→1.2.0 vom Orchestrator nachgezogen (neuer Check)

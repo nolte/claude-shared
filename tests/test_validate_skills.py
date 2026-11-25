@@ -851,18 +851,19 @@ def _write_bytes(root, rel, data):
 
 
 def test_undecodable_skill_is_critical_and_siblings_still_validate(monkeypatch, tmp_path, capsys):
+    # The undecodable skill sorts first, so a run that stopped at it would miss zed-apply.
     _write_bytes(tmp_path, "skills/foo-apply/SKILL.md", _UNDECODABLE)
-    broken = "---\nname: bar-apply\ndescription: Read-only: reports things\n---\nbody\n"
-    _write_bytes(tmp_path, "skills/bar-apply/SKILL.md", broken.encode("utf-8"))
+    broken = "---\nname: zed-apply\ndescription: Read-only: reports things\n---\nbody\n"
+    _write_bytes(tmp_path, "skills/zed-apply/SKILL.md", broken.encode("utf-8"))
     assert _consumer_run(
-        monkeypatch, tmp_path, "skills/bar-apply/SKILL.md", broken, "skills/") == 1
+        monkeypatch, tmp_path, "skills/zed-apply/SKILL.md", broken, "skills/") == 1
     out = capsys.readouterr().out
     unreadable = [line for line in out.splitlines() if "skill-management.unreadable" in line]
     assert len(unreadable) == 1
     assert unreadable[0].startswith("Critical")
     assert unreadable[0].split()[1] == "skills/foo-apply/SKILL.md"
     assert "position 36" in unreadable[0]
-    assert any("skills/bar-apply/SKILL.md" in line and "frontmatter-yaml-invalid" in line
+    assert any("skills/zed-apply/SKILL.md" in line and "frontmatter-yaml-invalid" in line
                for line in out.splitlines())
 
 
@@ -892,15 +893,14 @@ def test_agent_tools_index_records_undecodable_agent_as_absent(tmp_path):
     assert index["bar-reviewer"] == ["Read"]
 
 
-def test_description_budget_flags_undecodable_agent(monkeypatch, tmp_path):
+def test_description_budget_skips_undecodable_agent(monkeypatch, tmp_path):
     monkeypatch.setattr(v, "REPO", tmp_path)
     monkeypatch.setitem(v.AGENT_DESC_BASELINE_CHARS, "agents", 10_000)
     monkeypatch.chdir(tmp_path)
     _write_bytes(tmp_path, "agents/foo-scanner.md", _UNDECODABLE)
     _write_bytes(tmp_path, "agents/bar-reviewer.md", b"---\nname: bar-reviewer\ndescription: Reviews.\n---\n")
-    findings = v.check_agent_description_budget(tmp_path / "agents")
-    assert [(f.severity, f.target, f.rule) for f in findings] == [
-        ("Critical", "agents/foo-scanner.md", "agent-management.unreadable")]
+    # No crash, and no second copy of the Critical check_agent already raises for it.
+    assert v.check_agent_description_budget(tmp_path / "agents") == []
 
 
 def test_edit_hook_surfaces_undecodable_skill_by_path(tmp_path):
