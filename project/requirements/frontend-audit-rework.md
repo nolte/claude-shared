@@ -62,7 +62,7 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
   ≥ 22.20 for `npx skills`, Node ≥ 20 for `@playwright/cli` — network access, running
   application), pinned install command, availability check, and behaviour when absent.
   - _dimension_: `domain_objects`, `constraints` · _status_: `confirmed` · _source_: "erzeuge eine ausführliche spec wann welche plugins und skills verwendet werden und was die entsprechenden vorbedingungen sind"; Q6 point 1
-- **R2** — Install commands in the spec SHALL be pinned (`npx skills add <repo>@<tag|commit> --skill <name> -a claude-code` with `skills-lock.json`; `@playwright/cli@<version>`).
+- **R2** — Install commands in the spec SHALL be pinned (`npx skills add <repo>#<tag|commit> --skill <name> -a claude-code` with `skills-lock.json`; `@playwright/cli@<version>`).
   - _dimension_: `constraints` · _status_: `confirmed` · _source_: Q2 option text, Q6 point 1
 - **R3** — The operator SHALL install third-party skills before the audit; the `frontend-audit` skill SHALL NOT install them.
   - _dimension_: `constraints`, `actors` · _status_: `confirmed` · _source_: Q2 "Operator + Fallback"

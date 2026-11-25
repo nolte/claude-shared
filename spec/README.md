@@ -34,7 +34,7 @@ Canonical language: `en` · Translations: `de`
 | design | graphic-prompt-authoring | Graphic Prompt Authoring | Grafik-Prompt-Autorenschaft | draft | local | unversioned |
 | frontend | source-code-review | Frontend Source Code Review | Frontend-Source-Code-Review | draft | local | unversioned |
 | frontend | testability-identifiers | Frontend Testability: Stable Test Identifiers | Frontend-Testbarkeit: Stabile Test-Identifikatoren | draft | local | unversioned |
-| frontend | third-party-audit-skills | Third-Party Skills in the Frontend Audit | Drittanbieter-Skills im Frontend-Audit | draft | local | 2026-11-20 |
+| frontend | third-party-audit-skills | Third-Party Skills in the Frontend Audit | Drittanbieter-Skills im Frontend-Audit | draft | local | 2026-11-25 |
 | frontend | webview-ui-optimization | Web-View UI Optimization | Web-View-UI-Optimierung | draft | local | unversioned |
 | portfolio | portfolio-inflight-management | Portfolio In-Flight Management | Portfolio-In-Flight-Management | draft | local | unversioned |
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | local | unversioned |
