@@ -38,6 +38,13 @@ Scratch repos under the session scratchpad (outside the repository), `git init`,
 | 3 | `add vercel-labs/agent-skills@dd089a8c<40-char SHA> --skill web-design-guidelines` | 0 | content = **tag** (`f4647ca8…`) | `ref: dd089a8c…`, `commit: dd089a8c…` |
 | 4 | `add vercel-labs/agent-skills#agent-skills-dd089a8c… --skill web-design-guidelines` | 0 | content = **tag** | `ref: agent-skills-dd089a8c…`, `commit: dd089a8c…` |
 | 5 | `add vercel-labs/agent-skills@agent-skills-dd089a8c… --skill react-best-practices` | 1 | nothing | none; output `[SKILLS_NO_MATCHING_SKILLS] No matching skills found for: react-best-practices, agent-skills-dd089a8c…` |
+| 6 | `add vercel-labs/agent-skills#dd089a8c<full SHA> --skill web-design-guidelines` | 0 | content = **tag** | `ref: dd089a8c…`, `commit: dd089a8c…` |
+| 7 | `add vercel-labs/agent-skills#main --skill web-design-guidelines` | 0 | content = **main** | `ref: main`, `commit: 5a37a632` |
+| 8 | `add vercel-labs/agent-skills --skill web-design-guidelines` (no ref) | 0 | content = **main** | `ref: null`, `commit: 5a37a632` |
+| 9 | `add vercel-labs/agent-skills --skill react-best-practices` (no ref) | 1 | nothing | `[SKILLS_NO_MATCHING_SKILLS] No matching skills found for: react-best-practices` |
+| 10 | `add vercel-labs/agent-skills@v1.0.0 --skill web-design-guidelines` | 1 | nothing | `Source: … @ v1.0.0` (read as ref), `[SKILLS_GIT_CLONE_FAILED]` (no such tag) |
+
+Runs 6–10 were added after the diff review at 4d51738c to settle its findings 1, 2, 7, and 9.
 
 Conclusions: (#803) folder and lock key are the frontmatter name; `-a claude-code` alone copies into `.claude/skills/<name>/`; `--skill react-best-practices` matches nothing — the claims of #809 hold for a run. (#808) `@<non-version-tag>` is taken as an extra skill filter (run 5 lists it as a skill name); together with `--skill` the install comes from the default branch, unpinned, exit 0, and the lock entry still carries a `commit` (of the default branch) but **no `ref`**. `#<ref>` and `@<full SHA>` pin, and the lock then records `ref`. So a lock entry without `commit` doesn't result (AC3 of #808 in its literal form doesn't apply); the detectable sign of an unpinned install is a missing `ref`.
 
@@ -89,13 +96,31 @@ Existing installations / upgrade / rollback: a consumer repo whose `skills-lock.
 
 | Member | Specialist | Check | Actual output |
 |---|---|---|---|
+| #803, #808 | no matching specialist dispatched — members implemented in the orchestrating session (text alignment to the measurement; see Deviations) | `cmp` bundled copies vs `en.md`/`de.md` | identical (no output, exit 0) |
+| #803, #808 | — | `task test` @ 4d51738c | `1779 passed, 21 skipped, 8 warnings in 356.45s` |
+| #803, #808 | — | `SKIP=markdownlint pre-commit run --from-ref origin/develop --to-ref HEAD` | exit 0 (Vale 3.15.2 locally; CI pins 3.28.1) |
+| #803, #808 | — | `markdownlint-cli@0.50.1` with the hook's `--disable` list on changed files | only MD060 on unchanged table rows (`en.md:42,112`), the same 20 lines as on develop 72cba52c |
+| #808 | — | `git grep -n '@<ref>' -- spec plugins` | only the new MUST NOT bullet (`en.md:61`, `de.md:61` + bundled copies) |
 
 ## Deviations
 
 | Member | Kind | What changed |
 |---|---|---|
+| #803, #808 | local adaptation | members implemented directly in the orchestrating session instead of a nested `issue-orchestrate` run: the partition record plus the measurement already carried comprehension, class, and cause verification, and the change is a text alignment of 4 files + 2 copies |
+| #808 | local adaptation | AC3 as written (a lock entry without `commit`) doesn't occur; the run shows an unpinned entry lacks `ref` instead, so the lock check now requires `ref` |
+| #808 | local adaptation | review finding 4: `project/requirements/frontend-audit-rework.md` R2 named the `@<tag|commit>` form; changed to `#<tag|commit>` in this lane |
 
 ## Findings
 
 | Finding | Source | Outcome | Reproduction | Issue |
 |---|---|---|---|---|
+| `en.md:56,61` `#<full SHA>` prescribed but never run | diff review @ 4d51738c | fixed directly | run 6: `#<SHA>` → content = tag, `ref` = SHA | — |
+| `en.md:61` "any other text after `@`" overgeneralised | diff review @ 4d51738c | fixed directly | run 10: `@v1.0.0` → `Source: … @ v1.0.0`, read as ref | — |
+| `en.md:56` vs `:61` `@<full SHA>` both required-against and allowed | diff review @ 4d51738c | fixed directly (MUST NOT `@<ref>` without exemption) | text contradiction, read | — |
+| `project/requirements/frontend-audit-rework.md:65` R2 still `@<tag|commit>` | diff review @ 4d51738c | fixed directly | `git grep` | — |
+| no AC for `#` form / `ref` lock condition | diff review @ 4d51738c | fixed directly (new AC, EN+DE) | read | — |
+| §H header and step 3 don't record `ref` | diff review @ 4d51738c | fixed directly (`en.md:131`, `:72`, `SKILL.md:52,88`) | read | — |
+| `ref: main` passes the lock check | diff review @ 4d51738c | fixed directly as a documented limit of the plausibility check (`en.md:74`) | run 7: `#main` → `ref: main` | — |
+| no migration sentence for entries without `ref` / lock v1 | diff review @ 4d51738c | fixed directly (`en.md:74`) | read | — |
+| unpinned-install and exit-1 claims measured only with `@<tag>` | diff review @ 4d51738c | fixed directly | runs 8, 9 (no ref) | — |
+| `en.md:61,74` Vale.Spelling `install's`, `reinstalls` | pre-commit vale | fixed directly | `vale` exit 1 → 0 | — |
