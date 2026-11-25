@@ -23,8 +23,8 @@ prints a version and a browser is installed.
 
 1. Stack detected as React, client-side rendered; findings in the
    server-side categories of `vercel-react-best-practices` are dropped.
-2. All four skills reported `available` with location and commit or
-   version; the two Vercel skills pass the lock check and the
+2. All four skills reported `available` with location, `ref` and commit
+   or version; the two Vercel skills pass the lock check and the
    `frontend-design` plugin is recorded with its plugin version, so the
    plan asks for no extra confirmation and the header carries no setup
    Warning; no coverage gap.

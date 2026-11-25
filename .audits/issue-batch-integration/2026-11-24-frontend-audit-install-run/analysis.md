@@ -124,3 +124,4 @@ Existing installations / upgrade / rollback: a consumer repo whose `skills-lock.
 | no migration sentence for entries without `ref` / lock v1 | diff review @ 4d51738c | fixed directly (`en.md:74`) | read | — |
 | unpinned-install and exit-1 claims measured only with `@<tag>` | diff review @ 4d51738c | fixed directly | runs 8, 9 (no ref) | — |
 | `en.md:61,74` Vale.Spelling `install's`, `reinstalls` | pre-commit vale | fixed directly | `vale` exit 1 → 0 | — |
+| re-review @ ad27be2b: all 9 resolved; 4 suggestions (`only` overgeneralised `en.md:61`; `therefore` misplaced `en.md:74`; lock v1 `ref` asserted unmeasured `en.md:74`; example 01 `:26` lacks `ref`) | diff re-review @ ad27be2b | fixed directly | read; v1 `ref` now stated as unestablished | — |
