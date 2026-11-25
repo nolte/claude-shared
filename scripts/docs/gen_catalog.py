@@ -341,6 +341,15 @@ def parse_frontmatter(text: str, file_label: str) -> tuple[dict, str]:
     return meta, body.lstrip("\n")
 
 
+def _read_utf8(path: Path) -> str:
+    """Read ``path`` as UTF-8 text, reporting undecodable bytes as a
+    :class:`CatalogError` that names the file instead of a bare traceback."""
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise CatalogError(f"{path}: not valid UTF-8 ({exc})") from exc
+
+
 def _repo_prefix(source: SourceRoot) -> str:
     """The source root's path inside the repository, as a URL path prefix.
 
@@ -355,8 +364,7 @@ def _repo_prefix(source: SourceRoot) -> str:
 
 
 def load_sources() -> list[SourceRoot]:
-    with SOURCES_FILE.open("r", encoding="utf-8") as fh:
-        data = yaml.safe_load(fh) or {}
+    data = yaml.safe_load(_read_utf8(SOURCES_FILE)) or {}
     sources_raw = data.get("sources") or []
     if not sources_raw:
         raise CatalogError(f"{SOURCES_FILE}: no sources configured")
@@ -385,8 +393,7 @@ def load_sources() -> list[SourceRoot]:
 
 
 def load_languages() -> list[str]:
-    with MKDOCS_FILE.open("r", encoding="utf-8") as fh:
-        raw = fh.read()
+    raw = _read_utf8(MKDOCS_FILE)
     locales = re.findall(r"^\s*-\s*locale:\s*([a-zA-Z][\w-]*)", raw, re.MULTILINE)
     if not locales:
         raise CatalogError(
@@ -661,7 +668,7 @@ def discover_skills(source: SourceRoot, languages: list[str]) -> list[Artifact]:
         if not skill_md.is_file():
             continue
         label = f"{source.name}:{source.skills_path}/{entry.name}/SKILL.md"
-        text = skill_md.read_text(encoding="utf-8")
+        text = _read_utf8(skill_md)
         meta, body = parse_frontmatter(text, label)
         name = meta.get("name")
         if not name:
@@ -706,7 +713,7 @@ def discover_agents(source: SourceRoot, languages: list[str]) -> list[Artifact]:
         if entry.suffix != ".md" or not entry.is_file():
             continue
         label = f"{source.name}:{source.agents_path}/{entry.name}"
-        text = entry.read_text(encoding="utf-8")
+        text = _read_utf8(entry)
         meta, body = parse_frontmatter(text, label)
         name = meta.get("name")
         if not name:
@@ -1124,10 +1131,17 @@ def write_page(path: Path, content: str) -> None:
     ``docs_dir`` on every build, an unchanged run touches no files, so
     ``mkdocs serve``'s livereload doesn't loop (spec §Generation mechanism;
     requirement R8, mirroring the verified claude-home-assistant#6 pattern).
+    An existing page that is not valid UTF-8 can't match ``content``; it is
+    stale output and gets overwritten.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists() and path.read_text(encoding="utf-8") == content:
-        return
+    if path.exists():
+        try:
+            unchanged = path.read_text(encoding="utf-8") == content
+        except UnicodeDecodeError:
+            unchanged = False
+        if unchanged:
+            return
     path.write_text(content, encoding="utf-8")
 
 

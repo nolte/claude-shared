@@ -130,3 +130,5 @@ P1 ; P2 ; P3 ; P4 — unabhängig (disjunkte Dateien), sequenziell dispatcht, da
 |---|---|---|---|---|
 
 ## Dispatch log
+- 2026-11-25 P1 dispatched to nolte-engineering:fullstack-developer — 6 Tests rot→grün, validate_skills-Ausgabe auf Repo byte-identisch; VALIDATOR_VERSION 1.1.0→1.2.0 vom Orchestrator nachgezogen (neuer Check)
+- 2026-11-25 P2 dispatched to nolte-engineering:fullstack-developer — 8 Tests (7 rot→grün, 1 Idempotenz-Test per Mutante belegt), 358 generierte Seiten checksum-identisch, zweiter Lauf ohne mtime-Änderung
