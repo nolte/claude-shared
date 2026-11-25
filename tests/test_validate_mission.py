@@ -266,3 +266,119 @@ def test_750_historical_flip_a30d346_passes():
 ])
 def test_750_marker_and_sentence_edge_cases(sentence, expected):
     assert v._names_subsequent_sprint(sentence) is expected
+
+
+# --- #814: a non-UTF-8 input is a Critical finding naming its path ----------
+
+_UNDECODABLE = b"\xff\xfe not utf-8 \x80\n"
+
+
+def _hermetic(monkeypatch, tmp_path):
+    """Point every cross-reference input at an absent path under tmp_path."""
+    monkeypatch.setattr(v, "GOALS_PATH", tmp_path / "absent-goals.md")
+    monkeypatch.setattr(v, "AUDIENCES_PATH", tmp_path / "absent-audiences.md")
+    monkeypatch.setattr(v, "FEATURES_DIR", tmp_path / "absent-features")
+
+
+def _unreadable(findings):
+    return [f for f in findings if f.rule == "mission.unreadable" and f.severity == "Critical"]
+
+
+def test_814_undecodable_mission_file_is_critical_and_exits_1(monkeypatch, tmp_path):
+    _hermetic(monkeypatch, tmp_path)
+    mission = tmp_path / "mission.md"
+    mission.write_bytes(_UNDECODABLE)
+    findings = v.check_mission(mission)
+    hits = _unreadable(findings)
+    assert len(hits) == 1 and str(mission) in hits[0].message and "utf-8" in hits[0].message
+    monkeypatch.setattr(sys, "argv", ["validate_mission.py", str(mission)])
+    assert v.main() == 1
+
+
+def test_814_undecodable_goals_keeps_every_other_finding(monkeypatch, tmp_path):
+    _hermetic(monkeypatch, tmp_path)
+    goals = tmp_path / "goals.md"
+    goals.write_bytes(_UNDECODABLE)
+    monkeypatch.setattr(v, "GOALS_PATH", goals)
+    text = (_GOOD.replace('"A does X for the B audience."', '""')
+            .replace("verifies_via: F-1:acceptance-1", "verifies_via: nope"))
+    findings = v.check_mission_text(text, "m")
+    hits = _unreadable(findings)
+    assert len(hits) == 1 and str(goals) in hits[0].message
+    # findings collected before the goals read, and checks after it, all survive
+    assert {"mission.mission-statement-empty", "mission.verifies-via-pattern"} <= _rules(findings)
+    # an undecodable goals.md resolves nothing, like an absent one (no false unresolved)
+    assert "mission.relevant-outcome-unresolved" not in _rules(findings)
+
+
+def test_814_undecodable_audiences_keeps_every_other_finding(monkeypatch, tmp_path):
+    _hermetic(monkeypatch, tmp_path)
+    audiences = tmp_path / "AUDIENCES.md"
+    audiences.write_bytes(_UNDECODABLE)
+    monkeypatch.setattr(v, "AUDIENCES_PATH", audiences)
+    text = (_GOOD.replace('"A does X for the B audience."', '""')
+            .replace("verifies_via: F-1:acceptance-1", "verifies_via: nope"))
+    findings = v.check_mission_text(text, "m")
+    hits = _unreadable(findings)
+    assert len(hits) == 1 and str(audiences) in hits[0].message
+    assert {"mission.mission-statement-empty", "mission.verifies-via-pattern"} <= _rules(findings)
+    assert "mission.audience-unresolved" not in _rules(findings)
+
+
+def test_814_undecodable_feature_is_critical_and_others_still_index(monkeypatch, tmp_path):
+    _hermetic(monkeypatch, tmp_path)
+    features = tmp_path / "features"
+    features.mkdir()
+    (features / "0001-good.md").write_text(
+        "---\nid: F-1\nverifies_sprint_value: acceptance-2\n---\n", encoding="utf-8")
+    bad = features / "0002-bad.md"
+    bad.write_bytes(_UNDECODABLE)
+    monkeypatch.setattr(v, "FEATURES_DIR", features)
+    findings = v.check_verifies_via("F-1:acceptance-1", "m")
+    hits = _unreadable(findings)
+    assert len(hits) == 1 and str(bad) in hits[0].message
+    # the valid feature F-1 was still indexed and resolved against
+    assert "mission.verifies-via-acceptance-mismatch" in _rules(findings)
+
+
+def test_814_only_undecodable_features_is_not_silently_empty(monkeypatch, tmp_path):
+    _hermetic(monkeypatch, tmp_path)
+    features = tmp_path / "features"
+    features.mkdir()
+    bad = features / "0001-bad.md"
+    bad.write_bytes(_UNDECODABLE)
+    monkeypatch.setattr(v, "FEATURES_DIR", features)
+    hits = _unreadable(v.check_verifies_via("F-1:acceptance-1", "m"))
+    assert len(hits) == 1 and str(bad) in hits[0].message
+
+
+def test_814_undecodable_committed_version_is_critical(monkeypatch, tmp_path):
+    _hermetic(monkeypatch, tmp_path)
+    monkeypatch.delenv("MISSION_BASE_REF", raising=False)
+    real_run = subprocess.run
+
+    def fake_run(cmd, *args, **kwargs):
+        if cmd[:2] == ["git", "show"]:
+            if kwargs.get("text") or kwargs.get("encoding"):
+                # what a text-mode run does on a UTF-8 locale: the decode raises
+                _UNDECODABLE.decode("utf-8")
+            return subprocess.CompletedProcess(cmd, 0, stdout=_UNDECODABLE, stderr=b"")
+        return real_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr(v.subprocess, "run", fake_run)
+    findings = v.check_mission(v.MISSION_PATH)
+    hits = _unreadable(findings)
+    assert len(hits) == 1 and "HEAD:project/mission.md" in hits[0].message
+
+
+def test_814_committed_version_missing_stays_no_finding(monkeypatch, tmp_path):
+    # returncode != 0 without MISSION_BASE_REF keeps meaning "no committed version".
+    _hermetic(monkeypatch, tmp_path)
+    monkeypatch.delenv("MISSION_BASE_REF", raising=False)
+
+    def fake_run(cmd, *args, **kwargs):
+        empty = "" if kwargs.get("text") else b""
+        return subprocess.CompletedProcess(cmd, 128, stdout=empty, stderr=empty)
+
+    monkeypatch.setattr(v.subprocess, "run", fake_run)
+    assert v._committed_version(v.MISSION_PATH, "HEAD") is None
