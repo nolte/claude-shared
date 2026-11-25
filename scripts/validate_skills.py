@@ -1250,9 +1250,11 @@ def check_agent_description_budget(agents_dir: Path) -> list[Finding]:
     findings: list[Finding] = []
     descriptions: list[str] = []
     for md in sorted(agents_dir.glob("*.md")):
-        text, _ = _read_utf8(md, "agent")
+        text, unreadable = _read_utf8(md, "agent")
         if text is None:
-            # check_agent reports it: a directory target validates every *.md in it.
+            # Reported here as well as by check_agent: this check must not pass on
+            # an unmeasured file even where check_agent didn't run over the tree.
+            findings.append(unreadable)
             continue
         descriptions.append((parse_frontmatter(text) or {}).get("description") or "")
     concat = "".join(descriptions)

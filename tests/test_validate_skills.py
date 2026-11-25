@@ -893,14 +893,15 @@ def test_agent_tools_index_records_undecodable_agent_as_absent(tmp_path):
     assert index["bar-reviewer"] == ["Read"]
 
 
-def test_description_budget_skips_undecodable_agent(monkeypatch, tmp_path):
+def test_description_budget_flags_undecodable_agent(monkeypatch, tmp_path):
     monkeypatch.setattr(v, "REPO", tmp_path)
     monkeypatch.setitem(v.AGENT_DESC_BASELINE_CHARS, "agents", 10_000)
     monkeypatch.chdir(tmp_path)
     _write_bytes(tmp_path, "agents/foo-scanner.md", _UNDECODABLE)
     _write_bytes(tmp_path, "agents/bar-reviewer.md", b"---\nname: bar-reviewer\ndescription: Reviews.\n---\n")
-    # No crash, and no second copy of the Critical check_agent already raises for it.
-    assert v.check_agent_description_budget(tmp_path / "agents") == []
+    findings = v.check_agent_description_budget(tmp_path / "agents")
+    assert [(f.severity, f.target, f.rule) for f in findings] == [
+        ("Critical", "agents/foo-scanner.md", "agent-management.unreadable")]
 
 
 def test_edit_hook_surfaces_undecodable_skill_by_path(tmp_path):

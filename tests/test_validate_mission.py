@@ -293,13 +293,16 @@ def test_814_unreadable_goals_and_feature_are_findings_not_tracebacks(monkeypatc
     monkeypatch.setattr(v, "GOALS_PATH", goals)
     features = tmp_path / "features"
     (features / "0001-dir.md").mkdir(parents=True)
+    # sorts after the unreadable one, so it shows the index kept going
+    (features / "0002-ok.md").write_text(
+        "---\nid: F-1\nverifies_sprint_value: acceptance-9\n---\n", encoding="utf-8")
     monkeypatch.setattr(v, "FEATURES_DIR", features)
     text = _GOOD.replace('"A does X for the B audience."', '""')
     findings = v.check_mission_text(text, "m")
     messages = [f.message for f in _unreadable(findings)]
     assert any(str(goals) in m for m in messages)
     assert any(str(features / "0001-dir.md") in m for m in messages)
-    assert "mission.mission-statement-empty" in _rules(findings)
+    assert {"mission.mission-statement-empty", "mission.verifies-via-acceptance-mismatch"} <= _rules(findings)
 
 
 def test_814_undecodable_mission_file_is_critical_and_exits_1(monkeypatch, tmp_path):
@@ -380,8 +383,7 @@ def test_814_undecodable_committed_version_is_critical(monkeypatch, tmp_path):
             # Only an explicit strict UTF-8 decode is locale-independent; anything
             # else would decode by locale, so the fake refuses it.
             assert kwargs.get("text") and kwargs.get("encoding") == "utf-8" and "errors" not in kwargs
-            _UNDECODABLE.decode("utf-8")
-            return subprocess.CompletedProcess(cmd, 0, stdout=_UNDECODABLE, stderr=b"")
+            _UNDECODABLE.decode("utf-8")  # raises, as the real text-mode decode does
         return real_run(cmd, *args, **kwargs)
 
     monkeypatch.setattr(v.subprocess, "run", fake_run)
