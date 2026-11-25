@@ -56,7 +56,7 @@ def _display(path: Path) -> str:
 # detect validator drift (`spec/claude/skill-review/` §"Checks derived from
 # external skill-structure validation", #588). Bump the minor version when a
 # check is added or its severity changes, the major version when one is removed.
-VALIDATOR_VERSION = "1.1.0"
+VALIDATOR_VERSION = "1.2.0"
 
 STARTER_TAGS = {
     "pull-request", "review", "audit", "scaffolding", "prose",
@@ -147,6 +147,20 @@ class Finding:
 
     def __str__(self) -> str:
         return f"{self.severity:11s} {self.target}  [{self.rule}] {self.message}"
+
+
+def _read_utf8(path: Path, kind: str) -> tuple[str | None, Finding | None]:
+    """Read an artifact as UTF-8, or return a Critical finding naming the file.
+
+    An undecodable file is reported, never decoded lossily, so one bad file
+    can't abort the run or hide the findings of every other artifact (#814).
+    """
+    try:
+        return path.read_text(encoding="utf-8"), None
+    except UnicodeDecodeError as exc:
+        return None, Finding(
+            "Critical", _display(path), f"{kind}-management.unreadable",
+            f"file is not valid UTF-8 ({exc}); re-save it as UTF-8")
 
 
 def _unquote(value: str) -> str:
@@ -888,7 +902,9 @@ def _agent_tools_in(agents_dir: Path) -> dict[str, object]:
     if key not in _AGENT_TOOLS_CACHE:
         index: dict[str, object] = {}
         for f in sorted(agents_dir.glob("*.md")) if agents_dir.is_dir() else []:
-            fm = parse_frontmatter(f.read_text(encoding="utf-8")) or {}
+            text, _ = _read_utf8(f, "agent")  # check_agent reports the file itself
+            # Undecodable: record `tools` as absent, which counts as unbacked (fail closed).
+            fm = (parse_frontmatter(text) or {}) if text is not None else {}
             index[f.stem] = fm.get("tools")
         _AGENT_TOOLS_CACHE[key] = index
     return _AGENT_TOOLS_CACHE[key]
@@ -925,7 +941,9 @@ def check_skill_tool_enforcement_claim(
 
 def check_skill(path: Path) -> list[Finding]:
     rel = _display(path)
-    text = path.read_text(encoding="utf-8")
+    text, unreadable = _read_utf8(path, "skill")
+    if text is None:
+        return [unreadable]
     fm = parse_frontmatter(text)
     if fm is None:
         return [Finding("Critical", rel, "skill-management.frontmatter-missing", "no YAML frontmatter")]
@@ -1136,7 +1154,9 @@ def check_spec_fallback_backlog() -> list[Finding]:
 
 def check_agent(path: Path) -> list[Finding]:
     rel = _display(path)
-    text = path.read_text(encoding="utf-8")
+    text, unreadable = _read_utf8(path, "agent")
+    if text is None:
+        return [unreadable]
     fm = parse_frontmatter(text)
     if fm is None:
         return [Finding("Critical", rel, "agent-management.frontmatter-missing", "no YAML frontmatter")]
@@ -1227,13 +1247,18 @@ def check_agent_description_budget(agents_dir: Path) -> list[Finding]:
     baseline = AGENT_DESC_BASELINE_CHARS.get(key)
     if baseline is None:
         return []
-    concat = "".join(
-        ((parse_frontmatter(md.read_text(encoding="utf-8")) or {}).get("description") or "")
-        for md in sorted(agents_dir.glob("*.md"))
-    )
+    findings: list[Finding] = []
+    descriptions: list[str] = []
+    for md in sorted(agents_dir.glob("*.md")):
+        text, unreadable = _read_utf8(md, "agent")
+        if text is None:
+            findings.append(unreadable)
+            continue
+        descriptions.append((parse_frontmatter(text) or {}).get("description") or "")
+    concat = "".join(descriptions)
     ceiling = int(baseline * (1 + AGENT_DESC_BUDGET_HEADROOM))
     if len(concat) > ceiling:
-        return [Finding(
+        findings.append(Finding(
             "Critical", key, "agent-management.description-budget-regression",
             f"aggregate agent `description` weight {len(concat)} chars "
             f"(~{len(concat) // 4} est. tokens) exceeds the frozen R-9 ceiling "
@@ -1242,8 +1267,8 @@ def check_agent_description_budget(agents_dir: Path) -> list[Finding]:
             f"to agent-management §Description contract, or raise the baseline in "
             f"AGENT_DESC_BASELINE_CHARS and the post-remediation-baseline artefact "
             f"with a recorded rationale",
-        )]
-    return []
+        ))
+    return findings
 
 
 def discover_default_targets() -> list[str]:
