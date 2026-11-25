@@ -133,3 +133,4 @@ P1 ; P2 ; P3 ; P4 — unabhängig (disjunkte Dateien), sequenziell dispatcht, da
 - 2026-11-25 P1 dispatched to nolte-engineering:fullstack-developer — 6 Tests rot→grün, validate_skills-Ausgabe auf Repo byte-identisch; VALIDATOR_VERSION 1.1.0→1.2.0 vom Orchestrator nachgezogen (neuer Check)
 - 2026-11-25 P2 dispatched to nolte-engineering:fullstack-developer — 8 Tests (7 rot→grün, 1 Idempotenz-Test per Mutante belegt), 358 generierte Seiten checksum-identisch, zweiter Lauf ohne mtime-Änderung
 - 2026-11-25 P3 dispatched to nolte-engineering:fullstack-developer — 6 Tests rot→grün (+1 Positivkontrolle), CLI + --self-test identisch; Orchestrator-Korrektur: git show bleibt im Textmodus (encoding=utf-8 strikt), damit die Universal-Newline-Übersetzung wie vorher erhalten bleibt
+- 2026-11-25 P4 dispatched to nolte-engineering:fullstack-developer — 4 Tests rot→grün, 22 passed inkl. echtem Vale; fake_vale-Signatur um encoding ergänzt
