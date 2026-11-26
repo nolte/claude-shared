@@ -18,8 +18,10 @@ scratch file) is never selected. Excluded from the tracked set:
 - ``tests/`` (top level): the test suite. Its fixtures parse synthetic input
   freely, and this guard's own self-tests write members on purpose.
 
-Fallback: when git isn't available or ``ROOT`` isn't a git work tree (the
-synthetic self-tests below run in a bare temporary directory), the selector is
+Fallback: when git isn't available or ``ROOT`` isn't a git work tree, or when
+a caller forces it (``use_git=False``: the synthetic self-tests below, whose
+temporary directory may itself sit inside a work tree and would then list as
+empty; they also assert a non-empty selection), the selector is
 ``ROOT.rglob("*.py")`` minus ``tests/`` and any path with a ``.git``, ``.venv``,
 ``venv``, ``node_modules``, ``site``, ``__pycache__``, ``build``, ``dist`` or
 ``.tox`` segment. That name list is an approximation of "tracked"; only the git
@@ -155,13 +157,19 @@ class Member:
         return f"{self.path}:{self.line} ({self.scope}, {self.target}): {self.problem}"
 
 
-def python_files(root: Path) -> list[Path]:
-    """The selector: every tracked *.py below `root` outside tests/ (rglob without git)."""
-    try:
-        listed = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", "*.py"],
-                                capture_output=True, timeout=60)
-    except (OSError, subprocess.TimeoutExpired):
-        listed = None
+def python_files(root: Path, use_git: bool = True) -> list[Path]:
+    """The selector: every tracked *.py below `root` outside tests/ (rglob without git).
+
+    `use_git=False` forces the filesystem path; the synthetic self-tests use it, since
+    a temporary directory inside some work tree would otherwise list as empty.
+    """
+    listed = None
+    if use_git:
+        try:
+            listed = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", "*.py"],
+                                    capture_output=True, timeout=60)
+        except (OSError, subprocess.TimeoutExpired):
+            listed = None
     if listed is not None and listed.returncode == 0:
         candidates = [root / rel for rel in listed.stdout.decode("utf-8").split("\0") if rel]
         excluded: set[str] = set()
@@ -231,9 +239,9 @@ def _name_problem(scope: ast.AST, name: str, assign: ast.stmt) -> str | None:
     return None
 
 
-def find_members(root: Path) -> list[Member]:
+def find_members(root: Path, use_git: bool = True) -> list[Member]:
     members: list[Member] = []
-    for path in python_files(root):
+    for path in python_files(root, use_git):
         rel = path.relative_to(root).as_posix()
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         modules, funcs = _loader_names(tree)
@@ -312,9 +320,16 @@ def test_selector_reaches_every_tree_that_holds_python():
 
 # --- the predicate and the count rule, on synthetic sources --------------------
 
+def _synthetic_members(root: Path) -> list[Member]:
+    """Members of a synthetic tree; an empty selection can never pass silently."""
+    selected = python_files(root, use_git=False)
+    assert selected, f"synthetic tree {root} selected no files"
+    return find_members(root, use_git=False)
+
+
 def _members_of(tmp_path: Path, source: str) -> list[Member]:
     (tmp_path / "mod.py").write_text(source, encoding="utf-8")
-    return find_members(tmp_path)
+    return _synthetic_members(tmp_path)
 
 
 def test_guard_flags_each_member_shape(tmp_path):
@@ -360,9 +375,9 @@ def test_a_second_site_under_an_allowlisted_key_fails(tmp_path):
     copy = tmp_path / key[0]
     copy.parent.mkdir(parents=True)
     copy.write_text(original, encoding="utf-8")
-    assert evaluate(find_members(tmp_path), {key: ALLOWLIST[key]}, {}) == []
+    assert evaluate(_synthetic_members(tmp_path), {key: ALLOWLIST[key]}, {}) == []
     copy.write_text(original.replace(line, line + line), encoding="utf-8")
-    problems = evaluate(find_members(tmp_path), {key: ALLOWLIST[key]}, {})
+    problems = evaluate(_synthetic_members(tmp_path), {key: ALLOWLIST[key]}, {})
     assert len(problems) == 1 and "expects 1 site(s), matches 2" in problems[0]
 
 
