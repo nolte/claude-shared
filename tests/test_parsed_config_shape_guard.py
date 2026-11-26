@@ -5,21 +5,25 @@ Guard origin (spec/project/defect-class-guards/ G5): #816, whose class is
 AttributeError/TypeError traceback or a silent default instead of a message
 that names the file.
 
-Selector (G6). Every ``*.py`` file the repository holds, found by
-``ROOT.rglob("*.py")``: the shipped scripts (``scripts/``), the plugin- and
-skill-bundled scripts (``plugins/*/skills/*/scripts/``, ``skills/*/scripts/``),
-the eval harness (``evals/``), the spec templates handed to consumers
-(``spec/**/templates/``) and ``design/``. A new file joins by existing, not by
-being named. Excluded, each for a stated reason:
+Selector (G6). The criterion is "a ``*.py`` file tracked by the repository",
+derived from ``git -C ROOT ls-files -z -- '*.py'``: the shipped scripts
+(``scripts/``), the plugin- and skill-bundled scripts
+(``plugins/*/skills/*/scripts/``, ``skills/*/scripts/``), the eval harness
+(``evals/``), the spec templates handed to consumers (``spec/**/templates/``)
+and ``design/``. A new file joins by being committed, not by being named, and
+anything the repository doesn't track (a gitignored ``.sbom-venv`` site-packages
+from ``task license:check``, ``build/``, ``dist/``, ``.tox/``, an untracked
+scratch file) is never selected. Excluded from the tracked set:
 
 - ``tests/`` (top level): the test suite. Its fixtures parse synthetic input
   freely, and this guard's own self-tests write members on purpose.
-- any path with a ``.git``, ``.venv``, ``venv``, ``node_modules``, ``site`` or
-  ``__pycache__`` segment: version-control internals, installed third-party
-  packages, the built MkDocs site, and bytecode caches. None is authored here;
-  all are gitignored or git-internal. Measured on this tree they hold no
-  ``*.py`` at all, so the exclusion only keeps a local virtualenv or build from
-  flooding the guard with code this repository doesn't own.
+
+Fallback: when git isn't available or ``ROOT`` isn't a git work tree (the
+synthetic self-tests below run in a bare temporary directory), the selector is
+``ROOT.rglob("*.py")`` minus ``tests/`` and any path with a ``.git``, ``.venv``,
+``venv``, ``node_modules``, ``site``, ``__pycache__``, ``build``, ``dist`` or
+``.tox`` segment. That name list is an approximation of "tracked"; only the git
+path is the honest criterion.
 
 Predicate (G3). In each selected file, take each call to a loader:
 ``yaml.safe_load``, ``yaml.load``, ``yaml.full_load``, ``yaml.unsafe_load``,
@@ -74,6 +78,7 @@ by hand):
 from __future__ import annotations
 
 import ast
+import subprocess
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -81,7 +86,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 EXCLUDED_TOP = {"tests"}
-EXCLUDED_PARTS = {".git", ".venv", "venv", "node_modules", "site", "__pycache__"}
+# Fallback only (no git): segments that hold code this repository doesn't own.
+EXCLUDED_PARTS = {".git", ".venv", "venv", "node_modules", "site", "__pycache__", "build", "dist", ".tox"}
 
 LOADERS = {
     ("yaml", "safe_load"), ("yaml", "load"), ("yaml", "full_load"), ("yaml", "unsafe_load"),
@@ -90,7 +96,7 @@ LOADERS = {
 }
 
 # The issue that repairs the KNOWN_UNREPAIRED members.
-FOLLOW_UP_ISSUE = "#TBD"
+FOLLOW_UP_ISSUE = "#820"
 
 Key = tuple[str, str, str]  # (path relative to ROOT, enclosing function, target or "<expr>")
 
@@ -150,12 +156,23 @@ class Member:
 
 
 def python_files(root: Path) -> list[Path]:
-    """The selector: every *.py below `root` outside the excluded segments."""
+    """The selector: every tracked *.py below `root` outside tests/ (rglob without git)."""
+    try:
+        listed = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", "*.py"],
+                                capture_output=True, timeout=60)
+    except (OSError, subprocess.TimeoutExpired):
+        listed = None
+    if listed is not None and listed.returncode == 0:
+        candidates = [root / rel for rel in listed.stdout.decode("utf-8").split("\0") if rel]
+        excluded: set[str] = set()
+    else:
+        candidates = list(root.rglob("*.py"))
+        excluded = EXCLUDED_PARTS
     out = []
-    for path in sorted(root.rglob("*.py")):
+    for path in sorted(candidates):
         parts = path.relative_to(root).parts
-        if parts[0] in EXCLUDED_TOP or EXCLUDED_PARTS.intersection(parts):
-            continue
+        if parts[0] in EXCLUDED_TOP or excluded.intersection(parts) or not path.is_file():
+            continue  # a tracked file deleted in the working tree has nothing to parse
         out.append(path)
     return out
 
@@ -363,3 +380,17 @@ def test_a_new_member_beside_known_ones_fails(tmp_path):
               "def g(t):\n    return json.loads(t)['k']\n")
     problems = evaluate(_members_of(tmp_path, source), {}, {("mod.py", "f", "d"): 1})
     assert len(problems) == 1 and problems[0].startswith("new member: mod.py:6 (g, <expr>)")
+
+
+def test_selector_skips_untracked_and_ignored_python(tmp_path):
+    """N1: a gitignored tree (`.sbom-venv`, `build/`) or an untracked file isn't the repo's code."""
+    member = "import json\ndef f(t):\n    return json.loads(t)['k']\n"
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True, timeout=60)
+    (tmp_path / ".gitignore").write_text(".sbom-venv/\nbuild/\n", encoding="utf-8")
+    for rel in (".sbom-venv/lib/site-packages/pkg/mod.py", "build/lib/mod.py", "scratch.py"):
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text(member, encoding="utf-8")
+    (tmp_path / "tracked.py").write_text("import json\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "add", ".gitignore", "tracked.py"], check=True, timeout=60)
+    assert [p.relative_to(tmp_path).as_posix() for p in python_files(tmp_path)] == ["tracked.py"]
+    assert find_members(tmp_path) == []
