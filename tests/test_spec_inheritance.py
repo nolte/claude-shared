@@ -360,3 +360,99 @@ def test_non_utf8_manifest_or_hub_config_exits_2_instead_of_a_silent_default(tmp
     bad.write_bytes(b"\xff\xfe{}")
     assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 2
     assert str(bad) in capsys.readouterr().err
+
+
+# --- #816: a malformed config shape fails closed, naming file and key ---------
+# Missing files and missing keys keep their defaults; a present-but-malformed
+# value is a Critical `malformed-config` finding (exit 1), never a silent default
+# and never a traceback.
+
+def _consumer_with_hub(tmp_path: Path) -> tuple[Path, Path]:
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    write_config(consumer, inherits=[{"source": "nolte-shared", "ref": "v0.1.9"}])
+    make_spec(consumer / "spec", "project/mine", scope="local")
+    return consumer, hub
+
+
+def _malformed(findings, needle: str) -> list:
+    return [f for f in findings
+            if f.rule == "malformed-config" and f.severity == "Critical"
+            and needle in f"{f.target} {f.message}"]
+
+
+@pytest.mark.parametrize("manifest, key", [
+    ("{bad", "plugin.json"),
+    ("[1]", "plugin.json"),
+    ('{"name": 5}', "name"),
+    ('{"name": ""}', "name"),
+])
+def test_malformed_plugin_manifest_is_critical_not_a_silent_none(tmp_path, capsys, manifest, key):
+    """A broken manifest must not switch the cyclic-inheritance check off."""
+    consumer, hub = _consumer_with_hub(tmp_path)
+    bad = consumer / ".claude-plugin" / "plugin.json"
+    bad.parent.mkdir()
+    bad.write_text(manifest, encoding="utf-8")
+    findings = csi.run(consumer, hub)
+    hits = _malformed(findings, key)
+    assert hits, findings
+    assert str(bad) in hits[0].target
+    assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 1
+    assert "Traceback" not in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("config, key", [
+    ("a: [\n", ".spec-config.yml"),
+    ("- a\n", ".spec-config.yml"),
+    ("canonical_language: 5\n", "canonical_language"),
+    ("canonical_language: ''\n", "canonical_language"),
+    ("canonical_language:\n", "canonical_language"),
+])
+def test_malformed_hub_config_is_critical_not_a_silent_english(tmp_path, capsys, config, key):
+    consumer, hub = _consumer_with_hub(tmp_path)
+    cfg = hub / ".spec-config.yml"
+    cfg.write_text(config, encoding="utf-8")
+    findings = csi.run(consumer, hub)
+    hits = _malformed(findings, key)
+    assert hits, findings
+    assert str(cfg) in hits[0].target
+    assert csi.main(["--repo", str(consumer), "--hub-spec-root", str(hub)]) == 1
+    assert "Traceback" not in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("extra, key", [
+    ({"canonical_language": None}, "canonical_language"),
+    ({"canonical_language": ""}, "canonical_language"),
+    ({"canonical_language": 5}, "canonical_language"),
+    ({"spec_root": 1}, "spec_root"),
+    ({"spec_root": ""}, "spec_root"),
+    ({"spec_root": None}, "spec_root"),
+    ({"spec_root": "/abs/spec"}, "spec_root"),
+])
+def test_malformed_consumer_config_value_is_critical(tmp_path, capsys, extra, key):
+    consumer = tmp_path / "consumer"
+    (consumer / "spec").mkdir(parents=True)
+    cfg = {"canonical_language": "en", "spec_root": "spec", **extra}
+    (consumer / "spec" / ".spec-config.yml").write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    findings = csi.run(consumer, None)
+    hits = _malformed(findings, key)
+    assert hits, findings
+    assert csi.main(["--repo", str(consumer)]) == 1
+    assert "Traceback" not in capsys.readouterr().err
+
+
+def test_absent_keys_keep_their_defaults(tmp_path):
+    """Refutation control: absent manifest name, hub language, consumer keys stay defaults."""
+    hub = make_hub(tmp_path)
+    (hub / ".spec-config.yml").write_text("languages: [en]\n", encoding="utf-8")
+    consumer = tmp_path / "consumer"
+    (consumer / "spec").mkdir(parents=True)
+    (consumer / "spec" / ".spec-config.yml").write_text(
+        yaml.safe_dump({"inherits": [{"source": "nolte-shared", "ref": "v0.1.9"}]}), encoding="utf-8")
+    (consumer / ".claude-plugin").mkdir()
+    (consumer / ".claude-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+    make_spec(consumer / "spec", "project/branching-model", scope="local", section="Branch roles")
+    findings = csi.run(consumer, hub)
+    assert "malformed-config" not in codes(findings)
+    # The default "en" still finds the shadowing spec on both sides.
+    assert "undeclared-divergence" in codes(findings)

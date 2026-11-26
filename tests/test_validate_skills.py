@@ -923,3 +923,36 @@ def test_edit_hook_surfaces_undecodable_skill_by_path(tmp_path):
     assert "skills/foo-apply/SKILL.md" in result.stderr
     assert "skill-management.unreadable" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+# --- #816: an unreadable artifact (OSError) is a per-file Critical, not a crash --
+
+def test_directory_named_skill_md_is_critical_and_siblings_still_validate(monkeypatch, tmp_path, capsys):
+    (tmp_path / "skills" / "foo-apply" / "SKILL.md").mkdir(parents=True)
+    broken = "---\nname: zed-apply\ndescription: Read-only: reports things\n---\nbody\n"
+    _write_bytes(tmp_path, "skills/zed-apply/SKILL.md", broken.encode("utf-8"))
+    assert _consumer_run(
+        monkeypatch, tmp_path, "skills/zed-apply/SKILL.md", broken, "skills/") == 1
+    out = capsys.readouterr().out
+    unreadable = [line for line in out.splitlines() if "skill-management.unreadable" in line]
+    assert len(unreadable) == 1
+    assert unreadable[0].startswith("Critical")
+    assert unreadable[0].split()[1] == "skills/foo-apply/SKILL.md"
+    assert "can't be read" in unreadable[0]
+    assert any("skills/zed-apply/SKILL.md" in line and "frontmatter-yaml-invalid" in line
+               for line in out.splitlines())
+
+
+def test_unreadable_agent_is_critical(monkeypatch, tmp_path):
+    path = tmp_path / "agents" / "foo-scanner.md"
+    path.mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+    findings = v.check_agent(path)
+    assert [(f.severity, f.target, f.rule) for f in findings] == [
+        ("Critical", "agents/foo-scanner.md", "agent-management.unreadable")]
+
+
+def test_agent_tools_index_records_unreadable_agent_as_absent(tmp_path):
+    (tmp_path / "agents" / "foo-scanner.md").mkdir(parents=True)
+    index = v._agent_tools_in(tmp_path / "agents")
+    assert index["foo-scanner"] is None

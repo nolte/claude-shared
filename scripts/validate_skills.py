@@ -152,8 +152,9 @@ class Finding:
 def _read_utf8(path: Path, kind: str) -> tuple[str | None, Finding | None]:
     """Read an artifact as UTF-8, or return a Critical finding naming the file.
 
-    An undecodable file is reported, never decoded lossily, so one bad file
-    can't abort the run or hide the findings of every other artifact (#814).
+    An undecodable file is reported, never decoded lossily, and an unreadable
+    one (a directory, missing permissions) is reported too, so one bad file
+    can't abort the run or hide the findings of every other artifact (#814, #816).
     """
     try:
         return path.read_text(encoding="utf-8"), None
@@ -161,6 +162,10 @@ def _read_utf8(path: Path, kind: str) -> tuple[str | None, Finding | None]:
         return None, Finding(
             "Critical", _display(path), f"{kind}-management.unreadable",
             f"file is not valid UTF-8 ({exc}); re-save it as UTF-8")
+    except OSError as exc:
+        return None, Finding(
+            "Critical", _display(path), f"{kind}-management.unreadable",
+            f"file can't be read ({exc})")
 
 
 def _unquote(value: str) -> str:

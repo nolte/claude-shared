@@ -162,3 +162,62 @@ def test_write_page_keeps_identical_page_untouched(tmp_path: Path) -> None:
     os.utime(page, ns=(1_000_000_000_000_000_000, 1_000_000_000_000_000_000))
     gen_catalog.write_page(page, "same content\n")
     assert page.stat().st_mtime_ns == 1_000_000_000_000_000_000
+
+
+# --- #816: unreadable files and a non-mapping sources file name the path -------
+
+
+def test_unreadable_skill_raises_catalog_error_naming_path(tmp_path: Path) -> None:
+    if os.geteuid() == 0:
+        pytest.skip("root reads a mode-000 file")
+    path = tmp_path / "plugin" / "skills" / "broken" / "SKILL.md"
+    path.parent.mkdir(parents=True)
+    path.write_text("---\nname: broken\n---\nbody\n", encoding="utf-8")
+    path.chmod(0)
+    try:
+        with pytest.raises(gen_catalog.CatalogError, match="can't be read") as exc:
+            gen_catalog.discover_skills(_source(tmp_path / "plugin"), ["en"])
+    finally:
+        path.chmod(0o644)
+    assert str(path) in str(exc.value)
+
+
+def test_unreadable_sources_file_raises_catalog_error_naming_path(
+    isolated_config: Path,
+) -> None:
+    gen_catalog.SOURCES_FILE.unlink()
+    gen_catalog.SOURCES_FILE.mkdir()
+    with pytest.raises(gen_catalog.CatalogError, match="can't be read") as exc:
+        gen_catalog.load_sources()
+    assert str(gen_catalog.SOURCES_FILE) in str(exc.value)
+
+
+@pytest.mark.parametrize("text", ["- sources\n", "just a string\n", "42\n"])
+def test_non_mapping_sources_file_raises_catalog_error_naming_path(
+    isolated_config: Path, text: str
+) -> None:
+    gen_catalog.SOURCES_FILE.write_text(text, encoding="utf-8")
+    with pytest.raises(gen_catalog.CatalogError, match="must be a mapping") as exc:
+        gen_catalog.load_sources()
+    assert str(gen_catalog.SOURCES_FILE) in str(exc.value)
+
+
+@pytest.mark.parametrize("field, value", [("local", 5), ("name", ["a"]), ("repo_url", 7)])
+def test_non_string_source_field_raises_catalog_error_naming_path(
+    isolated_config: Path, field: str, value: object
+) -> None:
+    entry = {"name": "test-plugin", "local": str(isolated_config / "plugin"),
+             "repo_url": "https://example.invalid/repo", field: value}
+    gen_catalog.SOURCES_FILE.write_text(
+        gen_catalog.yaml.safe_dump({"sources": [entry]}), encoding="utf-8")
+    with pytest.raises(gen_catalog.CatalogError, match=field) as exc:
+        gen_catalog.load_sources()
+    assert str(gen_catalog.SOURCES_FILE) in str(exc.value)
+
+
+@pytest.mark.parametrize("text", ["sources: just-a-string\n", "sources:\n  name: test-plugin\n"])
+def test_non_list_sources_raises_catalog_error_naming_path(isolated_config: Path, text: str) -> None:
+    gen_catalog.SOURCES_FILE.write_text(text, encoding="utf-8")
+    with pytest.raises(gen_catalog.CatalogError, match="'sources' must be a list") as exc:
+        gen_catalog.load_sources()
+    assert str(gen_catalog.SOURCES_FILE) in str(exc.value)

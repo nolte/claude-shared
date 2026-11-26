@@ -342,12 +342,14 @@ def parse_frontmatter(text: str, file_label: str) -> tuple[dict, str]:
 
 
 def _read_utf8(path: Path) -> str:
-    """Read ``path`` as UTF-8 text, reporting undecodable bytes as a
-    :class:`CatalogError` that names the file instead of a bare traceback."""
+    """Read ``path`` as UTF-8 text, reporting undecodable bytes or an unreadable
+    file as a :class:`CatalogError` that names the file instead of a bare traceback."""
     try:
         return path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
         raise CatalogError(f"{path}: not valid UTF-8 ({exc})") from exc
+    except OSError as exc:
+        raise CatalogError(f"{path}: can't be read ({exc})") from exc
 
 
 def _repo_prefix(source: SourceRoot) -> str:
@@ -368,9 +370,13 @@ def load_sources() -> list[SourceRoot]:
         data = yaml.safe_load(_read_utf8(SOURCES_FILE)) or {}
     except yaml.YAMLError as exc:
         raise CatalogError(f"{SOURCES_FILE}: invalid YAML ({exc})") from exc
+    if not isinstance(data, dict):
+        raise CatalogError(f"{SOURCES_FILE}: top level must be a mapping with a 'sources' list")
     sources_raw = data.get("sources") or []
     if not sources_raw:
         raise CatalogError(f"{SOURCES_FILE}: no sources configured")
+    if not isinstance(sources_raw, list):
+        raise CatalogError(f"{SOURCES_FILE}: 'sources' must be a list")
     result: list[SourceRoot] = []
     for idx, entry in enumerate(sources_raw):
         if not isinstance(entry, dict):
@@ -381,6 +387,11 @@ def load_sources() -> list[SourceRoot]:
             repo_url = entry["repo_url"]
         except KeyError as exc:
             raise CatalogError(f"{SOURCES_FILE}: source #{idx} missing field {exc}") from exc
+        for field, value in (("local", local_value), ("name", name), ("repo_url", repo_url)):
+            if not isinstance(value, str) or not value:
+                raise CatalogError(
+                    f"{SOURCES_FILE}: source #{idx} field '{field}' must be a non-empty string"
+                )
         local_path = (REPO_ROOT / local_value).resolve()
         result.append(
             SourceRoot(
