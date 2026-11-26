@@ -47,14 +47,27 @@ BASELINE = REPO_ROOT / ".audits" / "license-check" / "license-baseline.json"
 
 def sbom_license_ids(sbom_path: Path) -> set[str]:
     doc = json.loads(sbom_path.read_text(encoding="utf-8"))
+    if not isinstance(doc, dict):
+        raise SystemExit(f"license gate: {sbom_path} must be a CycloneDX JSON object")
+    components = doc.get("components", [])
+    if not isinstance(components, list) or not all(isinstance(c, dict) for c in components):
+        raise SystemExit(f"license gate: {sbom_path}: `components` must be a list of objects")
     ids: set[str] = set()
-    for component in doc.get("components", []):
+    for component in components:
         licenses = component.get("licenses") or []
+        if not isinstance(licenses, list) or not all(isinstance(e, dict) for e in licenses):
+            raise SystemExit(
+                f"license gate: {sbom_path}: component {component.get('name', '?')!r} "
+                "`licenses` must be a list of objects")
         if not licenses:
             ids.add("NOASSERTION")
             continue
         for entry in licenses:
             lic = entry.get("license") or {}
+            if not isinstance(lic, dict):
+                raise SystemExit(
+                    f"license gate: {sbom_path}: component {component.get('name', '?')!r} "
+                    "`license` must be an object")
             expression = entry.get("expression")
             ids.add(expression or lic.get("id") or lic.get("name") or "NOASSERTION")
     return ids
@@ -130,8 +143,19 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _read_baseline_doc(path: Path) -> dict:
+    """The baseline file's top-level object, or SystemExit naming the file."""
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(doc, dict):
+        raise SystemExit(f"license gate: {path} must be a JSON object with an `adjudicated` mapping")
+    return doc
+
+
 def _load_baseline(path: Path) -> dict[str, str]:
-    data = json.loads(path.read_text(encoding="utf-8"))["adjudicated"]
+    doc = _read_baseline_doc(path)
+    if "adjudicated" not in doc:
+        raise SystemExit(f"license gate: {path} has no `adjudicated` mapping")
+    data = doc["adjudicated"]
     if not isinstance(data, dict):
         raise SystemExit(f"license gate: {path} must map each identifier to its reason")
     return data
@@ -139,7 +163,9 @@ def _load_baseline(path: Path) -> dict[str, str]:
 
 def _write_baseline(path: Path, entries: dict[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    doc = {"_comment": json.loads(path.read_text(encoding="utf-8"))["_comment"]} if path.exists() else {}
+    previous = _read_baseline_doc(path) if path.exists() else {}
+    # Carry the explanatory `_comment` over when the file has one; it is optional.
+    doc = {"_comment": previous["_comment"]} if "_comment" in previous else {}
     doc["adjudicated"] = dict(sorted(entries.items()))
     path.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 

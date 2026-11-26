@@ -249,6 +249,8 @@ class PortfolioError(Exception):
 
 def load_languages() -> list[str]:
     cfg = yaml.safe_load(SPEC_CONFIG.read_text(encoding="utf-8")) or {}
+    if not isinstance(cfg, dict):
+        raise PortfolioError(f"{SPEC_CONFIG}: top level must be a mapping")
     langs = cfg.get("languages") or ["en"]
     if not isinstance(langs, list) or not langs:
         raise PortfolioError("spec/.spec-config.yml: 'languages' must be a non-empty list")
@@ -580,6 +582,8 @@ def main() -> int:
     if not AGGREGATE.exists():
         raise PortfolioError(f"missing snapshot: {AGGREGATE}")
     snapshot = yaml.safe_load(AGGREGATE.read_text(encoding="utf-8")) or {}
+    if not isinstance(snapshot, dict):
+        raise PortfolioError(f"{AGGREGATE}: top level must be a mapping")
     if not isinstance(snapshot.get("members"), list):
         raise PortfolioError("portfolio/aggregate.yml: top-level 'members' must be a list")
     for lang in load_languages():

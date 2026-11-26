@@ -72,3 +72,44 @@ def test_list_shaped_baseline_is_rejected(tmp_path):
 def test_committed_baseline_gives_every_entry_a_reason():
     entries = json.loads((ROOT / ".audits/license-check/license-baseline.json").read_text())["adjudicated"]
     assert isinstance(entries, dict) and all(str(r).strip() for r in entries.values())
+
+
+# --- #816: a parsed SBOM or baseline of the wrong shape names the file ---------
+# Each case leaves the gate through its own failure path (SystemExit with a
+# message naming the file), never an AttributeError/TypeError/KeyError traceback.
+
+@pytest.mark.parametrize("doc", [[1], "x", {"components": {"a": 1}}, {"components": [1]},
+                                 {"components": [{"licenses": {"id": "MIT"}}]},
+                                 {"components": [{"licenses": ["MIT"]}]},
+                                 {"components": [{"licenses": [{"license": "MIT"}]}]}])
+def test_malformed_sbom_shape_names_the_file(tmp_path, doc):
+    path = tmp_path / "sbom.cdx.json"
+    path.write_text(json.dumps(doc))
+    with pytest.raises(SystemExit) as exc:
+        run(tmp_path, path, baseline(tmp_path, {"MIT": "allow"}))
+    assert str(exc.value.code).startswith(f"license gate: {path}")
+
+
+@pytest.mark.parametrize("doc", [["MIT"], "x", {"_comment": "no adjudicated key"}])
+def test_malformed_baseline_shape_names_the_file(tmp_path, doc):
+    b = tmp_path / "baseline.json"
+    b.write_text(json.dumps(doc))
+    with pytest.raises(SystemExit) as exc:
+        run(tmp_path, sbom(tmp_path, "MIT"), b)
+    assert str(exc.value.code).startswith(f"license gate: {b}")
+
+
+def test_write_baseline_over_a_list_shaped_file_names_the_file(tmp_path):
+    b = tmp_path / "baseline.json"
+    b.write_text(json.dumps(["MIT"]))
+    with pytest.raises(SystemExit) as exc:
+        gate._write_baseline(b, {"MIT": "allow"})
+    assert str(exc.value.code).startswith(f"license gate: {b}")
+
+
+def test_prune_keeps_working_on_a_baseline_without_a_comment(tmp_path):
+    """An absent `_comment` is optional: --prune must not raise KeyError on it."""
+    b = tmp_path / "baseline.json"
+    b.write_text(json.dumps({"adjudicated": {"MIT": "allow", "ISC": "allow"}}))
+    assert run(tmp_path, sbom(tmp_path, "MIT"), b, "--prune") == 0
+    assert json.loads(b.read_text()) == {"adjudicated": {"MIT": "allow"}}

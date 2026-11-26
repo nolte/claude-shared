@@ -43,9 +43,13 @@ def first_user_prompt(transcript: Path) -> str:
                     obj = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                if obj.get("type") != "user":
+                # Valid JSON of another shape is as unusable as invalid JSON: skip it
+                # rather than let `.get` abort the scan and hide a later prompt.
+                if not isinstance(obj, dict) or obj.get("type") != "user":
                     continue
                 msg = obj.get("message") or {}
+                if not isinstance(msg, dict):
+                    continue
                 content = msg.get("content")
                 text = ""
                 if isinstance(content, str):
