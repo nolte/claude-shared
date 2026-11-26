@@ -6,5 +6,5 @@
 # with the Linux_64-bit line of the release's vale_<version>_checksums.txt:
 # tests/test_vale_version.py fails while the file name in that line names
 # another version, and the install fails closed on a checksum mismatch.
-VALE_VERSION=3.28.1
-VALE_SHA256=068954ad869ebec24b8dec6ebcd1cbb1fd5f5a83e966a35baedfae8b2cdc093a  vale_3.28.1_Linux_64-bit.tar.gz
+VALE_VERSION=3.29.0
+VALE_SHA256=00356ae1bacd1160aa415664f3ed0d34ce9ef5319c61d31123a97366ea1a2f64  vale_3.29.0_Linux_64-bit.tar.gz
