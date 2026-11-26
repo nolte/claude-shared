@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib.util
 import os
 import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -127,9 +128,19 @@ def test_main_exits_1_and_names_undecodable_path(
 
 
 def test_on_pre_build_raises_plugin_error_naming_path(
-    isolated_config: Path, undecodable_agent: Path
+    isolated_config: Path, undecodable_agent: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from mkdocs.exceptions import PluginError
+    # The CI test lane doesn't install MkDocs; the hook imports PluginError lazily,
+    # so a stand-in `mkdocs.exceptions` module exercises the same code path.
+    class PluginError(Exception):
+        pass
+
+    exceptions = types.ModuleType("mkdocs.exceptions")
+    exceptions.PluginError = PluginError
+    mkdocs = types.ModuleType("mkdocs")
+    mkdocs.exceptions = exceptions
+    monkeypatch.setitem(sys.modules, "mkdocs", mkdocs)
+    monkeypatch.setitem(sys.modules, "mkdocs.exceptions", exceptions)
 
     with pytest.raises(PluginError) as exc:
         gen_catalog.on_pre_build(config=None)
