@@ -394,6 +394,15 @@ def test_814_undecodable_committed_version_is_critical(monkeypatch, tmp_path):
     assert len(hits) == 1 and "HEAD:project/mission.md" in hits[0].message
 
 
+def test_814_committed_version_returns_the_committed_text():
+    # Positive control: the real `git show` path returns HEAD's mission, decoded and
+    # newline-translated like the working-tree read, not None.
+    raw = subprocess.run(["git", "show", "HEAD:project/mission.md"], cwd=v.REPO,
+                         capture_output=True, check=True).stdout
+    expected = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    assert v._committed_version(v.MISSION_PATH, "HEAD") == expected
+
+
 def test_814_committed_version_missing_stays_no_finding(monkeypatch, tmp_path):
     # returncode != 0 without MISSION_BASE_REF keeps meaning "no committed version".
     _hermetic(monkeypatch, tmp_path)

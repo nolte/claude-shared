@@ -145,6 +145,7 @@ def test_on_pre_build_raises_plugin_error_naming_path(
     with pytest.raises(PluginError) as exc:
         gen_catalog.on_pre_build(config=None)
     assert str(undecodable_agent) in str(exc.value)
+    assert isinstance(exc.value.__cause__, gen_catalog.CatalogError)
 
 
 def test_write_page_overwrites_undecodable_existing_page(tmp_path: Path) -> None:
