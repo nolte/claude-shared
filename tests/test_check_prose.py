@@ -30,7 +30,7 @@ RENOVATE_ENTRY = (
 def fake_vale(errors=(), stdout=None, returncode=None):
     calls = []
 
-    def runner(args, cwd=None, capture_output=None, text=None):
+    def runner(args, cwd=None, capture_output=None, text=None, encoding=None):
         calls.append({"args": list(args), "text": pathlib.Path(args[-1]).read_text(encoding="utf-8")})
         report = {args[-1]: [{"Severity": "error", "Check": c, "Message": "m", "Match": "x", "Line": 1} for c in errors]}
         out = stdout if stdout is not None else json.dumps(report if errors else {})
@@ -154,6 +154,54 @@ def test_unparseable_vale_output_is_an_error_not_a_pass(monkeypatch, vale_on_pat
     monkeypatch.delenv("PR_AUTHOR", raising=False)
     runner = fake_vale(stdout="E100 [vocab] Runtime error", returncode=1)
     assert check_prose.main(["--title"], runner=runner) == 2
+
+
+# --------------------------------------------------------------------------- #
+# Undecodable input (#814): a decode failure is "could not run", never a traceback
+# --------------------------------------------------------------------------- #
+def _undecodable(*args, **kwargs):
+    raise UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte")
+
+
+def test_undecodable_vale_output_under_title_is_an_error_naming_vale(monkeypatch, vale_on_path, capsys):
+    monkeypatch.setenv("PR_TITLE", "fix(ci): anything")
+    monkeypatch.delenv("PR_AUTHOR", raising=False)
+    assert check_prose.main(["--title"], runner=_undecodable) == 2
+    err = capsys.readouterr().err
+    assert "prose check could not run" in err and "vale" in err
+
+
+def test_undecodable_gh_output_is_an_error_naming_the_tag(vale_on_path, capsys):
+    assert check_prose.main(["--release-notes", "v9.9.9"], runner=_undecodable) == 2
+    err = capsys.readouterr().err
+    assert "prose check could not run" in err and "v9.9.9" in err
+
+
+def test_non_utf8_release_notes_file_is_an_error_naming_the_path(tmp_path, vale_on_path, capsys):
+    notes = tmp_path / "latin1-notes.md"
+    notes.write_bytes("## Änderungen\n".encode("latin-1"))
+    assert check_prose.main(["--file", str(notes)], runner=fake_vale()) == 2
+    err = capsys.readouterr().err
+    assert "prose check could not run" in err and str(notes) in err
+
+
+def test_subprocess_calls_decode_as_utf8_independent_of_locale(monkeypatch, vale_on_path):
+    monkeypatch.setenv("PR_TITLE", "fix(ci): anything")
+    monkeypatch.delenv("PR_AUTHOR", raising=False)
+    seen = []
+
+    def recording(args, **kwargs):
+        seen.append((args[0], kwargs))
+        if args[0] == "gh":
+            return SimpleNamespace(returncode=0, stdout="## Changes\n", stderr="")
+        return SimpleNamespace(returncode=0, stdout="{}", stderr="")
+
+    assert check_prose.main(["--title"], runner=recording) == 0
+    assert check_prose.main(["--release-notes", "v1.0.0"], runner=recording) == 0
+    assert [name for name, _ in seen] == ["/usr/local/bin/vale", "gh", "/usr/local/bin/vale"]
+    for _, kwargs in seen:
+        assert kwargs.get("text") is True and kwargs.get("encoding") == "utf-8"
+        assert "errors" not in kwargs
 
 
 @pytest.mark.skipif(shutil.which("vale") is None, reason="needs the vale binary; `task test` sets STRICT_SKIPS=1, so this skip fails the gate")

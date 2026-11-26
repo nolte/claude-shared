@@ -24,7 +24,8 @@ repository, so .vale.ini's `[*.md]` section applies and no shell ever sees it.
 
 Exit codes: 0 pass or advisory report, 1 title alerts, 2 usage error or a check
 that could not run (no Vale, a Vale runtime error, no `gh` access, an unreadable
-file). A check that could not run never reads as a pass.
+file, input or tool output that is not valid UTF-8). A check that could not run
+never reads as a pass.
 """
 
 from __future__ import annotations
@@ -103,7 +104,11 @@ def run_vale(text: str, runner=subprocess.run) -> list[dict]:
     try:
         path = Path(tmpdir, "prose.md")
         path.write_text(text, encoding="utf-8")
-        proc = runner([vale, "--output=JSON", str(path)], cwd=REPO, capture_output=True, text=True)
+        try:
+            proc = runner([vale, "--output=JSON", str(path)], cwd=REPO, capture_output=True, text=True,
+                          encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise CheckUnavailable(f"vale output is not valid UTF-8 ({exc})") from exc
         try:
             data = json.loads(proc.stdout or "{}")
         except json.JSONDecodeError as exc:
@@ -122,8 +127,11 @@ def run_vale(text: str, runner=subprocess.run) -> list[dict]:
 
 
 def _release_body(tag: str, runner) -> str:
-    proc = runner(["gh", "release", "view", tag, "--json", "body", "--jq", ".body"],
-                  cwd=REPO, capture_output=True, text=True)
+    try:
+        proc = runner(["gh", "release", "view", tag, "--json", "body", "--jq", ".body"],
+                      cwd=REPO, capture_output=True, text=True, encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise CheckUnavailable(f"gh output for release {tag} is not valid UTF-8 ({exc})") from exc
     if proc.returncode != 0:
         raise CheckUnavailable(
             f"gh could not read release {tag}: {proc.stderr.strip()[:200]} "
@@ -164,7 +172,7 @@ def main(argv: list[str] | None = None, runner=subprocess.run) -> int:
         if args.file:
             try:
                 body = Path(args.file).read_text(encoding="utf-8")
-            except OSError as exc:
+            except (OSError, UnicodeDecodeError) as exc:
                 raise CheckUnavailable(f"cannot read {args.file}: {exc}") from exc
         else:
             body = _release_body(args.release_notes, runner)

@@ -834,3 +834,92 @@ def test_override_precondition_excludes_every_plugin_of_this_repository():
             capture_output=True, text=True, check=True).stdout.strip()
         assert Path(toplevel).resolve() == v.REPO.resolve(), root
         assert (Path(toplevel) / "spec").is_dir(), root
+
+
+# --- #814: an undecodable artifact is a per-file Critical, not a crash ------
+# A skill/agent file that is not valid UTF-8 must be named as a finding while
+# every other artifact keeps being validated; exit codes stay 1 (Critical).
+
+_UNDECODABLE = b"---\nname: foo-apply\ndescription: caf\xe9 reports things\n---\nbody\n"
+
+
+def _write_bytes(root, rel, data):
+    target = root / rel
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    return target
+
+
+def test_undecodable_skill_is_critical_and_siblings_still_validate(monkeypatch, tmp_path, capsys):
+    # The undecodable skill sorts first, so a run that stopped at it would miss zed-apply.
+    _write_bytes(tmp_path, "skills/foo-apply/SKILL.md", _UNDECODABLE)
+    broken = "---\nname: zed-apply\ndescription: Read-only: reports things\n---\nbody\n"
+    _write_bytes(tmp_path, "skills/zed-apply/SKILL.md", broken.encode("utf-8"))
+    assert _consumer_run(
+        monkeypatch, tmp_path, "skills/zed-apply/SKILL.md", broken, "skills/") == 1
+    out = capsys.readouterr().out
+    unreadable = [line for line in out.splitlines() if "skill-management.unreadable" in line]
+    assert len(unreadable) == 1
+    assert unreadable[0].startswith("Critical")
+    assert unreadable[0].split()[1] == "skills/foo-apply/SKILL.md"
+    assert "position 36" in unreadable[0]
+    assert any("skills/zed-apply/SKILL.md" in line and "frontmatter-yaml-invalid" in line
+               for line in out.splitlines())
+
+
+def test_undecodable_skill_yields_exactly_one_finding(monkeypatch, tmp_path):
+    path = _write_bytes(tmp_path, "skills/foo-apply/SKILL.md", _UNDECODABLE)
+    monkeypatch.chdir(tmp_path)
+    findings = v.check_skill(path)
+    assert [(f.severity, f.target, f.rule) for f in findings] == [
+        ("Critical", "skills/foo-apply/SKILL.md", "skill-management.unreadable")]
+
+
+def test_undecodable_agent_is_critical(monkeypatch, tmp_path):
+    path = _write_bytes(tmp_path, "agents/foo-scanner.md", _UNDECODABLE)
+    monkeypatch.chdir(tmp_path)
+    findings = v.check_agent(path)
+    assert [(f.severity, f.target, f.rule) for f in findings] == [
+        ("Critical", "agents/foo-scanner.md", "agent-management.unreadable")]
+    assert "position 36" in findings[0].message
+
+
+def test_agent_tools_index_records_undecodable_agent_as_absent(tmp_path):
+    _write_bytes(tmp_path, "agents/foo-scanner.md", _UNDECODABLE)
+    _write_bytes(tmp_path, "agents/bar-reviewer.md", b"---\nname: bar-reviewer\ntools: Read\n---\n")
+    index = v._agent_tools_in(tmp_path / "agents")
+    assert "foo-scanner" in index
+    assert index["foo-scanner"] is None
+    assert index["bar-reviewer"] == ["Read"]
+
+
+def test_description_budget_flags_undecodable_agent(monkeypatch, tmp_path):
+    monkeypatch.setattr(v, "REPO", tmp_path)
+    monkeypatch.setitem(v.AGENT_DESC_BASELINE_CHARS, "agents", 10_000)
+    monkeypatch.chdir(tmp_path)
+    _write_bytes(tmp_path, "agents/foo-scanner.md", _UNDECODABLE)
+    _write_bytes(tmp_path, "agents/bar-reviewer.md", b"---\nname: bar-reviewer\ndescription: Reviews.\n---\n")
+    findings = v.check_agent_description_budget(tmp_path / "agents")
+    assert [(f.severity, f.target, f.rule) for f in findings] == [
+        ("Critical", "agents/foo-scanner.md", "agent-management.unreadable")]
+
+
+def test_edit_hook_surfaces_undecodable_skill_by_path(tmp_path):
+    # End to end through the PostToolUse hook: it runs <project>/scripts/validate_skills.py
+    # and surfaces exit 1 as exit 2. The symlink keeps the validator under test the
+    # real one while the fixture lives outside this repository.
+    import json
+    import subprocess
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts" / "validate_skills.py").symlink_to(SCRIPTS / "validate_skills.py")
+    target = _write_bytes(tmp_path, "skills/foo-apply/SKILL.md", _UNDECODABLE)
+    payload = json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(target)}})
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "validate_edited_artifact.py")],
+        input=payload, capture_output=True, text=True, timeout=60, cwd=tmp_path,
+        env={**__import__("os").environ, "CLAUDE_PROJECT_DIR": str(tmp_path)},
+    )
+    assert result.returncode == 2
+    assert "skills/foo-apply/SKILL.md" in result.stderr
+    assert "skill-management.unreadable" in result.stderr
+    assert "Traceback" not in result.stderr

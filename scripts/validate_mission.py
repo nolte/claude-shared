@@ -14,8 +14,12 @@ suite (per the spec §"Directory layout and file shape"); a missing file is a pa
 
 Exit codes:
   0  the mission passes (0 files = pass)
-  1  at least one error (`Critical`-grade per `review-plan` §Severity scale)
-  2  internal error (file unreadable, YAML unrecoverable, self-test failed, etc.)
+  1  at least one error (`Critical`-grade per `review-plan` §Severity scale);
+     an unreadable or non-UTF-8 input file (the mission, goals.md, AUDIENCES.md,
+     or a feature file) or a non-UTF-8 committed mission version is such a
+     `Critical` finding (`mission.unreadable`); an unreadable goals.md,
+     AUDIENCES.md, or feature file doesn't stop the other checks
+  2  path not found, or failed self-test
 
 Usage:
   python scripts/validate_mission.py                    # checks project/mission.md
@@ -114,17 +118,57 @@ def _audience_ids(audiences_text: str) -> set[str]:
     return set(re.findall(r"_id_:\s*`([a-z0-9][a-z0-9-]*)`", audiences_text))
 
 
-def _feature_index() -> dict[str, str | None]:
+def _display(path: Path) -> str:
+    """`path` relative to the repository when it lies inside it, else as given."""
+    return path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else path.as_posix()
+
+
+def _undecodable(target: str, source: str, exc: UnicodeDecodeError) -> Finding:
+    """The Critical finding for an input that isn't valid UTF-8, naming `source`."""
+    return Finding("Critical", target, "mission.unreadable", f"{source} is not valid UTF-8 ({exc})")
+
+
+def _unreadable(target: str, source: str, exc: OSError | UnicodeDecodeError) -> Finding:
+    """The Critical finding for an input that can't be read or decoded, naming `source`."""
+    if isinstance(exc, UnicodeDecodeError):
+        return _undecodable(target, source, exc)
+    return Finding("Critical", target, "mission.unreadable", f"{source} can't be read ({exc})")
+
+
+def _read_ids(path: Path, parse, target: str, findings: list[Finding]) -> set[str] | None:
+    """IDs parsed from `path`, or None when it is absent, unreadable, or undecodable.
+
+    An unreadable or undecodable file resolves nothing (like an absent one) and appends a
+    `mission.unreadable` finding naming it, so the caller's other checks still run.
+    """
+    if not path.exists():
+        return None
+    try:
+        return parse(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError) as exc:
+        findings.append(_unreadable(target, _display(path), exc))
+        return None
+
+
+def _feature_index(target: str) -> tuple[dict[str, str | None], list[Finding]]:
     """Map feature id (`F-<n>`) -> its `verifies_sprint_value` scalar (or None).
 
     Read from project/features/*.md frontmatter so `verifies_via` can be resolved
-    to both an existing feature file and the acceptance identifier it names.
+    to both an existing feature file and the acceptance identifier it names. A
+    feature file that can't be read or isn't valid UTF-8 yields a
+    `mission.unreadable` finding naming it; the other feature files are still indexed.
     """
     index: dict[str, str | None] = {}
+    findings: list[Finding] = []
     if not FEATURES_DIR.is_dir():
-        return index
+        return index, findings
     for path in sorted(FEATURES_DIR.glob("*.md")):
-        split = _split(path.read_text(encoding="utf-8"))
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            findings.append(_unreadable(target, _display(path), exc))
+            continue
+        split = _split(text)
         if split is None:
             continue
         fm = split[0]
@@ -133,7 +177,7 @@ def _feature_index() -> dict[str, str | None]:
             continue
         vsv = re.search(r"^verifies_sprint_value:\s*(\S+)\s*$", fm, re.M)
         index[fid.group(1)] = vsv.group(1) if vsv else None
-    return index
+    return index, findings
 
 
 def check_frontmatter_order_and_keys(fm: str, target: str) -> list[Finding]:
@@ -169,7 +213,7 @@ def check_frontmatter_values(data: dict, target: str) -> list[Finding]:
                                 "`mission_statement` must be a non-empty string"))
 
     outcomes = data.get("relevant_outcomes")
-    goals_ids = _outcome_ids(GOALS_PATH.read_text(encoding="utf-8")) if GOALS_PATH.exists() else None
+    goals_ids = _read_ids(GOALS_PATH, _outcome_ids, target, findings)
     if not isinstance(outcomes, list) or not outcomes:
         findings.append(Finding("Critical", target, "mission.relevant-outcomes-empty",
                                 "`relevant_outcomes` must be a non-empty list of `O-<n>` IDs"))
@@ -184,7 +228,7 @@ def check_frontmatter_values(data: dict, target: str) -> list[Finding]:
                                         f"outcome in project/goals.md"))
 
     audiences = data.get("audiences")
-    aud_ids = _audience_ids(AUDIENCES_PATH.read_text(encoding="utf-8")) if AUDIENCES_PATH.exists() else None
+    aud_ids = _read_ids(AUDIENCES_PATH, _audience_ids, target, findings)
     if not isinstance(audiences, list) or not audiences:
         findings.append(Finding("Critical", target, "mission.audiences-empty",
                                 "`audiences` must be a non-empty list of audience identifiers"))
@@ -223,19 +267,19 @@ def check_verifies_via(verifies_via, target: str) -> list[Finding]:
                         f"(e.g. `F-3:acceptance-2`), got `{verifies_via}`")]
     m = VERIFIES_VIA_RE.match(verifies_via)
     feature_id, acceptance_id = m.group(1), m.group(2)
-    index = _feature_index()
+    index, findings = _feature_index(target)
     if not index:
-        return []  # no feature corpus on disk — nothing to resolve against
+        return findings  # no readable feature corpus on disk — nothing to resolve against
     if feature_id not in index:
-        return [Finding("Critical", target, "mission.verifies-via-feature-missing",
-                        f"`verifies_via` names feature `{feature_id}`, but no file under "
-                        f"project/features/ declares `id: {feature_id}`")]
+        return findings + [Finding("Critical", target, "mission.verifies-via-feature-missing",
+                                   f"`verifies_via` names feature `{feature_id}`, but no file under "
+                                   f"project/features/ declares `id: {feature_id}`")]
     declared = index[feature_id]
     if declared is not None and declared != acceptance_id:
-        return [Finding("Critical", target, "mission.verifies-via-acceptance-mismatch",
-                        f"`verifies_via` names `{acceptance_id}` on `{feature_id}`, but that "
-                        f"feature's `verifies_sprint_value` is `{declared}`")]
-    return []
+        return findings + [Finding("Critical", target, "mission.verifies-via-acceptance-mismatch",
+                                   f"`verifies_via` names `{acceptance_id}` on `{feature_id}`, but that "
+                                   f"feature's `verifies_sprint_value` is `{declared}`")]
+    return findings
 
 
 def check_time_bound(time_bound, target: str, outcomes) -> list[Finding]:
@@ -424,23 +468,40 @@ def check_stabilisation_evidence(old_text: str, new_text: str, target: str) -> l
 
 
 def _committed_version(path: Path, ref: str) -> str | None:
+    """`path` as committed at `ref`, or None when git has no such version.
+
+    The output is decoded as strict UTF-8; content that isn't valid UTF-8 raises
+    `UnicodeDecodeError` for the caller to report, never "no committed version".
+    """
     try:
         rel = path.resolve().relative_to(REPO).as_posix()
     except ValueError:
         return None
-    proc = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO, capture_output=True, text=True)
+    # Text mode keeps the universal-newline translation the working-tree read gets;
+    # `encoding` makes the decode strict UTF-8 regardless of the locale. stderr is
+    # discarded: git localises it in the locale's charset, and it is never read.
+    proc = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO, stdout=subprocess.PIPE,
+                          stderr=subprocess.DEVNULL, text=True, encoding="utf-8")
     return proc.stdout if proc.returncode == 0 else None
 
 
 def check_mission(path: Path) -> list[Finding]:
-    rel = path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else path.as_posix()
+    rel = _display(path)
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:  # pragma: no cover
         return [Finding("Critical", rel, "mission.unreadable", str(exc))]
+    except UnicodeDecodeError as exc:
+        return [_undecodable(rel, rel, exc)]
     findings = check_mission_text(text, rel)
     base = os.environ.get("MISSION_BASE_REF", "").strip()
-    committed = _committed_version(path, base or "HEAD")
+    ref = base or "HEAD"
+    try:
+        committed = _committed_version(path, ref)
+    except UnicodeDecodeError as exc:
+        # The revision and stabilisation checks can't compare against it; say so.
+        findings.append(_undecodable(rel, f"{ref}:{path.resolve().relative_to(REPO).as_posix()}", exc))
+        return findings
     if committed is None and base:
         # An explicitly configured base that can't be read would make the check
         # vacuous in exactly the run meant to enforce it (a shallow CI checkout).
