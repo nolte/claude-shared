@@ -241,3 +241,29 @@ def test_absent_optional_source_fields_keep_their_defaults(isolated_config: Path
     """Refutation control: absent skills_path / agents_path / branch keep the defaults."""
     (source,) = gen_catalog.load_sources()
     assert (source.skills_path, source.agents_path, source.branch) == ("skills", "agents", "main")
+
+
+# --- #816: a frontmatter description that isn't a string names the file ------
+
+# Bare scalars (`42`, `true`) stay strings in this hand-rolled parser; only the
+# flow-list and block branches hand the value to yaml.safe_load.
+@pytest.mark.parametrize("description", ["[a, b]", "\n  key: value\n  other: 1"])
+@pytest.mark.parametrize("kind", ["skill", "agent"])
+def test_non_string_description_raises_catalog_error_naming_file_and_key(
+    tmp_path: Path, kind: str, description: str
+) -> None:
+    plugin = tmp_path / "plugin"
+    if kind == "skill":
+        path = plugin / "skills" / "foo" / "SKILL.md"
+        extra = ""
+    else:
+        path = plugin / "agents" / "foo.md"
+        extra = "distribution: plugin\n"
+    path.parent.mkdir(parents=True)
+    path.write_text(f"---\nname: foo\ndescription: {description}\n{extra}phase: build\n---\nbody\n",
+                    encoding="utf-8")
+    discover = gen_catalog.discover_skills if kind == "skill" else gen_catalog.discover_agents
+    with pytest.raises(gen_catalog.CatalogError, match="'description' must be a string") as exc:
+        discover(_source(plugin), ["en"])
+    rel = "skills/foo/SKILL.md" if kind == "skill" else "agents/foo.md"
+    assert f"test-plugin:{rel}" in str(exc.value)  # the generator's file label

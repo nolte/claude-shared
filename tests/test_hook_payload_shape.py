@@ -75,3 +75,20 @@ def test_branch_guard_still_blocks_a_well_formed_switch_in_a_primary_checkout(tm
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": "git checkout feat/x"}})
     result = _run("guard_feature_branch_hook.py", payload, tmp_path)
     assert result.returncode == 2, result.stderr
+
+
+def test_edit_validator_still_surfaces_a_broken_skill_from_a_well_formed_payload(tmp_path):
+    """Refutation control: the shape checks don't swallow real feedback (exit 2).
+
+    The hook runs <project>/scripts/validate_skills.py; the symlink keeps that the
+    real validator while the scratch project lives outside this repository.
+    """
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts" / "validate_skills.py").symlink_to(SCRIPTS / "validate_skills.py")
+    skill = tmp_path / "skills" / "foo-apply" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("---\nname: wrong-name\ndescription: Reports things.\n---\nbody\n", encoding="utf-8")
+    payload = json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(skill)}})
+    result = _run("validate_edited_artifact.py", payload, tmp_path)
+    assert result.returncode == 2, result.stderr
+    assert "skills/foo-apply/SKILL.md" in result.stderr and "Traceback" not in result.stderr

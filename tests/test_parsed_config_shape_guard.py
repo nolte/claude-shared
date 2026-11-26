@@ -5,14 +5,29 @@ Guard origin (spec/project/defect-class-guards/ G5): #816, whose class is
 AttributeError/TypeError traceback or a silent default instead of a message
 that names the file.
 
-Predicate (G3). Over every ``*.py`` file below ``scripts/`` (the selector is the
-recursive glob, not a file list; G6), take each call to a loader:
+Selector (G6). Every ``*.py`` file the repository holds, found by
+``ROOT.rglob("*.py")``: the shipped scripts (``scripts/``), the plugin- and
+skill-bundled scripts (``plugins/*/skills/*/scripts/``, ``skills/*/scripts/``),
+the eval harness (``evals/``), the spec templates handed to consumers
+(``spec/**/templates/``) and ``design/``. A new file joins by existing, not by
+being named. Excluded, each for a stated reason:
+
+- ``tests/`` (top level): the test suite. Its fixtures parse synthetic input
+  freely, and this guard's own self-tests write members on purpose.
+- any path with a ``.git``, ``.venv``, ``venv``, ``node_modules``, ``site`` or
+  ``__pycache__`` segment: version-control internals, installed third-party
+  packages, the built MkDocs site, and bytecode caches. None is authored here;
+  all are gitignored or git-internal. Measured on this tree they hold no
+  ``*.py`` at all, so the exclusion only keeps a local virtualenv or build from
+  flooding the guard with code this repository doesn't own.
+
+Predicate (G3). In each selected file, take each call to a loader:
 ``yaml.safe_load``, ``yaml.load``, ``yaml.full_load``, ``yaml.unsafe_load``,
-``json.load`` or ``json.loads``. Module aliases (``import json as j``) and
-imported names (``from json import loads``) resolve to the same loaders. The
-parsed value is the call itself, or the smallest ``... or ...`` /
-``... if ... else ...`` expression that can evaluate to it (``yaml.safe_load(x)
-or {}``). The site is a class member, and the guard fails on it, when:
+``yaml.safe_load_all``, ``yaml.load_all``, ``json.load`` or ``json.loads``.
+Module aliases (``import json as j``) and imported names (``from json import
+loads``) resolve to the same loaders. The parsed value is the call itself, or
+the smallest ``... or ...`` / ``... if ... else ...`` expression that can
+evaluate to it (``yaml.safe_load(x) or {}``). The site is a class member when:
 
 1. the parsed value is used directly, with an attribute or subscript applied to
    it (``json.loads(x)["key"]``, ``yaml.safe_load(x).get("k")``); or
@@ -24,43 +39,97 @@ or {}``). The site is a class member, and the guard fails on it, when:
    ``x.get(k) if isinstance(x, dict) else None`` passes. Order is lexical
    (line numbers), not control flow; or
 3. it is assigned to anything other than a single name (``meta[key] = ...``),
-   or it flows anywhere else unchecked (an argument, a ``return``).
+   or it flows anywhere else unchecked (an argument, a ``return``, a ``for``).
 
 A loader call whose result is discarded (an expression statement, used only to
 see whether the text parses) isn't a member.
 
-A member that is correct as written goes in ALLOWLIST with the reason it is
-safe. An entry that matches no site fails the guard, so a reason can't outlive
-its site (G4). Every entry covers a site that was checked and is safe; none
-covers an unrepaired member (G7).
+Every member must be covered by exactly one entry, keyed by (file, enclosing
+function, assignment target or ``<expr>``) and carrying the exact number of
+sites it covers (G4): a second matching site, or a site that disappears, fails
+the guard, so an entry can't silently cover a new member or outlive its site.
 
-Not covered: loaders other than the six above, and Python files outside
-``scripts/`` (plugin-bundled scripts, evals/). The issue records those.
+- ALLOWLIST: members that are correct as written, each with the reason.
+- KNOWN_UNREPAIRED: members #816 measured but deliberately didn't repair (G7).
+  The guard skips them explicitly, never asserts them as intended, and carries
+  FOLLOW_UP_ISSUE at each entry. Repairing one makes its entry stale, which
+  fails until the entry is removed.
+
+Not covered (a reader deciding whether a new case is caught should check these
+by hand):
+
+- ``isinstance`` with any type counts as the check: ``isinstance(x, str)``
+  satisfies rule 2 even where the code then needs a mapping.
+- uses other than attribute or subscript before the check (iterating the name,
+  passing it as an argument, ``len(x)``) aren't seen as early uses.
+- loads inside a lambda or nested function are judged only within their own
+  scope; the flow from there into the enclosing function isn't followed (a
+  ``return`` of the parsed value is itself a member, rule 3).
+- loader aliases by assignment (``load = json.loads``), ``json.JSONDecoder().
+  decode``, ``tomllib.load``/``loads`` (whose top level is always a table, but
+  whose values aren't), and any other parser.
+- reassignment of the name between the load and the check.
+- the shape below the top level (``doc["components"][0]``).
 """
 from __future__ import annotations
 
 import ast
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "scripts"
+
+EXCLUDED_TOP = {"tests"}
+EXCLUDED_PARTS = {".git", ".venv", "venv", "node_modules", "site", "__pycache__"}
 
 LOADERS = {
     ("yaml", "safe_load"), ("yaml", "load"), ("yaml", "full_load"), ("yaml", "unsafe_load"),
+    ("yaml", "safe_load_all"), ("yaml", "load_all"),
     ("json", "load"), ("json", "loads"),
 }
 
-# (path relative to scripts/, enclosing function, assignment target or "<expr>") -> reason.
-ALLOWLIST: dict[tuple[str, str, str], str] = {
-    ("validate_schemas.py", "main", "data"):
+# The issue that repairs the KNOWN_UNREPAIRED members.
+FOLLOW_UP_ISSUE = "#TBD"
+
+Key = tuple[str, str, str]  # (path relative to ROOT, enclosing function, target or "<expr>")
+
+# key -> (exact number of sites, reason it is safe)
+ALLOWLIST: dict[Key, tuple[int, str]] = {
+    ("scripts/validate_schemas.py", "main", "data"): (
+        1,
         "a governed data file may have any JSON shape; it is passed only to "
         "Draft202012Validator.iter_errors, which validates it against the bound schema",
-    ("docs/gen_catalog.py", "parse_frontmatter", "meta[key]"):
-        "a value-level load of one frontmatter key; every consumed key is shape-checked "
-        "where it is read (_validate_phase, _normalize_tags, _validate_summary, "
-        "_validate_use_when, _validate_dont_use_when, _validate_see_also, "
-        "_validate_examples; name/description via the folder-name equality check and str())",
+    ),
+    ("scripts/docs/gen_catalog.py", "parse_frontmatter", "meta[key]"): (
+        2,
+        "value-level loads of one frontmatter key (flow list, block value); each key "
+        "discover_skills/discover_agents consume is checked where it is read: name by "
+        "equality with the folder name / file stem; description by isinstance(str); "
+        "distribution by membership in ('plugin', 'project'); phase by _validate_phase; "
+        "tags by _normalize_tags; summary and summary_<lang> (via _collect_summaries) by "
+        "_validate_summary; use_when, dont_use_when, see_also and examples by their "
+        "_validate_* functions. No other key is read",
+    ),
+}
+
+# key -> exact number of sites; measured in #816, not repaired there (FOLLOW_UP_ISSUE).
+KNOWN_UNREPAIRED: dict[Key, int] = {
+    ("evals/harness/runner.py", "parse_json_result", "data"): 1,
+    ("evals/harness/runner.py", "parse_cost", "<expr>"): 1,
+    ("evals/harness/scorecard.py", "read", "<expr>"): 1,
+    ("plugins/nolte-engineering/skills/capability-reach-audit/scripts/reach_audit.py", "load_yaml", "<expr>"): 1,
+    ("plugins/nolte-linux/skills/image-boot-verify/scripts/boot_verify.py", "run_validator", "payload"): 1,
+    ("plugins/nolte-linux/skills/image-boot-verify/scripts/boot_verify.py", "qmp", "reply"): 1,
+    ("plugins/nolte-linux/skills/image-boot-verify/scripts/boot_verify.py", "read_declaration", "self.decl"): 1,
+    ("plugins/nolte-linux/skills/linux-image-audit/scripts/validate_declaration.py", "_load_json", "<expr>"): 1,
+    ("plugins/nolte-linux/skills/linux-image-audit/scripts/validate_declaration.py", "_validate", "doc"): 1,
+    ("plugins/nolte-linux/skills/linux-image-audit/scripts/validate_declaration.py", "_check", "schema"): 1,
+    ("plugins/nolte-media/skills/image-generate/scripts/image_generate.py", "_api_error_detail", "<expr>"): 1,
+    ("plugins/nolte-media/skills/image-generate/scripts/image_generate.py", "_post_json", "<expr>"): 1,
+    ("skills/pull-request-merge-order/scripts/merge_order.py", "main", "snapshot"): 1,
+    # Found by widening the selector to spec/ templates (round 4), after the 13 above.
+    ("spec/project/e2e-test-automation/templates/conftest.py", "_load_checkpoint", "entry"): 1,
 }
 
 
@@ -73,11 +142,22 @@ class Member:
     problem: str
 
     @property
-    def key(self) -> tuple[str, str, str]:
+    def key(self) -> Key:
         return (self.path, self.scope, self.target)
 
     def __str__(self) -> str:
-        return f"scripts/{self.path}:{self.line} ({self.scope}, {self.target}): {self.problem}"
+        return f"{self.path}:{self.line} ({self.scope}, {self.target}): {self.problem}"
+
+
+def python_files(root: Path) -> list[Path]:
+    """The selector: every *.py below `root` outside the excluded segments."""
+    out = []
+    for path in sorted(root.rglob("*.py")):
+        parts = path.relative_to(root).parts
+        if parts[0] in EXCLUDED_TOP or EXCLUDED_PARTS.intersection(parts):
+            continue
+        out.append(path)
+    return out
 
 
 def _loader_names(tree: ast.Module) -> tuple[dict[str, str], dict[str, tuple[str, str]]]:
@@ -134,12 +214,10 @@ def _name_problem(scope: ast.AST, name: str, assign: ast.stmt) -> str | None:
     return None
 
 
-def find_members(scripts_root: Path) -> list[Member]:
+def find_members(root: Path) -> list[Member]:
     members: list[Member] = []
-    for path in sorted(scripts_root.rglob("*.py")):
-        if "__pycache__" in path.parts:
-            continue
-        rel = path.relative_to(scripts_root).as_posix()
+    for path in python_files(root):
+        rel = path.relative_to(root).as_posix()
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         modules, funcs = _loader_names(tree)
         parents: dict[ast.AST, ast.AST] = {}
@@ -183,19 +261,39 @@ def find_members(scripts_root: Path) -> list[Member]:
     return members
 
 
-def test_every_parsed_value_is_shape_checked_before_use():
-    unexplained = [m for m in find_members(SCRIPTS) if m.key not in ALLOWLIST]
-    assert not unexplained, "parsed YAML/JSON used without a shape check:\n" + "\n".join(map(str, unexplained))
+def evaluate(members: list[Member], allowlist: dict[Key, tuple[int, str]],
+             known: dict[Key, int]) -> list[str]:
+    """Every problem: an uncovered member, or an entry whose site count is off."""
+    counts = Counter(m.key for m in members)
+    problems = [f"new member: {m}" for m in members if m.key not in allowlist and m.key not in known]
+    expected = {**{k: n for k, (n, _) in allowlist.items()}, **known}
+    for key, n in sorted(expected.items()):
+        if counts[key] != n:
+            kind = "allowlist" if key in allowlist else "known-unrepaired"
+            sites = [str(m) for m in members if m.key == key]
+            problems.append(f"{kind} entry {key} expects {n} site(s), matches {counts[key]}: {sites}")
+    return problems
 
 
-def test_every_allowlist_entry_matches_a_site_and_carries_a_reason():
-    keys = {m.key for m in find_members(SCRIPTS)}
-    stale = sorted(k for k in ALLOWLIST if k not in keys)
-    assert not stale, f"allowlist entries that match no site (remove them): {stale}"
-    assert all(reason.strip() for reason in ALLOWLIST.values())
+def test_every_parsed_value_is_shape_checked_or_explicitly_listed():
+    problems = evaluate(find_members(ROOT), ALLOWLIST, KNOWN_UNREPAIRED)
+    assert not problems, "parsed YAML/JSON used without a shape check:\n" + "\n".join(problems)
 
 
-# --- the predicate itself, on synthetic sources --------------------------------
+def test_entries_carry_a_reason_and_the_follow_up_issue():
+    assert all(reason.strip() for _, reason in ALLOWLIST.values())
+    assert FOLLOW_UP_ISSUE.startswith("#")
+    assert not set(ALLOWLIST) & set(KNOWN_UNREPAIRED)
+
+
+def test_selector_reaches_every_tree_that_holds_python():
+    """G6: the selector is derived, so every authored tree is in it and tests/ is not."""
+    tops = {p.relative_to(ROOT).parts[0] for p in python_files(ROOT)}
+    assert {"scripts", "plugins", "skills", "evals", "spec"} <= tops
+    assert "tests" not in tops
+
+
+# --- the predicate and the count rule, on synthetic sources --------------------
 
 def _members_of(tmp_path: Path, source: str) -> list[Member]:
     (tmp_path / "mod.py").write_text(source, encoding="utf-8")
@@ -214,10 +312,12 @@ def test_guard_flags_each_member_shape(tmp_path):
         "        raise SystemExit(1)\n    return v\n"
         "def escapes(t):\n    return json.loads(t)\n"
         "def subscript_target(t, m):\n    m['k'] = y.safe_load(t)\n"
+        "def each(t):\n    for doc in y.safe_load_all(t):\n        doc.get('k')\n"
     )
     found = {(m.scope, m.target) for m in _members_of(tmp_path, source)}
     assert found == {("direct", "<expr>"), ("direct_or", "<expr>"), ("unchecked", "d"),
-                     ("late", "d"), ("escapes", "<expr>"), ("subscript_target", "m['k']")}
+                     ("late", "d"), ("escapes", "<expr>"), ("subscript_target", "m['k']"),
+                     ("each", "<expr>")}
 
 
 def test_guard_passes_checked_and_discarded_loads(tmp_path):
@@ -232,3 +332,34 @@ def test_guard_passes_checked_and_discarded_loads(tmp_path):
         "def other(t):\n    return t.loads()\n"
     )
     assert _members_of(tmp_path, source) == []
+
+
+def test_a_second_site_under_an_allowlisted_key_fails(tmp_path):
+    """G4: the validate_schemas.main entry covers one load; a second identical one fails."""
+    key = ("scripts/validate_schemas.py", "main", "data")
+    original = (ROOT / key[0]).read_text(encoding="utf-8")
+    line = '            data = yaml.safe_load(data_file.read_text(encoding="utf-8"))\n'
+    assert original.count(line) == 1
+    copy = tmp_path / key[0]
+    copy.parent.mkdir(parents=True)
+    copy.write_text(original, encoding="utf-8")
+    assert evaluate(find_members(tmp_path), {key: ALLOWLIST[key]}, {}) == []
+    copy.write_text(original.replace(line, line + line), encoding="utf-8")
+    problems = evaluate(find_members(tmp_path), {key: ALLOWLIST[key]}, {})
+    assert len(problems) == 1 and "expects 1 site(s), matches 2" in problems[0]
+
+
+def test_a_repaired_known_unrepaired_entry_goes_stale(tmp_path):
+    key = ("mod.py", "f", "d")
+    broken = "import json\ndef f(t):\n    d = json.loads(t)\n    return d.get('k')\n"
+    assert evaluate(_members_of(tmp_path, broken), {}, {key: 1}) == []
+    fixed = broken.replace("    return", "    if not isinstance(d, dict):\n        return None\n    return")
+    problems = evaluate(_members_of(tmp_path, fixed), {}, {key: 1})
+    assert len(problems) == 1 and "known-unrepaired entry" in problems[0] and "matches 0" in problems[0]
+
+
+def test_a_new_member_beside_known_ones_fails(tmp_path):
+    source = ("import json\ndef f(t):\n    d = json.loads(t)\n    return d.get('k')\n"
+              "def g(t):\n    return json.loads(t)['k']\n")
+    problems = evaluate(_members_of(tmp_path, source), {}, {("mod.py", "f", "d"): 1})
+    assert len(problems) == 1 and problems[0].startswith("new member: mod.py:6 (g, <expr>)")

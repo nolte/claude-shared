@@ -704,6 +704,11 @@ def discover_skills(source: SourceRoot, languages: list[str]) -> list[Artifact]:
         description = meta.get("description")
         if not description:
             raise CatalogError(f"{label}: frontmatter missing 'description'")
+        if not isinstance(description, str):
+            # A list or block mapping would otherwise reach the catalog as its str() repr.
+            raise CatalogError(
+                f"{label}: frontmatter 'description' must be a string, not {type(description).__name__}"
+            )
         artefacts.append(
             Artifact(
                 kind="skill",
@@ -749,6 +754,11 @@ def discover_agents(source: SourceRoot, languages: list[str]) -> list[Artifact]:
         description = meta.get("description")
         if not description:
             raise CatalogError(f"{label}: frontmatter missing 'description'")
+        if not isinstance(description, str):
+            # A list or block mapping would otherwise reach the catalog as its str() repr.
+            raise CatalogError(
+                f"{label}: frontmatter 'description' must be a string, not {type(description).__name__}"
+            )
         distribution = meta.get("distribution")
         if distribution not in ("plugin", "project"):
             raise CatalogError(
