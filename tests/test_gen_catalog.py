@@ -221,3 +221,23 @@ def test_non_list_sources_raises_catalog_error_naming_path(isolated_config: Path
     with pytest.raises(gen_catalog.CatalogError, match="'sources' must be a list") as exc:
         gen_catalog.load_sources()
     assert str(gen_catalog.SOURCES_FILE) in str(exc.value)
+
+
+@pytest.mark.parametrize("field", ["skills_path", "agents_path", "branch"])
+@pytest.mark.parametrize("value", [None, 5, ["a"], "", "  "])
+def test_malformed_optional_source_field_raises_catalog_error_naming_path(
+    isolated_config: Path, field: str, value: object
+) -> None:
+    entry = {"name": "test-plugin", "local": str(isolated_config / "plugin"),
+             "repo_url": "https://example.invalid/repo", field: value}
+    gen_catalog.SOURCES_FILE.write_text(
+        gen_catalog.yaml.safe_dump({"sources": [entry]}), encoding="utf-8")
+    with pytest.raises(gen_catalog.CatalogError, match=field) as exc:
+        gen_catalog.load_sources()
+    assert str(gen_catalog.SOURCES_FILE) in str(exc.value)
+
+
+def test_absent_optional_source_fields_keep_their_defaults(isolated_config: Path) -> None:
+    """Refutation control: absent skills_path / agents_path / branch keep the defaults."""
+    (source,) = gen_catalog.load_sources()
+    assert (source.skills_path, source.agents_path, source.branch) == ("skills", "agents", "main")

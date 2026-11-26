@@ -71,6 +71,10 @@ VALID_SCOPES = {"portfolio", "local"}
 # the resolvable spec set and the cross-reference namespace so a prose reference
 # to e.g. spec/schemas/ is not mistaken for a ghost reference.
 EXCLUDED_TOPICS = {"schemas"}
+# A canonical language code, mirroring `canonical_language.pattern` in
+# schemas/spec-config-v1.0.schema.yaml. Anything else (padding, `*`, a path)
+# would make the `<lang>.md` glob match nothing or everything (#816).
+LANG_RE = re.compile(r"[a-z]{2}")
 
 
 @dataclass
@@ -194,7 +198,7 @@ def own_plugin_name(repo: Path) -> str | None:
     if "name" not in data:
         return None
     name = data["name"]
-    if not isinstance(name, str) or not name:
+    if not isinstance(name, str) or not name.strip():
         raise MalformedConfig(manifest, f"`name` must be a non-empty string, not {name!r}")
     return name
 
@@ -232,17 +236,31 @@ def hub_canonical_lang(hub_spec_root: Path) -> str:
 
 
 def _language(cfg: Path, value: object) -> str:
-    """`canonical_language` as given, or MalformedConfig when it isn't a non-empty string."""
-    if not isinstance(value, str) or not value.strip():
-        raise MalformedConfig(cfg, f"`canonical_language` must be a non-empty string, not {value!r}")
+    """`canonical_language` as given, or MalformedConfig unless it is a two-letter code."""
+    if not isinstance(value, str) or not LANG_RE.fullmatch(value):
+        raise MalformedConfig(
+            cfg, f"`canonical_language` must be a two-letter code matching ^[a-z]{{2}}$, not {value!r}")
     return value
 
 
-def _spec_root(cfg: Path, value: object) -> str:
-    """`spec_root` as given, or MalformedConfig unless it is a non-empty relative path."""
+def _spec_root(cfg: Path, repo: Path, config: dict) -> Path:
+    """The spec corpus root; `repo/spec` when the key is absent.
+
+    A present `spec_root` must be a non-empty relative path naming an existing
+    directory inside the repository, else MalformedConfig: a root outside the
+    repository or a missing directory would collect no specs and pass silently.
+    """
+    if "spec_root" not in config:
+        return repo / "spec"
+    value = config["spec_root"]
     if not isinstance(value, str) or not value.strip() or Path(value).is_absolute():
         raise MalformedConfig(cfg, f"`spec_root` must be a non-empty relative path, not {value!r}")
-    return value
+    root = repo / value
+    if not root.resolve().is_relative_to(repo.resolve()):
+        raise MalformedConfig(cfg, f"`spec_root` {value!r} resolves outside the repository")
+    if not root.is_dir():
+        raise MalformedConfig(cfg, f"`spec_root` {value!r} is not an existing directory")
+    return root
 
 
 # --- checks ----------------------------------------------------------------
@@ -391,7 +409,7 @@ def run(repo: Path, hub_spec_root: Path | None) -> list[Finding]:
 
 def _run(repo: Path, cfg_path: Path, config: dict, hub_spec_root: Path | None) -> list[Finding]:
     canonical_lang = _language(cfg_path, config.get("canonical_language", "en"))
-    spec_root = repo / _spec_root(cfg_path, config.get("spec_root", "spec"))
+    spec_root = _spec_root(cfg_path, repo, config)
     local = collect_specs(spec_root, canonical_lang)
 
     inherits = config.get("inherits")

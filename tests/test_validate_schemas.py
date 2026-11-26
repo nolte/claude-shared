@@ -237,6 +237,8 @@ def test_unreadable_schema_is_a_failure_not_a_crash(tmp_path):
         ("'': schemas/widget-v1.0.schema.yaml", "''"),
         ("5: schemas/widget-v1.0.schema.yaml", "5"),
         ("null: schemas/widget-v1.0.schema.yaml", "None"),
+        ("'.': schemas/widget-v1.0.schema.yaml", "'.'"),
+        ("'./': schemas/widget-v1.0.schema.yaml", "'./'"),
     ],
 )
 def test_malformed_mapping_entry_is_a_failure_naming_config_and_pattern(tmp_path, capsys, entry, needle):
@@ -253,6 +255,8 @@ def test_malformed_mapping_entry_is_a_failure_naming_config_and_pattern(tmp_path
              if ".schemas-config.yaml" in line and needle in line]
     assert lines, captured.out + captured.err
     assert "Traceback" not in captured.err
+    # The file outside the root is never bound (it would surface as `../x.yaml: ...`).
+    assert "x.yaml" not in captured.out + captured.err
 
 
 def test_valid_mapping_entry_still_binds(tmp_path):
@@ -263,3 +267,21 @@ def test_valid_mapping_entry_still_binds(tmp_path):
     (tmp_path / ".schemas-config.yaml").write_text(
         "mappings:\n  'widgets/[!_]*.yaml': schemas/widget-v1.0.schema.yaml\n", encoding="utf-8")
     assert run(tmp_path) == 1  # the bound file is invalid: proves the binding happened
+
+
+def test_symlinked_glob_hit_outside_root_is_a_failure_not_a_binding(tmp_path, capsys):
+    root = tmp_path / "repo"
+    write_schema(root, VALID_SCHEMA)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "x.yaml").write_text("name: 5\n", encoding="utf-8")
+    (root / "link").symlink_to(outside, target_is_directory=True)
+    (root / ".schemas-config.yaml").write_text(
+        "mappings:\n  'link/*.yaml': schemas/widget-v1.0.schema.yaml\n", encoding="utf-8")
+    assert run(root) == 1
+    out = capsys.readouterr()
+    lines = (out.out + out.err).splitlines()
+    escape = [line for line in lines if ".schemas-config.yaml" in line and "'link/*.yaml'" in line]
+    assert escape and "link/x.yaml" in escape[0] and "outside the repository root" in escape[0]
+    # Not bound: a binding would report the invalid `name: 5` against the schema.
+    assert not any("is not of type" in line for line in lines)

@@ -314,9 +314,22 @@ def main(argv: list[str] | None = None) -> int:
                 failures.append(f"{CONFIG_NAME}: mapping {pattern!r}: {problem}")
                 continue
             schema_file = (root / schema_ref).resolve()
-            for data_file in root.glob(pattern):
-                if not _excluded(data_file, root):
-                    bindings.append((data_file, schema_file))
+            try:
+                hits = list(root.glob(pattern))
+            except (ValueError, NotImplementedError) as exc:
+                failures.append(f"{CONFIG_NAME}: mapping {pattern!r}: unusable glob ({exc})")
+                continue
+            for data_file in hits:
+                if _excluded(data_file, root):
+                    continue
+                if not data_file.resolve().is_relative_to(root):
+                    # A symlink inside the root leads out of it: never bind that file.
+                    failures.append(
+                        f"{CONFIG_NAME}: mapping {pattern!r}: "
+                        f"{data_file.relative_to(root)} resolves outside the repository root"
+                    )
+                    continue
+                bindings.append((data_file, schema_file))
 
     # Sidecar comments on any *.yaml / *.json (excluding the schemas themselves).
     for ext in ("**/*.yaml", "**/*.yml", "**/*.json"):

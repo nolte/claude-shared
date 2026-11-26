@@ -392,15 +392,25 @@ def load_sources() -> list[SourceRoot]:
                 raise CatalogError(
                     f"{SOURCES_FILE}: source #{idx} field '{field}' must be a non-empty string"
                 )
+        optional = {"skills_path": "skills", "agents_path": "agents", "branch": "main"}
+        for field in optional:
+            if field in entry:
+                value = entry[field]
+                if not isinstance(value, str) or not value.strip():
+                    raise CatalogError(
+                        f"{SOURCES_FILE}: source #{idx} field '{field}' must be a non-empty "
+                        f"string when present, not {value!r}"
+                    )
+                optional[field] = value
         local_path = (REPO_ROOT / local_value).resolve()
         result.append(
             SourceRoot(
                 name=name,
                 local=local_path,
-                skills_path=entry.get("skills_path", "skills"),
-                agents_path=entry.get("agents_path", "agents"),
+                skills_path=optional["skills_path"],
+                agents_path=optional["agents_path"],
                 repo_url=repo_url.rstrip("/"),
-                branch=entry.get("branch", "main"),
+                branch=optional["branch"],
             )
         )
     return result

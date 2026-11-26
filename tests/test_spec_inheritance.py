@@ -386,6 +386,7 @@ def _malformed(findings, needle: str) -> list:
     ("[1]", "plugin.json"),
     ('{"name": 5}', "name"),
     ('{"name": ""}', "name"),
+    ('{"name": "  "}', "name"),
 ])
 def test_malformed_plugin_manifest_is_critical_not_a_silent_none(tmp_path, capsys, manifest, key):
     """A broken manifest must not switch the cyclic-inheritance check off."""
@@ -407,6 +408,9 @@ def test_malformed_plugin_manifest_is_critical_not_a_silent_none(tmp_path, capsy
     ("canonical_language: 5\n", "canonical_language"),
     ("canonical_language: ''\n", "canonical_language"),
     ("canonical_language:\n", "canonical_language"),
+    ("canonical_language: '  en'\n", "canonical_language"),
+    ("canonical_language: '*'\n", "canonical_language"),
+    ("canonical_language: ../x\n", "canonical_language"),
 ])
 def test_malformed_hub_config_is_critical_not_a_silent_english(tmp_path, capsys, config, key):
     consumer, hub = _consumer_with_hub(tmp_path)
@@ -428,15 +432,27 @@ def test_malformed_hub_config_is_critical_not_a_silent_english(tmp_path, capsys,
     ({"spec_root": ""}, "spec_root"),
     ({"spec_root": None}, "spec_root"),
     ({"spec_root": "/abs/spec"}, "spec_root"),
+    ({"canonical_language": "  en"}, "canonical_language"),
+    ({"canonical_language": "en "}, "canonical_language"),
+    ({"canonical_language": "../x"}, "canonical_language"),
+    ({"canonical_language": "*"}, "canonical_language"),
+    ({"canonical_language": "EN"}, "canonical_language"),
+    ({"canonical_language": "eng"}, "canonical_language"),
+    ({"canonical_language": "en\n"}, "canonical_language"),
+    ({"spec_root": "../x"}, "spec_root"),
+    ({"spec_root": "spec/../.."}, "spec_root"),
+    ({"spec_root": "missing-dir"}, "spec_root"),
 ])
 def test_malformed_consumer_config_value_is_critical(tmp_path, capsys, extra, key):
     consumer = tmp_path / "consumer"
     (consumer / "spec").mkdir(parents=True)
     cfg = {"canonical_language": "en", "spec_root": "spec", **extra}
     (consumer / "spec" / ".spec-config.yml").write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    (tmp_path / "x").mkdir()  # `../x` exists, so only the root escape can reject it
     findings = csi.run(consumer, None)
     hits = _malformed(findings, key)
     assert hits, findings
+    assert hits[0].target == str(consumer / "spec" / ".spec-config.yml")
     assert csi.main(["--repo", str(consumer)]) == 1
     assert "Traceback" not in capsys.readouterr().err
 
@@ -456,3 +472,14 @@ def test_absent_keys_keep_their_defaults(tmp_path):
     assert "malformed-config" not in codes(findings)
     # The default "en" still finds the shadowing spec on both sides.
     assert "undeclared-divergence" in codes(findings)
+
+
+def test_spec_root_inside_the_repo_is_accepted(tmp_path):
+    """Refutation control: a present, existing, in-repo spec_root (even via `..`) still works."""
+    consumer = tmp_path / "consumer"
+    (consumer / "docs" / "specs").mkdir(parents=True)
+    (consumer / "spec").mkdir()
+    cfg = {"canonical_language": "de", "spec_root": "spec/../docs/specs"}
+    (consumer / "spec" / ".spec-config.yml").write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    make_spec(consumer / "docs" / "specs", "project/foo", lang="de", scope="global")
+    assert codes(csi.run(consumer, None)) == {"scope-header-malformed"}
