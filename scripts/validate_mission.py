@@ -478,9 +478,10 @@ def _committed_version(path: Path, ref: str) -> str | None:
     except ValueError:
         return None
     # Text mode keeps the universal-newline translation the working-tree read gets;
-    # `encoding` makes the decode strict UTF-8 regardless of the locale.
-    proc = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO, capture_output=True,
-                          text=True, encoding="utf-8")
+    # `encoding` makes the decode strict UTF-8 regardless of the locale. stderr is
+    # discarded: git localises it in the locale's charset, and it is never read.
+    proc = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO, stdout=subprocess.PIPE,
+                          stderr=subprocess.DEVNULL, text=True, encoding="utf-8")
     return proc.stdout if proc.returncode == 0 else None
 
 

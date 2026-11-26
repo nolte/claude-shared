@@ -383,6 +383,8 @@ def test_814_undecodable_committed_version_is_critical(monkeypatch, tmp_path):
             # Only an explicit strict UTF-8 decode is locale-independent; anything
             # else would decode by locale, so the fake refuses it.
             assert kwargs.get("text") and kwargs.get("encoding") == "utf-8" and "errors" not in kwargs
+            # git's stderr is localised in the locale's charset; it must not be decoded
+            assert kwargs.get("stderr") is subprocess.DEVNULL and "capture_output" not in kwargs
             _UNDECODABLE.decode("utf-8")  # raises, as the real text-mode decode does
         return real_run(cmd, *args, **kwargs)
 
