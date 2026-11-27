@@ -192,3 +192,25 @@ def test_the_kind_distribution_diagram_carries_a_diagram_source_marker(snapshot)
 
 def test_rendering_is_deterministic(snapshot):
     assert gp.render_page("en", snapshot) == gp.render_page("en", snapshot)
+
+
+# --- #816: a config or snapshot of the wrong top-level shape names the file ---
+
+@pytest.mark.parametrize("text", ["- en\n", "just a string\n", "42\n"])
+def test_non_mapping_spec_config_raises_portfolio_error_naming_file(tmp_path, monkeypatch, text):
+    cfg = tmp_path / ".spec-config.yml"
+    cfg.write_text(text, encoding="utf-8")
+    monkeypatch.setattr(gp, "SPEC_CONFIG", cfg)
+    with pytest.raises(gp.PortfolioError, match="must be a mapping") as exc:
+        gp.load_languages()
+    assert str(cfg) in str(exc.value)
+
+
+@pytest.mark.parametrize("text", ["- members\n", "just a string\n", "42\n"])
+def test_non_mapping_snapshot_raises_portfolio_error_naming_file(tmp_path, monkeypatch, text):
+    snap = tmp_path / "aggregate.yml"
+    snap.write_text(text, encoding="utf-8")
+    monkeypatch.setattr(gp, "AGGREGATE", snap)
+    with pytest.raises(gp.PortfolioError, match="must be a mapping") as exc:
+        gp.main()
+    assert str(snap) in str(exc.value)

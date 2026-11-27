@@ -71,6 +71,10 @@ VALID_SCOPES = {"portfolio", "local"}
 # the resolvable spec set and the cross-reference namespace so a prose reference
 # to e.g. spec/schemas/ is not mistaken for a ghost reference.
 EXCLUDED_TOPICS = {"schemas"}
+# A canonical language code, mirroring `canonical_language.pattern` in
+# schemas/spec-config-v1.0.schema.yaml. Anything else (padding, `*`, a path)
+# would make the `<lang>.md` glob match nothing or everything (#816).
+LANG_RE = re.compile(r"[a-z]{2}")
 
 
 @dataclass
@@ -82,6 +86,20 @@ class Finding:
 
     def __str__(self) -> str:
         return f"{self.severity:11s} {self.target}  [{self.rule}] {self.message}"
+
+
+class MalformedConfig(Exception):
+    """A config file is present but its content has the wrong shape.
+
+    Raised by the readers below and turned into a Critical `malformed-config`
+    finding by `run()`: the check fails closed instead of falling back to a
+    default that would silently weaken it (#816).
+    """
+
+    def __init__(self, path: Path, message: str) -> None:
+        super().__init__(f"{path}: {message}")
+        self.path = path
+        self.message = message
 
 
 # --- parsing helpers -------------------------------------------------------
@@ -163,15 +181,26 @@ def own_plugin_name(repo: Path) -> str | None:
     """The repository's own plugin identifier, from .claude-plugin/plugin.json.
 
     Used to detect a cyclic inheritance declaration (a source resolving back to
-    this repository). Returns None when no plugin manifest is present.
+    this repository). Returns None when no plugin manifest is present or it
+    carries no `name`. A manifest that is present but malformed raises
+    MalformedConfig: a silent None would switch the cyclic-inheritance check off.
+    A read or decode error propagates to main(), which exits 2 naming the file.
     """
     manifest = repo / ".claude-plugin" / "plugin.json"
-    if manifest.is_file():
-        try:
-            return json.loads(_read(manifest)).get("name")
-        except (json.JSONDecodeError, OSError):
-            return None
-    return None
+    if not manifest.is_file():
+        return None
+    try:
+        data = json.loads(_read(manifest))
+    except json.JSONDecodeError as exc:
+        raise MalformedConfig(manifest, f"not valid JSON ({exc})") from None
+    if not isinstance(data, dict):
+        raise MalformedConfig(manifest, "top level must be a JSON object")
+    if "name" not in data:
+        return None
+    name = data["name"]
+    if not isinstance(name, str) or not name.strip():
+        raise MalformedConfig(manifest, f"`name` must be a non-empty string, not {name!r}")
+    return name
 
 
 def resolve_hub_spec_root(cli_value: str | None) -> Path | None:
@@ -184,14 +213,54 @@ def resolve_hub_spec_root(cli_value: str | None) -> Path | None:
 
 
 def hub_canonical_lang(hub_spec_root: Path) -> str:
+    """The hub's canonical language; "en" when its config or the key is absent.
+
+    A config that is present but malformed raises MalformedConfig rather than
+    falling back to "en", which would check a non-English hub in the wrong
+    language. A read or decode error propagates to main() (exit 2).
+    """
     cfg = hub_spec_root / ".spec-config.yml"
-    if cfg.is_file():
-        try:
-            data = yaml.safe_load(_read(cfg)) or {}
-            return data.get("canonical_language", "en")
-        except yaml.YAMLError:
-            pass
-    return "en"
+    if not cfg.is_file():
+        return "en"
+    try:
+        data = yaml.safe_load(_read(cfg))
+    except yaml.YAMLError as exc:
+        raise MalformedConfig(cfg, f"unparseable YAML ({exc})") from None
+    if data is None:
+        return "en"
+    if not isinstance(data, dict):
+        raise MalformedConfig(cfg, "top level must be a mapping")
+    if "canonical_language" not in data:
+        return "en"
+    return _language(cfg, data["canonical_language"])
+
+
+def _language(cfg: Path, value: object) -> str:
+    """`canonical_language` as given, or MalformedConfig unless it is a two-letter code."""
+    if not isinstance(value, str) or not LANG_RE.fullmatch(value):
+        raise MalformedConfig(
+            cfg, f"`canonical_language` must be a two-letter code matching ^[a-z]{{2}}$, not {value!r}")
+    return value
+
+
+def _spec_root(cfg: Path, repo: Path, config: dict) -> Path:
+    """The spec corpus root; `repo/spec` when the key is absent.
+
+    A present `spec_root` must be a non-empty relative path naming an existing
+    directory inside the repository, else MalformedConfig: a root outside the
+    repository or a missing directory would collect no specs and pass silently.
+    """
+    if "spec_root" not in config:
+        return repo / "spec"
+    value = config["spec_root"]
+    if not isinstance(value, str) or not value.strip() or Path(value).is_absolute():
+        raise MalformedConfig(cfg, f"`spec_root` must be a non-empty relative path, not {value!r}")
+    root = repo / value
+    if not root.resolve().is_relative_to(repo.resolve()):
+        raise MalformedConfig(cfg, f"`spec_root` {value!r} resolves outside the repository")
+    if not root.is_dir():
+        raise MalformedConfig(cfg, f"`spec_root` {value!r} is not an existing directory")
+    return root
 
 
 # --- checks ----------------------------------------------------------------
@@ -332,8 +401,15 @@ def run(repo: Path, hub_spec_root: Path | None) -> list[Finding]:
     if not isinstance(config, dict):
         return [Finding("Critical", str(cfg_path), "malformed-config",
                         "spec/.spec-config.yml must be a mapping")]
-    canonical_lang = config.get("canonical_language", "en")
-    spec_root = repo / config.get("spec_root", "spec")
+    try:
+        return _run(repo, cfg_path, config, hub_spec_root)
+    except MalformedConfig as exc:
+        return [Finding("Critical", str(exc.path), "malformed-config", exc.message)]
+
+
+def _run(repo: Path, cfg_path: Path, config: dict, hub_spec_root: Path | None) -> list[Finding]:
+    canonical_lang = _language(cfg_path, config.get("canonical_language", "en"))
+    spec_root = _spec_root(cfg_path, repo, config)
     local = collect_specs(spec_root, canonical_lang)
 
     inherits = config.get("inherits")

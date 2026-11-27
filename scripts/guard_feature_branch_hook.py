@@ -127,10 +127,14 @@ def main() -> int:
         event = json.load(sys.stdin)
     except Exception:
         return 0
-    if event.get("tool_name") != "Bash":
+    # A payload of another shape is as unusable as invalid JSON: allow (fail open).
+    if not isinstance(event, dict) or event.get("tool_name") != "Bash":
         return 0
-    cmd = (event.get("tool_input") or {}).get("command", "")
-    if not cmd:
+    tool_input = event.get("tool_input") or {}
+    if not isinstance(tool_input, dict):
+        return 0
+    cmd = tool_input.get("command", "")
+    if not cmd or not isinstance(cmd, str):
         return 0
 
     target, cwd_override = _analyze(cmd)

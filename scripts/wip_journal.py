@@ -135,6 +135,8 @@ def main() -> int:
         payload = json.loads(raw) if raw.strip() else {}
     except Exception:
         payload = {}
+    if not isinstance(payload, dict):
+        payload = {}  # a payload of another shape is treated like an invalid one
 
     args = sys.argv[1:]
     global_mode = "--global" in args

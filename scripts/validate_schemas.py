@@ -77,6 +77,29 @@ ID_PREFIX = "https://github.com/nolte/"
 PASCAL_CASE_RE = re.compile(r"^[A-Z][A-Za-z0-9]*$")
 
 
+def _mapping_problem(pattern: object, schema_ref: object, root: Path) -> str | None:
+    """Why one ``.schemas-config.yaml`` mapping entry is unusable, or None.
+
+    The glob must be a non-empty relative string without a ``..`` segment and the
+    schema path a non-empty relative string resolving inside ``root``: otherwise
+    ``Path /`` and ``root.glob`` crash on the entry or bind files outside the
+    repository (#816).
+    """
+    if not isinstance(pattern, str) or not pattern.strip():
+        return "glob must be a non-empty string"
+    if Path(pattern).is_absolute():
+        return "glob must be relative to the repository root"
+    if ".." in Path(pattern).parts:
+        return "glob must not contain a `..` segment"
+    if not isinstance(schema_ref, str) or not schema_ref.strip():
+        return f"schema path must be a non-empty string, not {schema_ref!r}"
+    if Path(schema_ref).is_absolute():
+        return f"schema path {schema_ref!r} must be relative to the repository root"
+    if not (root / schema_ref).resolve().is_relative_to(root.resolve()):
+        return f"schema path {schema_ref!r} resolves outside the repository root"
+    return None
+
+
 def _excluded(path: Path, root: Path) -> bool:
     return any(part in EXCLUDED_PARTS for part in path.relative_to(root).parts)
 
@@ -286,10 +309,27 @@ def main(argv: list[str] | None = None) -> int:
             failures.append(f"{CONFIG_NAME}: `mappings` must be a mapping of glob to schema path")
             mappings = {}
         for pattern, schema_ref in mappings.items():
+            problem = _mapping_problem(pattern, schema_ref, root)
+            if problem:
+                failures.append(f"{CONFIG_NAME}: mapping {pattern!r}: {problem}")
+                continue
             schema_file = (root / schema_ref).resolve()
-            for data_file in root.glob(pattern):
-                if not _excluded(data_file, root):
-                    bindings.append((data_file, schema_file))
+            try:
+                hits = list(root.glob(pattern))
+            except (ValueError, NotImplementedError) as exc:
+                failures.append(f"{CONFIG_NAME}: mapping {pattern!r}: unusable glob ({exc})")
+                continue
+            for data_file in hits:
+                if _excluded(data_file, root):
+                    continue
+                if not data_file.resolve().is_relative_to(root):
+                    # A symlink inside the root leads out of it: never bind that file.
+                    failures.append(
+                        f"{CONFIG_NAME}: mapping {pattern!r}: "
+                        f"{data_file.relative_to(root)} resolves outside the repository root"
+                    )
+                    continue
+                bindings.append((data_file, schema_file))
 
     # Sidecar comments on any *.yaml / *.json (excluding the schemas themselves).
     for ext in ("**/*.yaml", "**/*.yml", "**/*.json"):

@@ -56,9 +56,14 @@ def main() -> int:
         event = json.load(sys.stdin)
     except Exception:
         return 0
+    # A payload of another shape is as unusable as invalid JSON: allow (fail open).
+    if not isinstance(event, dict):
+        return 0
     ti = event.get("tool_input") or {}
+    if not isinstance(ti, dict):
+        return 0
     fp = ti.get("file_path") or ti.get("notebook_path") or ""
-    if not fp:
+    if not fp or not isinstance(fp, str):
         return 0
 
     rel = os.path.relpath(fp, REPO) if os.path.isabs(fp) else fp
