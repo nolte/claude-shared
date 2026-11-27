@@ -43,25 +43,36 @@ renovate 45.3.2. A selected file is a class member when any of these holds:
 5. ``--index-url=`` appears more than once;
 6. the command names no source file, or a named source file (resolved from
    the repository root, per rule 4) doesn't exist;
-7. the file's repository-relative path matches none of the
-   ``managerFilePatterns`` of the ``'pip-compile'`` block in ``renovate.json5``
-   (``re.search`` on the pattern between Renovate's ``/…/`` delimiters). A lock
+7. Renovate wouldn't read the file with this manager, judged from
+   ``renovate.json5``: the top level has ``enabled: false``; a top-level
+   ``enabledManagers`` list doesn't name ``'pip-compile'``; there's no
+   top-level ``'pip-compile'`` object; that object's ``enabled`` is anything
+   but ``true``; its ``managerFilePatterns`` is missing, empty, or holds a value
+   that isn't a string in Renovate's ``/regex/`` form (flag ``i`` only) or
+   doesn't compile; or the file's repository-relative path matches none of
+   those patterns (``re.search`` on the text between the delimiters). A lock
    outside that set is never read by the manager at all, which is this class's
    silent failure by another route.
 
-Rule 7 reads ``renovate.json5`` as text, not through a JSON5 parser, and is
-fail-closed: there must be exactly one ``'pip-compile': { … }`` block without
-nested braces, holding one ``managerFilePatterns: [ … ]`` list of
-single-quoted ``'/regex/'`` literals (flags: ``i`` only; escapes: ``\\\\`` and
-``\\'`` only). Anything else (no block, two blocks, no list, an empty list, a
-glob instead of a ``/…/`` regex, a literal the extractor can't read) fails
-naming ``renovate.json5`` instead of passing with zero patterns.
+Rule 7 reads ``renovate.json5`` with a small tokenizer and subset reader in
+this file, not a JSON5 library: ``//`` and ``/* */`` comments are dropped
+outside strings, single- and double-quoted strings are decoded per JSON5 (so a
+commented-out block, or block text inside a string value, isn't a block), and
+objects, arrays, strings and bare words are read. What it refuses rather than
+passes: a missing file, input outside that subset or not well formed, a
+duplicate key, and every case listed under rule 7, each with a message naming
+``renovate.json5``. Zero extracted patterns is a failure, never a pass.
 
 Not covered (a reader deciding whether a new case is caught should check these
 by hand):
 
-- presets the config ``extends`` (a ``managerFilePatterns`` inherited from
-  ``github>nolte/gh-plumbing`` is invisible to rule 7, which then fails closed);
+- presets the config ``extends``: a ``managerFilePatterns`` inherited from
+  ``github>nolte/gh-plumbing`` is invisible to rule 7 (which then refuses for
+  want of a local block), and an ``enabled: false`` or ``enabledManagers`` set
+  there isn't seen at all;
+- ``packageRules`` that switch the manager off for some files
+  (``matchManagers: ['pip-compile'], enabled: false``, or ``matchFileNames`` /
+  ``ignorePaths`` / ``ignoreDeps`` that exclude a lock);
 - options Renovate accepts but uv itself would reject or interpret differently;
 - the ``--constraint=``/``--override=`` files a header names (Renovate tracks
   them, but this repository uses none);
@@ -193,6 +204,10 @@ def header_problems(root: Path, lock: Path) -> list[str]:
             f"{rel}: no header command line ('#' + 4 spaces + command) after a comment line"
         ]
     command = match.group("command")
+    if not command:
+        return [
+            f"{rel}: header command line is indented by more than 4 spaces after '#'"
+        ]
     try:
         args = shlex.split(match.group("arguments") or "")
     except ValueError as exc:
@@ -258,45 +273,194 @@ def all_problems(root: Path, use_git: bool = True) -> list[str]:
 
 
 RENOVATE_CONFIG = "renovate.json5"
-# Rule 7, narrow on purpose: one brace-free 'pip-compile' block, one list in it,
-# single-quoted literals separated by commas. Anything else fails closed.
-PIP_COMPILE_BLOCK = re.compile(r"""['"]pip-compile['"]\s*:\s*\{(?P<body>[^{}]*)\}""")
-PATTERN_LIST = re.compile(
-    r"managerFilePatterns\s*:\s*\[(?P<items>(?:\s*'(?:[^'\\]|\\.)*'\s*,?)*)\s*\]"
-)
-STRING_LITERAL = re.compile(r"'((?:[^'\\]|\\.)*)'")
+MANAGER = "pip-compile"
+
+# Rule 7 reads renovate.json5 with the small tokenizer and subset reader below,
+# not with a JSON5 library: comments are dropped, single- and double-quoted
+# strings are decoded per JSON5, and objects/arrays/strings/bare words
+# (true, false, null, numbers, unquoted keys) are read. Anything outside that
+# subset, or not well formed, is a problem naming renovate.json5, not a pass.
+_PUNCT = frozenset("{}[]:,")
+_BARE = re.compile(r"[A-Za-z0-9_$+\-.]+")
+_SIMPLE_ESCAPES = {
+    "b": "\b",
+    "f": "\f",
+    "n": "\n",
+    "r": "\r",
+    "t": "\t",
+    "v": "\v",
+    "0": "\0",
+}
 REGEX_FORM = re.compile(r"^/(?P<pattern>.+)/(?P<flags>i?)$")
 
 
+class Bare(str):
+    """An unquoted JSON5 token (true, false, null, a number, an identifier key)."""
+
+
+def _tokens(text: str) -> list[tuple[str, str]]:
+    """(kind, value) tokens of `text`; kind is "punct", "str" or "bare". Comments vanish."""
+    out: list[tuple[str, str]] = []
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if c.isspace():
+            i += 1
+        elif text.startswith("//", i):
+            end = text.find("\n", i)
+            i = n if end == -1 else end
+        elif text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            if end == -1:
+                raise ValueError(f"unterminated /* comment at offset {i}")
+            i = end + 2
+        elif c in _PUNCT:
+            out.append(("punct", c))
+            i += 1
+        elif c in "'\"":
+            chars: list[str] = []
+            i += 1
+            while True:
+                if i >= n or text[i] == "\n":
+                    raise ValueError("unterminated string literal")
+                ch = text[i]
+                if ch == c:
+                    i += 1
+                    break
+                if ch != "\\":
+                    chars.append(ch)
+                    i += 1
+                    continue
+                if i + 1 >= n:
+                    raise ValueError("unterminated string literal")
+                esc = text[i + 1]
+                if esc in "xu":
+                    width = 2 if esc == "x" else 4
+                    digits = text[i + 2 : i + 2 + width]
+                    if not re.fullmatch(f"[0-9A-Fa-f]{{{width}}}", digits):
+                        raise ValueError(f"bad \\{esc} escape in string literal")
+                    chars.append(chr(int(digits, 16)))
+                    i += 2 + width
+                elif esc == "\n":
+                    i += 2  # line continuation
+                else:
+                    # JSON5: any other escaped character stands for itself.
+                    chars.append(_SIMPLE_ESCAPES.get(esc, esc))
+                    i += 2
+            out.append(("str", "".join(chars)))
+        else:
+            m = _BARE.match(text, i)
+            if m is None:
+                raise ValueError(f"unexpected character {c!r} at offset {i}")
+            out.append(("bare", m.group()))
+            i = m.end()
+    return out
+
+
+def read_json5_subset(text: str) -> object:
+    """The value `text` holds; ValueError on anything outside the subset or a duplicate key."""
+    tokens = _tokens(text)
+    pos = 0
+
+    def take() -> tuple[str, str]:
+        nonlocal pos
+        if pos >= len(tokens):
+            raise ValueError("unexpected end of input")
+        pos += 1
+        return tokens[pos - 1]
+
+    def peek(value: str) -> bool:
+        return pos < len(tokens) and tokens[pos] == ("punct", value)
+
+    def value() -> object:
+        kind, tok = take()
+        if kind == "str":
+            return tok
+        if kind == "bare":
+            return Bare(tok)
+        if tok == "[":
+            items: list[object] = []
+            while not peek("]"):
+                items.append(value())
+                if not peek("]"):
+                    if take() != ("punct", ","):
+                        raise ValueError("expected ',' or ']' in array")
+            take()
+            return items
+        if tok == "{":
+            obj: dict[str, object] = {}
+            while not peek("}"):
+                kkind, key = take()
+                if kkind == "punct":
+                    raise ValueError(f"expected a key, found {key!r}")
+                if key in obj:
+                    raise ValueError(f"duplicate key {key!r}")
+                if take() != ("punct", ":"):
+                    raise ValueError(f"expected ':' after key {key!r}")
+                obj[key] = value()
+                if not peek("}"):
+                    if take() != ("punct", ","):
+                        raise ValueError("expected ',' or '}' in object")
+            take()
+            return obj
+        raise ValueError(f"unexpected {tok!r}")
+
+    result = value()
+    if pos != len(tokens):
+        raise ValueError(
+            f"trailing content after the top-level value: {tokens[pos][1]!r}"
+        )
+    return result
+
+
 def manager_patterns(root: Path) -> tuple[list[re.Pattern[str]], list[str]]:
-    """The 'pip-compile' managerFilePatterns of `root`/renovate.json5, or why none."""
+    """The 'pip-compile' managerFilePatterns of `root`/renovate.json5, or why none apply."""
     config = root / RENOVATE_CONFIG
     if not config.is_file():
         return [], [f"{RENOVATE_CONFIG}: not found under {root}"]
-    blocks = list(PIP_COMPILE_BLOCK.finditer(config.read_text(encoding="utf-8")))
-    if len(blocks) != 1:
-        return [], [
-            f"{RENOVATE_CONFIG}: expects one brace-free 'pip-compile' block, found {len(blocks)}"
-        ]
-    lists = list(PATTERN_LIST.finditer(blocks[0].group("body")))
-    if len(lists) != 1:
-        return [], [
-            f"{RENOVATE_CONFIG}: expects one readable managerFilePatterns list, found {len(lists)}"
-        ]
-    patterns: list[re.Pattern[str]] = []
+    try:
+        doc = read_json5_subset(config.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        return [], [f"{RENOVATE_CONFIG}: can't read: {exc}"]
+    if not isinstance(doc, dict):
+        return [], [f"{RENOVATE_CONFIG}: top level isn't an object"]
     problems: list[str] = []
-    for raw in STRING_LITERAL.findall(lists[0].group("items")):
-        # STRING_LITERAL consumes escapes in pairs, so each "\X" here is one escape.
-        if any(char not in "\\'" for char in re.findall(r"\\(.)", raw)):
+    if doc.get("enabled") == Bare("false"):
+        problems.append(
+            f"{RENOVATE_CONFIG}: top-level enabled: false disables Renovate"
+        )
+    if "enabledManagers" in doc:
+        managers = doc["enabledManagers"]
+        if not isinstance(managers, list) or MANAGER not in [
+            m for m in managers if not isinstance(m, Bare)
+        ]:
             problems.append(
-                f"{RENOVATE_CONFIG}: pattern {raw!r} uses an escape other than \\\\ or \\'"
+                f"{RENOVATE_CONFIG}: enabledManagers doesn't list '{MANAGER}'"
             )
-            continue
-        text = re.sub(r"\\(.)", r"\1", raw)
-        form = REGEX_FORM.match(text)
+    block = doc.get(MANAGER)
+    if not isinstance(block, dict):
+        problems.append(f"{RENOVATE_CONFIG}: no top-level '{MANAGER}' object")
+        return [], problems
+    if "enabled" in block and block["enabled"] != Bare("true"):
+        problems.append(
+            f"{RENOVATE_CONFIG}: '{MANAGER}' has enabled: {block['enabled']}"
+        )
+    raw_patterns = block.get("managerFilePatterns")
+    if not isinstance(raw_patterns, list) or not raw_patterns:
+        problems.append(
+            f"{RENOVATE_CONFIG}: '{MANAGER}' managerFilePatterns holds no pattern"
+        )
+        return [], problems
+    patterns: list[re.Pattern[str]] = []
+    for raw in raw_patterns:
+        form = (
+            REGEX_FORM.match(raw)
+            if isinstance(raw, str) and not isinstance(raw, Bare)
+            else None
+        )
         if form is None:
             problems.append(
-                f"{RENOVATE_CONFIG}: pattern {text!r} isn't in Renovate's /regex/ form"
+                f"{RENOVATE_CONFIG}: pattern {raw!r} isn't a string in Renovate's /regex/ form"
             )
             continue
         try:
@@ -307,12 +471,8 @@ def manager_patterns(root: Path) -> tuple[list[re.Pattern[str]], list[str]]:
             )
         except re.error as exc:
             problems.append(
-                f"{RENOVATE_CONFIG}: pattern {text!r} doesn't compile: {exc}"
+                f"{RENOVATE_CONFIG}: pattern {raw!r} doesn't compile: {exc}"
             )
-    if not patterns and not problems:
-        problems.append(
-            f"{RENOVATE_CONFIG}: 'pip-compile' managerFilePatterns holds no pattern"
-        )
     return patterns, problems
 
 
@@ -328,7 +488,7 @@ def coverage_problems(root: Path, use_git: bool = True) -> list[str]:
         if not any(p.search(rel) for p in patterns):
             shown = ", ".join(p.pattern for p in patterns)
             problems.append(
-                f"{rel}: matches no 'pip-compile' managerFilePatterns in {RENOVATE_CONFIG} ({shown})"
+                f"{rel}: matches no '{MANAGER}' managerFilePatterns in {RENOVATE_CONFIG} ({shown})"
             )
     return problems
 
@@ -474,6 +634,44 @@ def test_git_selector_skips_untracked_lock_files(tmp_path):
     assert all_problems(tmp_path) == []
 
 
+def test_guard_accepts_an_output_file_with_a_leading_dot_segment(tmp_path):
+    """Renovate normalizes the value (upath.normalize); so does the guard."""
+    assert _problems(tmp_path, GOOD.replace("--output-file=", "--output-file=./")) == []
+
+
+def test_guard_rejects_two_index_urls(tmp_path):
+    cmd = (
+        GOOD
+        + " --index-url=https://a.example/simple --index-url=https://b.example/simple"
+    )
+    assert _problems(tmp_path, cmd) == [
+        "reqs/requirements.lock.txt: cannot use multiple --index-url options"
+    ]
+
+
+def test_guard_rejects_a_header_without_a_source_file(tmp_path):
+    cmd = (
+        "uv pip compile --python-version=3.14 --output-file=reqs/requirements.lock.txt"
+    )
+    assert _problems(tmp_path, cmd) == [
+        "reqs/requirements.lock.txt: header names no source file"
+    ]
+
+
+def test_guard_rejects_no_header_with_renovates_first_message(tmp_path):
+    """common.js runs throwForDisallowedOption before throwForUnknownOption."""
+    assert _problems(tmp_path, GOOD + " --no-header") == [
+        "reqs/requirements.lock.txt: option --no-header not allowed for this manager"
+    ]
+
+
+def test_guard_names_an_over_indented_header(tmp_path):
+    problems = _problems(tmp_path, " " + GOOD)
+    assert problems == [
+        "reqs/requirements.lock.txt: header command line is indented by more than 4 spaces after '#'"
+    ]
+
+
 # --- rule 7, on synthetic renovate.json5 files ----------------------------------
 
 
@@ -484,18 +682,44 @@ def _coverage(tmp_path: Path, config: str | None) -> list[str]:
     return coverage_problems(tmp_path, use_git=False)
 
 
-MATCHING = "{\n  'pip-compile': {\n    managerFilePatterns: ['/(^|/)requirements(-dev)?\\\\.lock\\\\.txt$/'],\n  },\n}\n"
+PATTERN = "'/(^|/)requirements(-dev)?\\\\.lock\\\\.txt$/'"
+BLOCK = "  'pip-compile': {\n    managerFilePatterns: [" + PATTERN + "],\n  },\n"
+MATCHING = "{\n" + BLOCK + "}\n"
 
 
 def test_coverage_accepts_a_pattern_that_matches_every_lock(tmp_path):
     assert _coverage(tmp_path, MATCHING) == []
 
 
-def test_coverage_accepts_the_repo_pattern_and_reads_it(tmp_path):
+def test_coverage_accepts_the_repo_pattern_and_reads_it():
     """Positive control: the repo's own literal is extracted, not skipped."""
     patterns, problems = manager_patterns(ROOT)
     assert problems == []
     assert [p.pattern for p in patterns] == [r"(^|/)requirements(-dev)?\.lock\.txt$"]
+
+
+def test_coverage_accepts_double_quotes_and_comments_inside_the_block(tmp_path):
+    config = (
+        '{\n  // a } brace and a { brace in a comment\n  "pip-compile": {\n'
+        "    /* the lock files } */\n"
+        '    "managerFilePatterns": [\n      // one pattern\n'
+        '      "/(^|/)requirements(-dev)?\\\\.lock\\\\.txt$/", // trailing\n    ],\n  },\n}\n'
+    )
+    assert _coverage(tmp_path, config) == []
+
+
+def test_coverage_decodes_json5_escapes_like_renovate(tmp_path):
+    """JSON5 `\\.` is `.`; the decoded regex still has to match the lock."""
+    config = "{'pip-compile': {managerFilePatterns: ['/requirements\\.lock\\.txt$/']}}"
+    patterns, problems = manager_patterns(_write_config(tmp_path, config))
+    assert problems == [] and [p.pattern for p in patterns] == [
+        "requirements.lock.txt$"
+    ]
+
+
+def _write_config(tmp_path: Path, config: str) -> Path:
+    (tmp_path / RENOVATE_CONFIG).write_text(config, encoding="utf-8")
+    return tmp_path
 
 
 def test_coverage_rejects_a_lock_the_pattern_misses(tmp_path):
@@ -517,21 +741,80 @@ def test_coverage_rejects_a_block_without_an_extractable_pattern(tmp_path):
 
 def test_coverage_rejects_a_config_without_a_pip_compile_block(tmp_path):
     problems = _coverage(tmp_path, "{\n  extends: ['config:recommended'],\n}\n")
-    assert problems == [
-        "renovate.json5: expects one brace-free 'pip-compile' block, found 0"
-    ]
+    assert problems == ["renovate.json5: no top-level 'pip-compile' object"]
 
 
-def test_coverage_rejects_a_glob_instead_of_a_regex(tmp_path):
+def test_coverage_rejects_a_block_commented_out_with_slash_star(tmp_path):
+    problems = _coverage(tmp_path, "{\n  extends: [],\n  /*\n" + BLOCK + "  */\n}\n")
+    assert problems == ["renovate.json5: no top-level 'pip-compile' object"]
+
+
+def test_coverage_rejects_a_block_commented_out_line_by_line(tmp_path):
+    commented = "".join("  // " + line + "\n" for line in BLOCK.splitlines())
+    problems = _coverage(tmp_path, "{\n  extends: [],\n" + commented + "}\n")
+    assert problems == ["renovate.json5: no top-level 'pip-compile' object"]
+
+
+def test_coverage_rejects_a_block_that_appears_only_inside_a_string(tmp_path):
+    config = (
+        '{\n  description: "' + BLOCK.replace("\n", " ").replace('"', "") + '",\n}\n'
+    )
+    assert "'pip-compile': {" in config
+    problems = _coverage(tmp_path, config)
+    assert problems == ["renovate.json5: no top-level 'pip-compile' object"]
+
+
+def test_coverage_rejects_a_disabled_pip_compile_block(tmp_path):
     problems = _coverage(
         tmp_path,
         MATCHING.replace(
-            "'/(^|/)requirements(-dev)?\\\\.lock\\\\.txt$/'", "'**/*.lock.txt'"
+            "  'pip-compile': {\n", "  'pip-compile': {\n    enabled: false,\n"
         ),
     )
+    assert problems == ["renovate.json5: 'pip-compile' has enabled: false"]
+
+
+def test_coverage_rejects_enabled_managers_without_pip_compile(tmp_path):
+    problems = _coverage(
+        tmp_path, "{\n  enabledManagers: ['pep621'],\n" + BLOCK + "}\n"
+    )
+    assert problems == ["renovate.json5: enabledManagers doesn't list 'pip-compile'"]
+
+
+def test_coverage_accepts_enabled_managers_with_pip_compile(tmp_path):
+    assert (
+        _coverage(
+            tmp_path,
+            "{\n  enabledManagers: ['pep621', 'pip-compile'],\n" + BLOCK + "}\n",
+        )
+        == []
+    )
+
+
+def test_coverage_rejects_a_globally_disabled_renovate(tmp_path):
+    problems = _coverage(tmp_path, "{\n  enabled: false,\n" + BLOCK + "}\n")
+    assert problems == ["renovate.json5: top-level enabled: false disables Renovate"]
+
+
+def test_coverage_rejects_a_glob_instead_of_a_regex(tmp_path):
+    problems = _coverage(tmp_path, MATCHING.replace(PATTERN, "'**/*.lock.txt'"))
     assert problems == [
-        "renovate.json5: pattern '**/*.lock.txt' isn't in Renovate's /regex/ form"
+        "renovate.json5: pattern '**/*.lock.txt' isn't a string in Renovate's /regex/ form"
     ]
+
+
+def test_coverage_rejects_a_config_it_cannot_read(tmp_path):
+    problems = _coverage(
+        tmp_path, MATCHING.replace("managerFilePatterns:", "managerFilePatterns")
+    )
+    assert len(problems) == 1 and problems[0].startswith(
+        "renovate.json5: can't read: expected ':'"
+    ), problems
+
+
+def test_coverage_rejects_a_duplicate_pip_compile_key(tmp_path):
+    problems = _coverage(tmp_path, "{\n" + BLOCK + BLOCK + "}\n")
+    assert problems == ["renovate.json5: can't read: duplicate key 'pip-compile'"]
 
 
 def test_coverage_rejects_a_missing_config(tmp_path):
@@ -539,10 +822,3 @@ def test_coverage_rejects_a_missing_config(tmp_path):
     assert len(problems) == 1 and problems[0].startswith("renovate.json5: not found"), (
         problems
     )
-
-
-def test_coverage_rejects_an_escape_the_extractor_cannot_read(tmp_path):
-    """A single-backslash `\\.` means `.` in JSON5; the extractor refuses rather than guess."""
-    config = "{\n  'pip-compile': {\n    managerFilePatterns: ['/requirements\\.lock\\.txt$/'],\n  },\n}\n"
-    problems = _coverage(tmp_path, config)
-    assert len(problems) == 1 and "uses an escape other than" in problems[0], problems

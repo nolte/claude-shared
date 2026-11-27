@@ -32,3 +32,6 @@
 
 | source | head | finding | triage |
 |---|---|---|---|
+| general-purpose review r1 | 38565617 | S1 rule 7 not fail-closed (commented-out block, enabled:false, enabledManagers, string-only pass; comments/double quotes false-fail) | fixed in branch: comment-aware JSON5-subset reader, refusals listed; packageRules/extends-sourced disables under Not covered |
+| general-purpose review r1 | 38565617 | S2 four predicate branches unkilled by mutation | fixed in branch: one test per branch, 11 mutations each red |
+| general-purpose review r1 | 38565617 | nits: partition vs split on `=`, 5-space message, zero --output-file stricter than Renovate | over-indent message fixed; the two stricter-than-Renovate cases kept deliberately |
