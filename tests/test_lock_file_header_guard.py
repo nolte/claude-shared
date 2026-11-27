@@ -72,7 +72,10 @@ by hand):
   there isn't seen at all;
 - ``packageRules`` that switch the manager off for some files
   (``matchManagers: ['pip-compile'], enabled: false``, or ``matchFileNames`` /
-  ``ignorePaths`` / ``ignoreDeps`` that exclude a lock);
+  ``ignoreDeps`` that exclude a lock);
+- ``ignorePaths``, which keeps Renovate from reading a matching file with any
+  manager: neither a local list nor one inherited through ``extends`` (for
+  example ``:ignoreModulesAndTests``, which adds ``**/tests/**``) is checked;
 - options Renovate accepts but uv itself would reject or interpret differently;
 - the ``--constraint=``/``--override=`` files a header names (Renovate tracks
   them, but this repository uses none);
@@ -413,6 +416,17 @@ def read_json5_subset(text: str) -> object:
     return result
 
 
+def _enabled_problems(where: str, value: object, effect: str) -> list[str]:
+    """`enabled` counts only as a bare true/false token; anything else is unreadable."""
+    if value == "true" and isinstance(value, Bare):
+        return []
+    if value == "false" and isinstance(value, Bare):
+        return [f"{RENOVATE_CONFIG}: {where} enabled: false {effect}"]
+    return [
+        f"{RENOVATE_CONFIG}: {where} enabled is {value!r}, not a bare true or false"
+    ]
+
+
 def manager_patterns(root: Path) -> tuple[list[re.Pattern[str]], list[str]]:
     """The 'pip-compile' managerFilePatterns of `root`/renovate.json5, or why none apply."""
     config = root / RENOVATE_CONFIG
@@ -425,15 +439,15 @@ def manager_patterns(root: Path) -> tuple[list[re.Pattern[str]], list[str]]:
     if not isinstance(doc, dict):
         return [], [f"{RENOVATE_CONFIG}: top level isn't an object"]
     problems: list[str] = []
-    if doc.get("enabled") == Bare("false"):
-        problems.append(
-            f"{RENOVATE_CONFIG}: top-level enabled: false disables Renovate"
-        )
+    if "enabled" in doc:
+        problems += _enabled_problems("top-level", doc["enabled"], "disables Renovate")
     if "enabledManagers" in doc:
         managers = doc["enabledManagers"]
-        if not isinstance(managers, list) or MANAGER not in [
-            m for m in managers if not isinstance(m, Bare)
-        ]:
+        # manager/index.js:81-82 (getEnabledManagersList): an empty list means
+        # every manager, so only a non-empty list has to name pip-compile.
+        if not isinstance(managers, list) or (
+            managers and MANAGER not in [m for m in managers if not isinstance(m, Bare)]
+        ):
             problems.append(
                 f"{RENOVATE_CONFIG}: enabledManagers doesn't list '{MANAGER}'"
             )
@@ -441,9 +455,9 @@ def manager_patterns(root: Path) -> tuple[list[re.Pattern[str]], list[str]]:
     if not isinstance(block, dict):
         problems.append(f"{RENOVATE_CONFIG}: no top-level '{MANAGER}' object")
         return [], problems
-    if "enabled" in block and block["enabled"] != Bare("true"):
-        problems.append(
-            f"{RENOVATE_CONFIG}: '{MANAGER}' has enabled: {block['enabled']}"
+    if "enabled" in block:
+        problems += _enabled_problems(
+            f"'{MANAGER}'", block["enabled"], "disables the manager"
         )
     raw_patterns = block.get("managerFilePatterns")
     if not isinstance(raw_patterns, list) or not raw_patterns:
@@ -771,7 +785,9 @@ def test_coverage_rejects_a_disabled_pip_compile_block(tmp_path):
             "  'pip-compile': {\n", "  'pip-compile': {\n    enabled: false,\n"
         ),
     )
-    assert problems == ["renovate.json5: 'pip-compile' has enabled: false"]
+    assert problems == [
+        "renovate.json5: 'pip-compile' enabled: false disables the manager"
+    ]
 
 
 def test_coverage_rejects_enabled_managers_without_pip_compile(tmp_path):
@@ -822,3 +838,72 @@ def test_coverage_rejects_a_missing_config(tmp_path):
     assert len(problems) == 1 and problems[0].startswith("renovate.json5: not found"), (
         problems
     )
+
+
+def test_coverage_accepts_an_empty_enabled_managers_list(tmp_path):
+    """manager/index.js:81-82: `enabledManagers: []` enables every manager."""
+    assert _coverage(tmp_path, "{\n  enabledManagers: [],\n" + BLOCK + "}\n") == []
+
+
+def test_coverage_accepts_a_bare_true_enabled(tmp_path):
+    config = (
+        "{\n  enabled: true,\n"
+        + BLOCK.replace("{\n", "{\n    enabled: true,\n", 1)
+        + "}\n"
+    )
+    assert _coverage(tmp_path, config) == []
+
+
+def test_coverage_refuses_a_quoted_top_level_enabled(tmp_path):
+    problems = _coverage(tmp_path, "{\n  enabled: 'true',\n" + BLOCK + "}\n")
+    assert problems == [
+        "renovate.json5: top-level enabled is 'true', not a bare true or false"
+    ]
+
+
+def test_coverage_refuses_a_quoted_block_enabled(tmp_path):
+    config = "{\n" + BLOCK.replace("{\n", '{\n    enabled: "false",\n', 1) + "}\n"
+    assert _coverage(tmp_path, config) == [
+        "renovate.json5: 'pip-compile' enabled is 'false', not a bare true or false"
+    ]
+
+
+def _read_error(text: str) -> str:
+    try:
+        read_json5_subset(text)
+    except ValueError as exc:
+        return str(exc)
+    raise AssertionError(f"read_json5_subset accepted {text!r}")
+
+
+def test_reader_refuses_a_missing_comma_in_an_array():
+    assert _read_error("{a: ['x' 'y']}") == "expected ',' or ']' in array"
+
+
+def test_reader_refuses_a_missing_comma_in_an_object():
+    assert _read_error("{a: 'x' b: 'y'}") == "expected ',' or '}' in object"
+
+
+def test_reader_refuses_trailing_content_after_the_top_level_value():
+    assert (
+        _read_error("{a: 'x'} {b: 'y'}")
+        == "trailing content after the top-level value: '{'"
+    )
+
+
+def test_reader_refuses_an_unclosed_block_comment():
+    assert (
+        _read_error("{a: 'x'} /* never closed") == "unterminated /* comment at offset 9"
+    )
+
+
+def test_reader_refuses_a_raw_newline_inside_a_string():
+    assert _read_error("{a: 'x\ny'}") == "unterminated string literal"
+
+
+def test_reader_decodes_hex_and_unicode_escapes():
+    assert read_json5_subset("{a: '\\x41\\u00e9\\n'}") == {"a": "A\u00e9\n"}
+
+
+def test_reader_drops_a_line_continuation():
+    assert read_json5_subset("{a: 'ab\\\ncd'}") == {"a": "abcd"}
